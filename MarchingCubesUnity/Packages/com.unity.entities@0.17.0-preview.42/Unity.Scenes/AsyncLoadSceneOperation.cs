@@ -460,7 +460,10 @@ namespace Unity.Scenes
 #endif
 
 #if !UNITY_DOTSRUNTIME
-            _EntityManager.ExclusiveEntityTransactionDependency = loadJob.Schedule(JobHandle.CombineDependencies(_EntityManager.ExclusiveEntityTransactionDependency, _ReadHandle.JobHandle));
+            var combineDependencies = JobHandle.CombineDependencies(_EntityManager.ExclusiveEntityTransactionDependency, _ReadHandle.JobHandle);
+            combineDependencies.Complete();
+            loadJob.Execute();
+            _EntityManager.ExclusiveEntityTransactionDependency = combineDependencies;
 #else
 
             JobHandle decompressJob = default;
