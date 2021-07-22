@@ -1,0 +1,17 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 42118d74661542b6b71f6a6eb8e49d97, type: 3}
+  m_Name: DynamicCubeMarchingSettingsHolder
+  m_EditorClassIdentifier: 
+  Compute: {fileID: 7200000, guid: 809069001e3c99b408ff81f90deae391, type: 3}
+  Materials:
+  - {fileID: 2100000, guid: b1a45b3676d3b994392d39b3621d9521, type: 2}

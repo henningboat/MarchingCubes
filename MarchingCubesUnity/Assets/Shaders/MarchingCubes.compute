@@ -1,0 +1,241 @@
+﻿#include "Includes/MarchTables.compute"
+#include "Includes/TerrainData.hlsl"
+float4 _Time;
+#pragma kernel GetTrianglePositions
+#pragma kernel CalculateTriangulationThreadGroupSizeKernel
+#pragma kernel Triangulation
+
+RWStructuredBuffer<TerrainData4> _GlobalTerrainBuffer;
+RWStructuredBuffer<int> _GlobalTerrainIndexMap;
+StructuredBuffer<float4> _NormalBuffer;
+
+StructuredBuffer<int3> _TerrainChunkBasePosition;
+
+#include "Includes/GlobalDistanceField.hlsl"
+
+groupshared float3 _GeneratedNormals;
+
+static const int numThreads = 8;
+
+struct Triangle {
+    float3 vertexC;
+    float3 normalC;
+    float4 colorC;
+    float3 vertexB;
+    float3 normalB;
+    float4 colorB;
+    float3 vertexA;
+    float3 normalA;
+    float4 colorA;
+};
+
+AppendStructuredBuffer<int4> _ValidTrianglePositions;
+StructuredBuffer<int4> _ValidTrianglePositionResults;
+AppendStructuredBuffer<Triangle> triangles;
+
+//todo make int3?
+float isoLevel;
+
+static const int localGridSize=10;
+groupshared float4 _grid[localGridSize*localGridSize*localGridSize];
+
+
+float3 interpolateVerts(float4 v1, float4 v2, out float t) {
+    t = (isoLevel - v1.w) / (v2.w - v1.w);
+    return v1.xyz + t * (v2.xyz-v1.xyz);
+}
+
+float3 interpolateNormals(float3 v1, float3 v2, float t) {
+    return v1.xyz + t * (v2.xyz-v1.xyz);
+}
+
+
+float4 interpolateColors(float4 v1, float4 v2, float t) {
+    return v1 + t * (v2-v1);
+}
+
+
+int GetIndexOfVert(float3 positionOS, int3 basePositionOfChunk)
+{
+    const int3 positionIndex = floor(positionOS);
+    const int index = positionIndex.x+positionIndex.y*8+positionIndex.z*64;
+    return index;
+}
+
+uint3 IndexToGridPosition(uint groupIndex)
+{
+    return uint3(groupIndex, groupIndex / localGridSize, groupIndex / (localGridSize*localGridSize)) % localGridSize;
+}
+
+uint GridPositionToIndex(uint3 gridPosition)
+{
+    return gridPosition.x + gridPosition.y*localGridSize+gridPosition.z*localGridSize*localGridSize;
+}
+
+void LoadDataIntoLocalGrid(uint groupIndex, uint3 chunkBasePosition)
+{
+    const uint3 positionToLoad = IndexToGridPosition(groupIndex) + chunkBasePosition;
+    _grid[groupIndex]=GetPointPosition(positionToLoad);
+}
+
+float3 CalculateNormalForPosition(int3 localPosition)
+{
+    float3 combinedNormal=0.00001;
+    for (int x=-1;x<2;x++)
+        for (int y=-1;y<2;y++)
+            for (int z=-1;z<2;z++)
+            {
+                if(!(x==0&&y==0&&z==0))
+                {
+                    //const float surfaceDistance = _grid[GridPositionToIndex(int3(localPosition.x+x, localPosition.y+y, localPosition.z+z))].w;
+                    const float surfaceDistance = GetPointPosition(int3(localPosition.x+x, localPosition.y+y, localPosition.z+z)).w;
+           
+                    combinedNormal += float3(x,y,z)*surfaceDistance;
+                }
+            }
+
+    return normalize(combinedNormal);
+}
+
+
+
+
+[numthreads(numThreads,numThreads,numThreads)]
+void GetTrianglePositions (uint3 id : SV_DispatchThreadID, uint groupIndex : SV_GroupIndex, uint3 groupThreadID:SV_GroupThreadID)
+{
+    const uint chunkIndex = id.x/8;
+    id.x%=8;
+    const int3 terrainChunkBasePosition = _TerrainChunkBasePosition[chunkIndex];
+
+    LoadDataIntoLocalGrid(groupIndex * 2, terrainChunkBasePosition);
+    LoadDataIntoLocalGrid(groupIndex * 2 + 1, terrainChunkBasePosition);
+
+    GroupMemoryBarrierWithGroupSync ();
+
+    float4 cubeCorners[8] = {
+        _grid[GridPositionToIndex(int3(id.x, id.y, id.z))],
+        _grid[GridPositionToIndex(int3(id.x + 1, id.y, id.z))], 
+        _grid[GridPositionToIndex(int3(id.x + 1, id.y, id.z + 1))],
+        _grid[GridPositionToIndex(int3(id.x, id.y, id.z + 1))],
+        _grid[GridPositionToIndex(int3(id.x, id.y + 1, id.z))],
+        _grid[GridPositionToIndex(int3(id.x + 1, id.y + 1, id.z))],
+        _grid[GridPositionToIndex(int3(id.x + 1, id.y + 1, id.z + 1))],
+        _grid[GridPositionToIndex(int3(id.x, id.y + 1, id.z + 1))]
+    };
+
+    
+    id+=terrainChunkBasePosition;
+
+    // Calculate unique index for each cube configuration.
+    // There are 256 possible values
+    // A value of 0 means cube is entirely inside surface; 255 entirely outside.
+    // The value is used to look up the edge table, which indicates which edges of the cube are cut by the isosurface.
+    int cubeIndex = 0;
+    if (cubeCorners[0].w > isoLevel) cubeIndex |= 1;
+    if (cubeCorners[1].w > isoLevel) cubeIndex |= 2;
+    if (cubeCorners[2].w > isoLevel) cubeIndex |= 4;
+    if (cubeCorners[3].w > isoLevel) cubeIndex |= 8;
+    if (cubeCorners[4].w > isoLevel) cubeIndex |= 16;
+    if (cubeCorners[5].w > isoLevel) cubeIndex |= 32;
+    if (cubeCorners[6].w > isoLevel) cubeIndex |= 64;
+    if (cubeCorners[7].w > isoLevel) cubeIndex |= 128;
+ 
+    if(cubeIndex==0||cubeIndex==255)
+        return;
+    
+    _ValidTrianglePositions.Append(int4(id,cubeIndex));
+}
+
+RWStructuredBuffer<int> _ArgsBuffer;
+[numthreads(1,1,1)]
+void CalculateTriangulationThreadGroupSizeKernel()
+{
+    _ArgsBuffer[1] =  ceil(_ArgsBuffer[0]/512.0f);
+}
+
+[numthreads(1,512,1)]
+void Triangulation (uint3 id : SV_DispatchThreadID)
+{
+    int index = id.x*512+id.y;
+
+    if(index>=_ArgsBuffer[0])
+        return;
+
+    int3 positionWS = _ValidTrianglePositionResults[index].xyz;
+    int cubeIndex = _ValidTrianglePositionResults[index].w;
+    
+    //id+=terrainChunkBasePosition;
+
+    float4 cubeCorners[8] = {
+        GetPointPosition((int3(positionWS.x, positionWS.y, positionWS.z))),
+       GetPointPosition((int3(positionWS.x + 1, positionWS.y, positionWS.z))),
+       GetPointPosition((int3(positionWS.x + 1, positionWS.y, positionWS.z + 1))),
+       GetPointPosition((int3(positionWS.x, positionWS.y, positionWS.z + 1))),
+       GetPointPosition((int3(positionWS.x, positionWS.y + 1, positionWS.z))),
+       GetPointPosition((int3(positionWS.x + 1, positionWS.y + 1, positionWS.z))),
+       GetPointPosition((int3(positionWS.x + 1, positionWS.y + 1, positionWS.z + 1))),
+       GetPointPosition((int3(positionWS.x, positionWS.y + 1, positionWS.z + 1)))
+    };
+
+    
+
+    float3 cubeNormals[8] = {
+        CalculateNormalForPosition((int3(positionWS.x, positionWS.y, positionWS.z))),
+        CalculateNormalForPosition((int3(positionWS.x + 1, positionWS.y, positionWS.z))),
+        CalculateNormalForPosition((int3(positionWS.x + 1, positionWS.y, positionWS.z + 1))),
+        CalculateNormalForPosition((int3(positionWS.x, positionWS.y, positionWS.z + 1))),
+        CalculateNormalForPosition((int3(positionWS.x, positionWS.y + 1, positionWS.z))),
+        CalculateNormalForPosition((int3(positionWS.x + 1, positionWS.y + 1, positionWS.z))),
+        CalculateNormalForPosition((int3(positionWS.x + 1, positionWS.y + 1, positionWS.z + 1))),
+        CalculateNormalForPosition((int3(positionWS.x, positionWS.y + 1, positionWS.z + 1)))
+    };
+
+    
+    // Create triangles for current cube configuration
+    for (int i = 0; triangulation[cubeIndex][i] != -1; i +=3) {
+        // Get indices of corner points A and B for each of the three edges
+        // of the cube that need to be joined to form the triangle.
+        int a0 = cornerIndexAFromEdge[triangulation[cubeIndex][i]];
+        int b0 = cornerIndexBFromEdge[triangulation[cubeIndex][i]];
+
+        int a1 = cornerIndexAFromEdge[triangulation[cubeIndex][i+1]];
+        int b1 = cornerIndexBFromEdge[triangulation[cubeIndex][i+1]];
+
+        int a2 = cornerIndexAFromEdge[triangulation[cubeIndex][i+2]];
+        int b2 = cornerIndexBFromEdge[triangulation[cubeIndex][i+2]];
+
+        Triangle tri;
+        
+        float tA;
+        float tB;
+        float tC;
+         
+        tri.vertexA = interpolateVerts(cubeCorners[a0], cubeCorners[b0],tA);
+        tri.vertexB = interpolateVerts(cubeCorners[a1], cubeCorners[b1],tB);
+        tri.vertexC = interpolateVerts(cubeCorners[a2], cubeCorners[b2],tC);
+        
+        tri.colorA = 0;
+        tri.colorB = 0;
+        tri.colorC = 0;
+        // tri.colorA = interpolateColors(cubeColors[a0], cubeColors[b0],tA);
+        // tri.colorB = interpolateColors(cubeColors[a1], cubeColors[b1],tB);
+        // tri.colorC = interpolateColors(cubeColors[a2], cubeColors[b2],tC);
+
+        
+        float3 flatNormal = -normalize(cross(tri.vertexB-tri.vertexA, tri.vertexC-tri.vertexA));
+        
+
+        tri.normalA = flatNormal;
+        tri.normalB = flatNormal;
+        tri.normalC = flatNormal;
+        //
+        //
+        tri.normalA = interpolateNormals(cubeNormals[a0], cubeNormals[b0],tA);
+        tri.normalB = interpolateNormals(cubeNormals[a1], cubeNormals[b1],tB);
+        tri.normalC = interpolateNormals(cubeNormals[a2], cubeNormals[b2],tC);
+
+
+
+        triangles.Append(tri);
+    }
+}
