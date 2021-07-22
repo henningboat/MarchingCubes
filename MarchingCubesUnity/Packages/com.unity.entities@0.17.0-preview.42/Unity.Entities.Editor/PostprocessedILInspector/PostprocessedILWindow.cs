@@ -168,7 +168,7 @@ namespace Unity.Entities.Editor
                             t.GetUserFriendlyName(), changeEvent.newValue, CompareOptions.IgnoreCase) >= 0));
             }
 
-            listView.Refresh();
+            listView.Rebuild();
         }
 
         private static void SetupListView(ListView listView, IList source, int itemHeight, Func<VisualElement> makeItem, Action<VisualElement, int> bindItem)

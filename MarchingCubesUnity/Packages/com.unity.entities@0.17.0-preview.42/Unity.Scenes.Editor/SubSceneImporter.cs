@@ -76,7 +76,7 @@ namespace Unity.Scenes.Editor
                 if (objRefs == null)
                     continue;
 
-                var path = ctx.GetResultPath($"{sectionIndex}.{EntityScenesPaths.GetExtension(EntityScenesPaths.PathType.EntitiesAssetDependencyGUIDs)}");
+                var path = ctx.GetOutputArtifactFilePath($"{sectionIndex}.{EntityScenesPaths.GetExtension(EntityScenesPaths.PathType.EntitiesAssetDependencyGUIDs)}");
                 var assetDependencyGUIDs = ReferencedUnityObjectsToGUIDs(objRefs, ctx);
 
                 using (var writer = new StreamBinaryWriter(path))

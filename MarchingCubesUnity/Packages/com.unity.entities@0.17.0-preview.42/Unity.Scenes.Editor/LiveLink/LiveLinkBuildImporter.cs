@@ -189,15 +189,15 @@ namespace Unity.Scenes.Editor
 
             var manifest = UnityEngine.ScriptableObject.CreateInstance<AssetObjectManifest>();
             AssetObjectManifestBuilder.BuildManifest(guid, manifest);
-            var manifestPath = ctx.GetResultPath(k_ManifestExtension);
+            var manifestPath = ctx.GetOutputArtifactFilePath(k_ManifestExtension);
             UnityEditorInternal.InternalEditorUtility.SaveToSerializedFileAndForget(new[] { manifest }, manifestPath, true);
 
-            var bundlePath = ctx.GetResultPath(k_BundleExtension);
+            var bundlePath = ctx.GetOutputArtifactFilePath(k_BundleExtension);
             var dependencies = new HashSet<Hash128>();
             var types = new HashSet<Type>();
             LiveLinkBuildPipeline.BuildAssetBundle(manifestPath, guid, bundlePath, ctx.selectedBuildTarget, dependencies, types, fileIdent);
 
-            var dependenciesPath = ctx.GetResultPath(k_DependenciesExtension);
+            var dependenciesPath = ctx.GetOutputArtifactFilePath(k_DependenciesExtension);
             WriteDependenciesResult(dependenciesPath, dependencies.ToArray());
 
             AddImportDependencies(ctx, dependencies, types);
@@ -206,12 +206,12 @@ namespace Unity.Scenes.Editor
         private void ImportSceneBundle(AssetImportContext ctx)
         {
             var guid = new GUID(AssetDatabase.AssetPathToGUID(ctx.assetPath));
-            var bundlePath = ctx.GetResultPath(k_BundleExtension);
+            var bundlePath = ctx.GetOutputArtifactFilePath(k_BundleExtension);
             var dependencies = new HashSet<Hash128>();
             var types = new HashSet<Type>();
             LiveLinkBuildPipeline.BuildSceneBundle(guid, bundlePath, ctx.selectedBuildTarget, false, dependencies, types);
 
-            var dependenciesPath = ctx.GetResultPath(k_DependenciesExtension);
+            var dependenciesPath = ctx.GetOutputArtifactFilePath(k_DependenciesExtension);
             WriteDependenciesResult(dependenciesPath, dependencies.ToArray());
 
             AddImportDependencies(ctx, dependencies, types);

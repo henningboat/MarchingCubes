@@ -132,7 +132,7 @@ namespace Unity.Entities
                     //Use the guid as an extension and retrieve the path to where to save in the AssetDataBase
                     if (AssetImportContext != null)
                     {
-                        var exportFileInfo = AssetImportContext.GetResultPath(guid.ToString());
+                        var exportFileInfo = AssetImportContext.GetOutputArtifactFilePath(guid.ToString());
                         var assetPath = AssetDatabase.GetAssetPath(uobject);
                         m_ExportedAssets.Add(uobject, found = new ExportedAsset
                         {

@@ -78,7 +78,7 @@ namespace Unity.Scenes.Editor
         internal static string GetSceneWritePath(EntityScenesPaths.PathType type, string subsectionName, AssetImportContext ctx)
         {
             var prefix = string.IsNullOrEmpty(subsectionName) ? "" : subsectionName + ".";
-            return ctx.GetResultPath(prefix + EntityScenesPaths.GetExtension(type));
+            return ctx.GetOutputArtifactFilePath(prefix + EntityScenesPaths.GetExtension(type));
         }
 
         internal static string GetSceneWritePath(EntityScenesPaths.PathType type, string subsectionName, Hash128 sceneGUID, string outputPath)

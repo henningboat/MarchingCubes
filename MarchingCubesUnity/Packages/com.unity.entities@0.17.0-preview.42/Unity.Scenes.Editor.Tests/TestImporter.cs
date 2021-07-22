@@ -12,7 +12,7 @@ namespace Unity.Scenes.Tests
     {
         public override void OnImportAsset(AssetImportContext ctx)
         {
-            var path = ctx.GetResultPath("output");
+            var path = ctx.GetOutputArtifactFilePath("output");
             File.WriteAllBytes(path, File.ReadAllBytes(ctx.assetPath));
 
         }

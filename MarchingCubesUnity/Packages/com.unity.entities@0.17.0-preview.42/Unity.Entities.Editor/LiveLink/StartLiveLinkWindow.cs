@@ -255,7 +255,7 @@ namespace Unity.Entities.Editor
                 m_FilteredBuildConfigurationViewModels.Clear();
                 m_FilteredBuildConfigurationViewModels.AddRange(string.IsNullOrEmpty(searchTerm) ? m_BuildConfigurationViewModels : m_BuildConfigurationViewModels.Where(b => b.MatchFilter(searchTerm)));
 
-                m_ConfigurationsListView.Refresh();
+                m_ConfigurationsListView.Rebuild();
 
                 if (m_SelectedConfiguration != null)
                     m_ConfigurationsListView.selectedIndex = m_FilteredBuildConfigurationViewModels.IndexOf(m_SelectedConfiguration);

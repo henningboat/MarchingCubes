@@ -46,7 +46,7 @@ namespace Code.CubeMarching.Rendering
             clusterMesh.bounds = new Bounds {min = Vector3.zero, max = Vector3.one * ClusterLength};
 
             clusterMesh.SetSubMesh(0, new SubMeshDescriptor(0, 33), MeshUpdateFlagsNone);
-            
+
             indexBuffer.Dispose();
             randomVertexData.Dispose();
 
