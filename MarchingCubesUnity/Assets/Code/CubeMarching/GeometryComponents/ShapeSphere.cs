@@ -35,7 +35,7 @@ namespace Code.CubeMarching.GeometryComponents
     public struct CGenericTerrainModifier : IComponentData
     {
     }
-    
+
     [StructLayout(LayoutKind.Explicit, Size = 4 * 16)]
     public struct CShapeSphere : IComponentData, ITerrainModifierShape
     {
@@ -53,13 +53,12 @@ namespace Code.CubeMarching.GeometryComponents
         public TerrainBounds CalculateBounds(Translation translation)
         {
             var center = translation.Value;
-            return new TerrainBounds()
+            return new TerrainBounds
             {
-                min = center - radius, max = center + radius,
+                min = center - radius, max = center + radius
             };
         }
 
         public TerrainModifierType Type => TerrainModifierType.Sphere;
-
     }
 }

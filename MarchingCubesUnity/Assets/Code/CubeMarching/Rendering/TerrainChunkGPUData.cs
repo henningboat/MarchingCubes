@@ -3,7 +3,6 @@ using Code.CubeMarching.TerrainChunkSystem;
 using Unity.Collections;
 using Unity.Mathematics;
 using UnityEngine;
-using Object = UnityEngine.Object;
 
 namespace Code.CubeMarching.Rendering
 {
@@ -11,10 +10,10 @@ namespace Code.CubeMarching.Rendering
     {
         private readonly ComputeShader _computeShader;
         private ComputeBuffer _argsBuffer;
-        private ComputeBuffer _trianglePositionCountBuffer;
         private ComputeBuffer _terrainIndexMap;
         private ComputeBuffer _triangleBuffer;
         private ComputeBuffer _trianglePositionBuffer;
+        private ComputeBuffer _trianglePositionCountBuffer;
 
         public TerrainChunkGPUData()
         {
@@ -26,7 +25,7 @@ namespace Code.CubeMarching.Rendering
             //todo make this properly resize
             _terrainIndexMap = new ComputeBuffer(TerrainChunkData.UnPackedCapacity * 100, 4 * 3, ComputeBufferType.Default);
         }
- 
+
         public void UpdateWithSurfaceData(ComputeBuffer globalTerrainBuffer, ComputeBuffer globalTerrainIndexMap, NativeList<int3> chunkPositionsToRender, int3 terrainMapSize, int materialIDFilter)
         {
             if (chunkPositionsToRender.Length == 0)
@@ -38,12 +37,13 @@ namespace Code.CubeMarching.Rendering
             var requiredTriangleCapacity = TerrainChunkData.UnPackedCapacity * chunkPositionsToRender.Length * 5;
             if (_triangleBuffer == null || _triangleBuffer.count < requiredTriangleCapacity)
             {
-                if(_triangleBuffer!=null)
+                if (_triangleBuffer != null)
                 {
                     _trianglePositionBuffer.Dispose();
                     _triangleBuffer.Dispose();
                 }
-                _trianglePositionBuffer = new ComputeBuffer(requiredTriangleCapacity, 4*4, ComputeBufferType.Append);
+
+                _trianglePositionBuffer = new ComputeBuffer(requiredTriangleCapacity, 4 * 4, ComputeBufferType.Append);
                 _triangleBuffer = new ComputeBuffer(requiredTriangleCapacity, trianbgleByteSize, ComputeBufferType.Append);
             }
 
@@ -54,7 +54,7 @@ namespace Code.CubeMarching.Rendering
             Shader.SetGlobalBuffer("_GlobalTerrainIndexMap", globalTerrainIndexMap);
             Shader.SetGlobalVector("_TerrainMapSize", new Vector3(terrainMapSize.x, terrainMapSize.y, terrainMapSize.z));
 
-            
+
             //Fine positions in the grid that contain triangles
             var getPositionKernel = _computeShader.FindKernel("GetTrianglePositions");
             _computeShader.SetInt("numPointsPerAxis", RenderCubeMarchingSystem.ChunkLength);
@@ -67,7 +67,7 @@ namespace Code.CubeMarching.Rendering
             _trianglePositionBuffer.SetCounterValue(0);
             _computeShader.Dispatch(getPositionKernel, chunkPositionsToRender.Length, 1, 1);
             ComputeBuffer.CopyCount(_trianglePositionBuffer, _trianglePositionCountBuffer, 0);
-            
+
             var calculateTriangulationThreadGroupSizeKernel = _computeShader.FindKernel("CalculateTriangulationThreadGroupSizeKernel");
             _computeShader.SetBuffer(calculateTriangulationThreadGroupSizeKernel, "_ArgsBuffer", _trianglePositionCountBuffer);
             _computeShader.Dispatch(calculateTriangulationThreadGroupSizeKernel, 1, 1, 1);

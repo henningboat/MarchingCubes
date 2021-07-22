@@ -6,7 +6,6 @@ using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
 using Unity.Entities;
 using Unity.Mathematics;
-using Unity.Transforms;
 using UnityEngine;
 using static Code.SIMDMath.SimdMath;
 
@@ -61,7 +60,7 @@ namespace Code.CubeMarching.GeometryComponents
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    public struct CGenericTerrainTransformation:IComponentData
+    public struct CGenericTerrainTransformation : IComponentData
     {
         public TerrainTransformationType TerrainTransformationType;
         public Bytes16 TerrainModifierDataA;

@@ -7,7 +7,10 @@ using Code.CubeMarching.Utils;
 using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
+using Unity.Rendering;
 using Unity.Transforms;
+using UnityEngine;
+using UnityEngine.Rendering;
 using CGenericTerrainModifier = Code.CubeMarching.Authoring.CGenericTerrainModifier;
 
 namespace Code.CubeMarching.TerrainChunkEntitySystem
@@ -35,10 +38,22 @@ namespace Code.CubeMarching.TerrainChunkEntitySystem
 
         public void SpawnCluster(int3 clusterPositionGS)
         {
+            //spawn cluster
             var clusterEntity = EntityManager.CreateEntity(_clusterArchetype);
             EntityManager.SetComponentData(clusterEntity, new CClusterPosition {PositionGS = clusterPositionGS});
-          //  EntityManager.AddSharedComponentData(clusterEntity, MeshGenerator.GenerateClusterMesh());
+            var clusterMesh = MeshGeneratorBuilder.GenerateClusterMesh();
+            EntityManager.AddSharedComponentData(clusterEntity, clusterMesh);
+            EntityManager.SetName(clusterEntity, "Cluster " + clusterPositionGS);
 
+            //spawn terrain renderer
+
+            var renderMeshDescriptor = new RenderMeshDescription(clusterMesh.mesh, Resources.Load<Material>("DefaultMaterial"), ShadowCastingMode.On, true);
+
+            var rendererEntity = EntityManager.CreateEntity(typeof(ClusterChild),typeof(Translation));
+            EntityManager.SetName(rendererEntity, "Cluster " + clusterPositionGS + " RenderMesh");
+            RenderMeshUtility.AddComponents(rendererEntity, EntityManager, renderMeshDescriptor);
+
+            //spawn chunks for the cluster
             var createdChunks = EntityManager.CreateEntity(_chunkArchtype, 512, Allocator.Temp);
             for (var i = 0; i < createdChunks.Length; i++)
             {
@@ -51,12 +66,10 @@ namespace Code.CubeMarching.TerrainChunkEntitySystem
                 chunkData.positionGS = new int3(i % clusterSize.x, i / clusterSize.y % clusterSize.y, i / (clusterSize.x * clusterSize.y)) + clusterPositionGS;
                 chunkData.indexInCluster = i;
 
-                staticDataData.DistanceFieldChunkData.ClusterEntity = clusterEntity;
-                dynamicData.DistanceFieldChunkData.ClusterEntity = clusterEntity;
-
                 EntityManager.SetComponentData(chunkEntity, chunkData);
                 EntityManager.SetComponentData(chunkEntity, staticDataData);
                 EntityManager.SetComponentData(chunkEntity, dynamicData);
+                EntityManager.SetComponentData(chunkEntity, new ClusterChild {ClusterEntity = clusterEntity});
             }
         }
 
@@ -78,7 +91,8 @@ namespace Code.CubeMarching.TerrainChunkEntitySystem
                 typeof(CTerrainEntityChunkPosition),
                 typeof(CTerrainShapeCoverageMask),
                 typeof(CTerrainChunkStaticData),
-                typeof(CTerrainChunkDynamicData));
+                typeof(CTerrainChunkDynamicData),
+                typeof(ClusterChild));
 
             _clusterArchetype = EntityManager.CreateArchetype(
                 typeof(CClusterPosition),
@@ -95,8 +109,8 @@ namespace Code.CubeMarching.TerrainChunkEntitySystem
             var entity = EntityManager.CreateEntity(typeof(TerrainChunkDataBuffer));
             var buffer = EntityManager.GetBuffer<TerrainChunkDataBuffer>(entity);
 
-            buffer.Add(new TerrainChunkDataBuffer() {Value = TerrainChunkData.Outside});
-            buffer.Add(new TerrainChunkDataBuffer() {Value = TerrainChunkData.Inside});
+            buffer.Add(new TerrainChunkDataBuffer {Value = TerrainChunkData.Outside});
+            buffer.Add(new TerrainChunkDataBuffer {Value = TerrainChunkData.Inside});
 
             Entities.ForEach((ref CTerrainChunkStaticData distanceField) =>
             {
@@ -244,18 +258,20 @@ namespace Code.CubeMarching.TerrainChunkEntitySystem
                 var indexInChunkMap = Utils.PositionToIndex(chunkPosition.positionGS, indexMapSize);
 
 
-                int indexInDistanceFieldBuffer = 0;
-                bool hasData=false;
+                var indexInDistanceFieldBuffer = 0;
+                var hasData = false;
                 if (dynamicDistanceField.DistanceFieldChunkData.HasData)
                 {
                     indexInDistanceFieldBuffer = dynamicDistanceField.DistanceFieldChunkData.IndexInDistanceFieldBuffer;
                     hasData = true;
-                }else{
+                }
+                else
+                {
                     indexInDistanceFieldBuffer = staticDistanceField.DistanceFieldChunkData.IndexInDistanceFieldBuffer;
                     hasData = true;
                 }
 
-                if (hasData) 
+                if (hasData)
                 {
                     var convertedData = ConvertDataForGPUFriendlyFormat(terrainChunkBuffer[indexInDistanceFieldBuffer].Value);
                     terrainChunkData.Add(convertedData);
@@ -343,11 +359,15 @@ namespace Code.CubeMarching.TerrainChunkEntitySystem
 
     public struct DistanceFieldChunkData
     {
-        public Entity ClusterEntity;
         public byte ChunkInsideTerrain;
         public byte InnerDataMask;
         public int IndexInDistanceFieldBuffer;
         public bool HasData => InnerDataMask != 0;
+    }
+
+    public struct ClusterChild : IComponentData
+    {
+        public Entity ClusterEntity;
     }
 
     public struct CTerrainChunkStaticData : IComponentData
@@ -358,7 +378,7 @@ namespace Code.CubeMarching.TerrainChunkEntitySystem
 
         #endregion
     }
-    
+
     public struct CTerrainChunkDynamicData : IComponentData
     {
         #region Public Fields

@@ -4,13 +4,13 @@ using UnityEngine;
 
 namespace Code.CubeMarching
 {
-	//todo convert into more general TerrainShaper component?
-	public struct CTerrainMaterial : IComponentData
-	{
-		#region Public Fields
+    //todo convert into more general TerrainShaper component?
+    public struct CTerrainMaterial : IComponentData
+    {
+        #region Public Fields
 
-		[HideInInspector] public PackedTerrainMaterial Material;
+        [HideInInspector] public PackedTerrainMaterial Material;
 
-		#endregion
-	}
+        #endregion
+    }
 }

@@ -13,131 +13,131 @@ using UnityEngine;
 
 namespace Code.CubeMarching.Authoring
 {
-	public abstract class GeometryContentAuthoringComponentBase<T> : MonoBehaviour, ITerrainModifierEntitySource, IConvertGameObjectToEntity where T : struct, IComponentData, ITerrainModifierShape
-	{
-		#region Serialize Fields
+    public abstract class GeometryContentAuthoringComponentBase<T> : MonoBehaviour, ITerrainModifierEntitySource, IConvertGameObjectToEntity where T : struct, IComponentData, ITerrainModifierShape
+    {
+        #region Serialize Fields
 
-		[SerializeField] private TerrainMaterial _material;
+        [SerializeField] private TerrainMaterial _material;
 
-		#endregion
+        #endregion
 
-		#region Properties
+        #region Properties
 
-		public Transform Transform => transform;
+        public Transform Transform => transform;
 
-		#endregion
+        #endregion
 
-		#region Public methods
+        #region IConvertGameObjectToEntity Members
 
-		protected abstract T GetShape();
+        public unsafe void Convert(Entity entity, EntityManager entityManager, GameObjectConversionSystem conversionSystem)
+        {
+            entityManager.AddComponent<CGenericTerrainModifier>(entity);
+            var componentData = GetShape();
 
-		#endregion
+            CGenericTerrainModifier genericComponentData = default;
+            genericComponentData.TerrainModifierType = componentData.Type;
 
-		#region IConvertGameObjectToEntity Members
+            var ptr = UnsafeUtility.AddressOf(ref genericComponentData.TerrainModifierDataA);
+            UnsafeUtility.CopyStructureToPtr(ref componentData, ptr);
 
-		public unsafe void Convert(Entity entity, EntityManager entityManager, GameObjectConversionSystem conversionSystem)
-		{
-			entityManager.AddComponent<CGenericTerrainModifier>(entity);
-			var componentData = GetShape();
+            entityManager.AddComponent<CGenericTerrainModifier>(entity);
+            entityManager.AddComponent<CTerrainMaterial>(entity);
+            entityManager.AddComponent<Translation>(entity);
+            entityManager.AddComponent<CTerrainModifierBounds>(entity);
+            entityManager.AddComponent<CTerrainModifierTransformation>(entity);
+            entityManager.AddComponent<WorldToLocal>(entity);
+            if (transform.parent == null || transform.parent.GetComponent<TerrainCombiner>() == null)
+            {
+                entityManager.AddComponent<CTopLevelTerrainModifier>(entity);
+            }
 
-			CGenericTerrainModifier genericComponentData = default;
-			genericComponentData.TerrainModifierType = componentData.Type;
+            if (transform.gameObject.isStatic)
+            {
+                entityManager.AddComponent<Static>(entity);
+            }
 
-			var ptr = UnsafeUtility.AddressOf(ref genericComponentData.TerrainModifierDataA);
-			UnsafeUtility.CopyStructureToPtr(ref componentData, ptr);
+            entityManager.SetComponentData(entity, genericComponentData);
+            entityManager.SetComponentData(entity, new Translation {Value = transform.position});
+            entityManager.SetComponentData(entity, CTerrainModifierTransformation.GetFromTransform(transform));
 
-			entityManager.AddComponent<CGenericTerrainModifier>(entity);
-			entityManager.AddComponent<CTerrainMaterial>(entity);
-			entityManager.AddComponent<Translation>(entity);
-			entityManager.AddComponent<CTerrainModifierBounds>(entity);
-			entityManager.AddComponent<CTerrainModifierTransformation>(entity);
-			entityManager.AddComponent<WorldToLocal>(entity);
-			if ((transform.parent == null) || (transform.parent.GetComponent<TerrainCombiner>() == null))
-			{
-				entityManager.AddComponent<CTopLevelTerrainModifier>(entity);
-			}
+            var terrainMaterial = new PackedTerrainMaterial(_material);
+            entityManager.SetComponentData(entity, new CTerrainMaterial {Material = terrainMaterial});
+        }
 
-			if (transform.gameObject.isStatic)
-			{
-				entityManager.AddComponent<Static>(entity);
-			}
-			
-			entityManager.SetComponentData(entity, genericComponentData);
-			entityManager.SetComponentData(entity, new Translation { Value = transform.position, });
-			entityManager.SetComponentData(entity, CTerrainModifierTransformation.GetFromTransform(transform));
+        #endregion
 
-			var terrainMaterial = new PackedTerrainMaterial(_material);
-			entityManager.SetComponentData(entity, new CTerrainMaterial { Material = terrainMaterial, });
-		}
+        #region Public methods
 
-		#endregion
-	}
+        protected abstract T GetShape();
 
-	[StructLayout(LayoutKind.Sequential)]
-	public struct CGenericTerrainModifier : IComponentData
-	{
-		#region Public Fields
+        #endregion
+    }
 
-		public Bytes16 TerrainModifierDataA;
-		public Bytes16 TerrainModifierDataB;
-		public Bytes16 TerrainModifierDataC;
-		public Bytes16 TerrainModifierDataD;
-		public TerrainModifierType TerrainModifierType;
+    [StructLayout(LayoutKind.Sequential)]
+    public struct CGenericTerrainModifier : IComponentData
+    {
+        #region Public Fields
 
-		#endregion
+        public Bytes16 TerrainModifierDataA;
+        public Bytes16 TerrainModifierDataB;
+        public Bytes16 TerrainModifierDataC;
+        public Bytes16 TerrainModifierDataD;
+        public TerrainModifierType TerrainModifierType;
 
-		#region Public methods
+        #endregion
 
-		public PackedFloat GetSurfaceDistance(PackedFloat3 positionOS)
-		{
-			unsafe
-			{
-				var ptr = UnsafeUtility.AddressOf(ref TerrainModifierDataA);
-				switch (TerrainModifierType)
-				{
-					case TerrainModifierType.Sphere:
-						return ((CShapeSphere*) ptr)->GetSurfaceDistance(positionOS);
-						break;
-					case TerrainModifierType.BoundingBox:
-						return ((CShapeBoundingBox*) ptr)->GetSurfaceDistance(positionOS);
-						break;
-					case TerrainModifierType.Torus:
-						return ((CShapeTorus*) ptr)->GetSurfaceDistance(positionOS);
-						break;
-					case TerrainModifierType.Noise:
-						return ((CShapeNoise*) ptr)->GetSurfaceDistance(positionOS);
-						break;
-					default:
-						throw new ArgumentOutOfRangeException();
-				}
-			}
-		}
+        #region Public methods
 
-		public TerrainBounds CalculateBounds(Translation translation)
-		{
-			unsafe
-			{
-				var ptr = UnsafeUtility.AddressOf(ref TerrainModifierDataA);
-				switch (TerrainModifierType)
-				{
-					case TerrainModifierType.Sphere:
-						return ((CShapeSphere*) ptr)->CalculateBounds(translation);
-						break;
-					case TerrainModifierType.BoundingBox:
-						return ((CShapeBoundingBox*) ptr)->CalculateBounds(translation);
-						break;
-					case TerrainModifierType.Torus:
-						return ((CShapeTorus*) ptr)->CalculateBounds(translation);
-						break;
-					case TerrainModifierType.Noise:
-						return ((CShapeNoise*) ptr)->CalculateBounds(translation);
-						break;
-					default:
-						throw new ArgumentOutOfRangeException();
-				}
-			}
-		}
+        public PackedFloat GetSurfaceDistance(PackedFloat3 positionOS)
+        {
+            unsafe
+            {
+                var ptr = UnsafeUtility.AddressOf(ref TerrainModifierDataA);
+                switch (TerrainModifierType)
+                {
+                    case TerrainModifierType.Sphere:
+                        return ((CShapeSphere*) ptr)->GetSurfaceDistance(positionOS);
+                        break;
+                    case TerrainModifierType.BoundingBox:
+                        return ((CShapeBoundingBox*) ptr)->GetSurfaceDistance(positionOS);
+                        break;
+                    case TerrainModifierType.Torus:
+                        return ((CShapeTorus*) ptr)->GetSurfaceDistance(positionOS);
+                        break;
+                    case TerrainModifierType.Noise:
+                        return ((CShapeNoise*) ptr)->GetSurfaceDistance(positionOS);
+                        break;
+                    default:
+                        throw new ArgumentOutOfRangeException();
+                }
+            }
+        }
 
-		#endregion
-	}
+        public TerrainBounds CalculateBounds(Translation translation)
+        {
+            unsafe
+            {
+                var ptr = UnsafeUtility.AddressOf(ref TerrainModifierDataA);
+                switch (TerrainModifierType)
+                {
+                    case TerrainModifierType.Sphere:
+                        return ((CShapeSphere*) ptr)->CalculateBounds(translation);
+                        break;
+                    case TerrainModifierType.BoundingBox:
+                        return ((CShapeBoundingBox*) ptr)->CalculateBounds(translation);
+                        break;
+                    case TerrainModifierType.Torus:
+                        return ((CShapeTorus*) ptr)->CalculateBounds(translation);
+                        break;
+                    case TerrainModifierType.Noise:
+                        return ((CShapeNoise*) ptr)->CalculateBounds(translation);
+                        break;
+                    default:
+                        throw new ArgumentOutOfRangeException();
+                }
+            }
+        }
+
+        #endregion
+    }
 }

@@ -5,6 +5,6 @@
         Sphere,
         BoundingBox,
         Torus,
-        Noise,
+        Noise
     }
 }

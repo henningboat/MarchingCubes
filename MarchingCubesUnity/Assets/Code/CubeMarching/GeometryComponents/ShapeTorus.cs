@@ -14,7 +14,7 @@ namespace Code.CubeMarching.GeometryComponents
 
         protected override CShapeTorus GetShape()
         {
-            return new CShapeTorus
+            return new()
             {
                 radius = transform.lossyScale.x,
                 thickness = _thickness
@@ -44,13 +44,13 @@ namespace Code.CubeMarching.GeometryComponents
         public TerrainBounds CalculateBounds(Translation translation)
         {
             var center = translation.Value;
-            var extends = radius+thickness;
-            return new TerrainBounds()
+            var extends = radius + thickness;
+            return new TerrainBounds
             {
-                min = center - extends, max = center + extends,
+                min = center - extends, max = center + extends
             };
         }
 
         public TerrainModifierType Type => TerrainModifierType.Torus;
     }
-} 
+}

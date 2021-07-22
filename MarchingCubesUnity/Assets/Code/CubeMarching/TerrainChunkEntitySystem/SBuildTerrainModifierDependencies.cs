@@ -39,7 +39,8 @@ namespace Code.CubeMarching.TerrainChunkEntitySystem
             var needsToRebuildStaticGeometry = true;
 
             var topLevelStaticEntities = GetEntityQuery(typeof(CTopLevelTerrainModifier), typeof(Static), ComponentType.Exclude<IgnoreGeometry>()).ToEntityArray(Allocator.Temp);
-            var topLevelDynamicEntities = GetEntityQuery(ComponentType.ReadWrite<CTopLevelTerrainModifier>(), ComponentType.Exclude<Static>(), ComponentType.Exclude<IgnoreGeometry>()).ToEntityArray(Allocator.Temp);
+            var topLevelDynamicEntities = GetEntityQuery(ComponentType.ReadWrite<CTopLevelTerrainModifier>(), ComponentType.Exclude<Static>(), ComponentType.Exclude<IgnoreGeometry>())
+                .ToEntityArray(Allocator.Temp);
 
 
             var staticCombinerChildren = EntityManager.GetBuffer<CTerrainChunkCombinerChild>(staticTerrainCombinerEntity);
@@ -59,13 +60,13 @@ namespace Code.CubeMarching.TerrainChunkEntitySystem
             {
                 foreach (var entity in topLevelStaticEntities)
                 {
-                   // EntityManager.AddComponent<IgnoreGeometry>(entity);
+                    // EntityManager.AddComponent<IgnoreGeometry>(entity);
                 }
             }
 
             topLevelCombiners.Dispose();
         }
-        
+
         protected override void OnDestroy()
         {
             EntityManager.DestroyEntity(GetSingletonEntity<CMainTerrainCombiner>());

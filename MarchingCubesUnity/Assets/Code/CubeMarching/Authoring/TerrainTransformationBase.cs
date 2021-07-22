@@ -1,37 +1,36 @@
 ﻿using Code.CubeMarching.GeometryComponents;
-using Code.CubeMarching.TerrainChunkEntitySystem;
 using Unity.Collections.LowLevel.Unsafe;
 using Unity.Entities;
 using UnityEngine;
 
 namespace Code.CubeMarching.Authoring
 {
-	public abstract class TerrainTransformationBase<T> : MonoBehaviour, ITerrainModifierEntitySource, IConvertGameObjectToEntity where T : struct, ITerrainTransformation
-	{
-		#region Protected methods
+    public abstract class TerrainTransformationBase<T> : MonoBehaviour, ITerrainModifierEntitySource, IConvertGameObjectToEntity where T : struct, ITerrainTransformation
+    {
+        #region IConvertGameObjectToEntity Members
 
-		protected abstract T GetComponentData();
+        public unsafe void Convert(Entity entity, EntityManager dstManager, GameObjectConversionSystem conversionSystem)
+        {
+            var componentData = GetComponentData();
 
-		#endregion
+            CGenericTerrainTransformation genericComponentData = default;
+            genericComponentData.TerrainTransformationType = componentData.TerrainTransformationType;
 
-		#region IConvertGameObjectToEntity Members
+            var ptr = UnsafeUtility.AddressOf(ref genericComponentData.TerrainModifierDataA);
+            UnsafeUtility.CopyStructureToPtr(ref componentData, ptr);
 
-		public unsafe void Convert(Entity entity, EntityManager dstManager, GameObjectConversionSystem conversionSystem)
-		{
-			T componentData = GetComponentData();
+            dstManager.AddComponent<CGenericTerrainTransformation>(entity);
+            dstManager.SetComponentData(entity, genericComponentData);
+        }
 
-			CGenericTerrainTransformation genericComponentData = default;
-			genericComponentData.TerrainTransformationType = componentData.TerrainTransformationType;
+        #endregion
 
-			var ptr = UnsafeUtility.AddressOf(ref genericComponentData.TerrainModifierDataA);
-			UnsafeUtility.CopyStructureToPtr(ref componentData, ptr);
+        #region Protected methods
 
-			dstManager.AddComponent<CGenericTerrainTransformation>(entity);
-			dstManager.SetComponentData(entity, genericComponentData);
-		}
+        protected abstract T GetComponentData();
 
-		#endregion
-	}
+        #endregion
+    }
 
-	//todo allow rotation of mirror axis
+    //todo allow rotation of mirror axis
 }

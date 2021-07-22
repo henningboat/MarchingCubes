@@ -35,7 +35,7 @@ namespace Code.CubeMarching.Authoring
             {
                 dstManager.AddComponent<CTopLevelTerrainModifier>(entity);
             }
-            
+
             if (transform.gameObject.isStatic)
             {
                 dstManager.AddComponent<Static>(entity);

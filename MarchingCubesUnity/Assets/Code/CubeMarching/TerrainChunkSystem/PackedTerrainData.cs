@@ -12,9 +12,10 @@ namespace Code.CubeMarching.TerrainChunkSystem
     {
         public float SurfaceDistance;
         public TerrainMaterial TerrainMaterial;
-        public static readonly TerrainData DefaultOutside = new TerrainData()
+
+        public static readonly TerrainData DefaultOutside = new()
         {
-            SurfaceDistance = TerrainChunkData.DefaultOutsideValue,
+            SurfaceDistance = TerrainChunkData.DefaultOutsideValue
         };
     }
 
@@ -68,7 +69,7 @@ namespace Code.CubeMarching.TerrainChunkSystem
     }
 
     /// <summary>
-    /// Always make sure to keep the content of this struct in sync with TerrainMaterial.hlsl
+    ///     Always make sure to keep the content of this struct in sync with TerrainMaterial.hlsl
     /// </summary>
     [Serializable]
     [StructLayout(LayoutKind.Sequential, Size = 4)]
@@ -87,7 +88,7 @@ namespace Code.CubeMarching.TerrainChunkSystem
 
         public static TerrainMaterial GetSpecialMaterial()
         {
-            return new TerrainMaterial() {MaterialID = 1};
+            return new() {MaterialID = 1};
         }
 
         public static TerrainMaterial GetDefaultMaterial()
@@ -100,7 +101,7 @@ namespace Code.CubeMarching.TerrainChunkSystem
     public enum TerrainMaterialFlags : byte
     {
         Static = 1 << 0,
-        DisplayExternalBordes = 1 << 1,
+        DisplayExternalBordes = 1 << 1
     }
 
     [StructLayout(LayoutKind.Sequential)]
@@ -118,15 +119,15 @@ namespace Code.CubeMarching.TerrainChunkSystem
             c = material;
             d = material;
         }
-        
+
         public static PackedTerrainMaterial Select(PackedTerrainMaterial packedMaterialA, PackedTerrainMaterial packedMaterialB, bool4 selection)
         {
-            return new PackedTerrainMaterial()
+            return new()
             {
                 a = selection.x ? packedMaterialB.a : packedMaterialA.a,
                 b = selection.y ? packedMaterialB.b : packedMaterialA.b,
                 c = selection.z ? packedMaterialB.c : packedMaterialA.c,
-                d = selection.w ? packedMaterialB.d : packedMaterialA.d,
+                d = selection.w ? packedMaterialB.d : packedMaterialA.d
             };
         }
     }

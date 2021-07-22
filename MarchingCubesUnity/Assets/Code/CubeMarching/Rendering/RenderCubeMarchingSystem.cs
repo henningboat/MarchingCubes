@@ -6,7 +6,7 @@ using Unity.Mathematics;
 using UnityEngine;
 
 namespace Code.CubeMarching.Rendering
-{ 
+{
     [ExecuteAlways]
     [UpdateInGroup(typeof(PresentationSystemGroup))]
     public class RenderCubeMarchingSystem : SystemBase
@@ -80,7 +80,7 @@ namespace Code.CubeMarching.Rendering
         {
             _globalTerrainBuffer?.Dispose();
             _globalTerrainIndexMap?.Dispose();
-            
+
             for (var i = 0; i < _gpuDataPerMaterial.Length; i++)
             {
                 _gpuDataPerMaterial[i].Dispose();

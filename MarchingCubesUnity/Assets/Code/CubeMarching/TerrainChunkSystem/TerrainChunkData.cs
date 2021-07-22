@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Runtime.InteropServices;
 using Unity.Collections.LowLevel.Unsafe;
-using Unity.Mathematics;
-using static Code.SIMDMath.SimdMath;
 
 namespace Code.CubeMarching.TerrainChunkSystem
 {
@@ -118,17 +116,17 @@ namespace Code.CubeMarching.TerrainChunkSystem
 
             public static implicit operator TerrainData4x4(float value)
             {
-                return new TerrainData4x4()
+                return new()
                 {
                     _value0 = new PackedTerrainData(value),
                     _value1 = new PackedTerrainData(value),
                     _value2 = new PackedTerrainData(value),
-                    _value3 = new PackedTerrainData(value),
+                    _value3 = new PackedTerrainData(value)
                 };
             }
         }
 
-        public static TerrainChunkData Outside => new TerrainChunkData
+        public static TerrainChunkData Outside => new()
         {
             _valueBlock0 = DefaultOutsideValue,
             _valueBlock1 = DefaultOutsideValue,
@@ -167,7 +165,7 @@ namespace Code.CubeMarching.TerrainChunkSystem
             _valueBlock31 = DefaultOutsideValue
         };
 
-        public static TerrainChunkData Inside => new TerrainChunkData
+        public static TerrainChunkData Inside => new()
         {
             _valueBlock0 = DefaultInsideValue,
             _valueBlock1 = DefaultInsideValue,

@@ -16,7 +16,7 @@ namespace Code.CubeMarching.GeometryComponents
 
         protected override CShapeNoise GetShape()
         {
-            return new CShapeNoise
+            return new()
             {
                 offset = transform.position,
                 scale = new float3(1f) / transform.lossyScale,
@@ -42,7 +42,7 @@ namespace Code.CubeMarching.GeometryComponents
 
         public TerrainBounds CalculateBounds(Translation translation)
         {
-            return new TerrainBounds() {min = int.MinValue, max = int.MaxValue};
+            return new() {min = int.MinValue, max = int.MaxValue};
         }
 
         public TerrainModifierType Type => TerrainModifierType.Noise;

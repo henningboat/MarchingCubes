@@ -28,10 +28,10 @@ namespace Code.CubeMarching.TerrainChunkEntitySystem
                 //Calculate Distance Fields
                 var getTerrainInstructionBuffer = GetBufferFromEntity<TerrainInstruction>(true);
 
-                Dependency = Entities.ForEach((ref CTerrainChunkStaticData distanceField, in CTerrainEntityChunkPosition chunkPosition) =>
+                Dependency = Entities.ForEach((ref CTerrainChunkStaticData distanceField, in ClusterChild clusterChild, in CTerrainEntityChunkPosition chunkPosition) =>
                 {
-                    DistanceFieldResolver.CalculateDistanceFieldForChunk(terrainChunkBuffer, ref distanceField.DistanceFieldChunkData, chunkPosition, getTerrainInstructionBuffer,
-                        getClusterPosition[distanceField.DistanceFieldChunkData.ClusterEntity],
+                    DistanceFieldResolver.CalculateDistanceFieldForChunk(terrainChunkBuffer, ref distanceField.DistanceFieldChunkData, chunkPosition, getTerrainInstructionBuffer,clusterChild.ClusterEntity,
+                        getClusterPosition[clusterChild.ClusterEntity],
                         distanceField.DistanceFieldChunkData.IndexInDistanceFieldBuffer, isPlaying);
                 }).WithNativeDisableParallelForRestriction(terrainChunkBuffer).WithReadOnly(getTerrainInstructionBuffer).WithReadOnly(getClusterPosition).WithBurst().ScheduleParallel(Dependency);
             }
@@ -49,7 +49,7 @@ namespace Code.CubeMarching.TerrainChunkEntitySystem
                 //Calculate Distance Fields
                 var getTerrainInstructionBuffer = GetBufferFromEntity<TerrainInstruction>(true);
 
-                Dependency = Entities.ForEach((ref CTerrainChunkDynamicData distanceField, in CTerrainChunkStaticData staticData, in CTerrainEntityChunkPosition chunkPosition) =>
+                Dependency = Entities.ForEach((ref CTerrainChunkDynamicData distanceField, in CTerrainChunkStaticData staticData, in CTerrainEntityChunkPosition chunkPosition, in ClusterChild clusterChild) =>
                 {
                     int existingData;
                     if (staticData.DistanceFieldChunkData.HasData)
@@ -68,8 +68,8 @@ namespace Code.CubeMarching.TerrainChunkEntitySystem
                         }
                     }
 
-                    DistanceFieldResolver.CalculateDistanceFieldForChunk(terrainChunkBuffer, ref distanceField.DistanceFieldChunkData, chunkPosition, getTerrainInstructionBuffer,
-                        getClusterPosition[distanceField.DistanceFieldChunkData.ClusterEntity], existingData, true);
+                    DistanceFieldResolver.CalculateDistanceFieldForChunk(terrainChunkBuffer, ref distanceField.DistanceFieldChunkData,chunkPosition, getTerrainInstructionBuffer, clusterChild.ClusterEntity,
+                        getClusterPosition[clusterChild.ClusterEntity], existingData, true);
                 }).WithNativeDisableParallelForRestriction(terrainChunkBuffer).WithReadOnly(getTerrainInstructionBuffer).WithReadOnly(getClusterPosition).WithBurst().ScheduleParallel(Dependency);
             }
         }

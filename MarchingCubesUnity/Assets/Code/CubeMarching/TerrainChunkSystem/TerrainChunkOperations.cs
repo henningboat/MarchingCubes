@@ -1,5 +1,4 @@
 ﻿using System;
-using Code.CubeMarching.Authoring;
 using Code.CubeMarching.GeometryComponents;
 using Code.SIMDMath;
 using Unity.Mathematics;
@@ -12,11 +11,11 @@ namespace Code.CubeMarching.TerrainChunkSystem
         public static void CombineWithChunk(this ref TerrainChunkData target, ref TerrainChunkData source, CGeometryCombiner combiner,
             byte conerageMask)
         {
-            for (int i = 0; i < 8; i++)
+            for (var i = 0; i < 8; i++)
             {
-                if ((conerageMask & 1 << i) != 0)
+                if ((conerageMask & (1 << i)) != 0)
                 {
-                    int baseOffset = i * 16;
+                    var baseOffset = i * 16;
                     for (var j = 0; j < 16; j++)
                     {
                         var offset = j + baseOffset;
@@ -30,7 +29,7 @@ namespace Code.CubeMarching.TerrainChunkSystem
                 }
             }
         }
-        
+
         public static PackedTerrainData CombinePackedTerrainData(CGeometryCombiner combiner, PackedTerrainData valuesA, PackedTerrainData valuesB)
         {
             PackedTerrainData packedTerrainData;
@@ -67,14 +66,14 @@ namespace Code.CubeMarching.TerrainChunkSystem
 
         private static PackedTerrainData ReplaceTerrainColor(PackedTerrainData a, PackedTerrainData b)
         {
-            bool4 replaceTerrainMaterial = a.SurfaceDistance.PackedValues > 0;
+            var replaceTerrainMaterial = a.SurfaceDistance.PackedValues > 0;
             return new PackedTerrainData {SurfaceDistance = b.SurfaceDistance, TerrainMaterial = PackedTerrainMaterial.Select(b.TerrainMaterial, a.TerrainMaterial, replaceTerrainMaterial)};
         }
 
         public static PackedTerrainData CombineTerrainMin(PackedTerrainData a, PackedTerrainData b)
         {
-            bool4 bIsSmaller = a.SurfaceDistance.PackedValues > b.SurfaceDistance.PackedValues;
-            float4 surfaceDistance = math.min(a.SurfaceDistance.PackedValues, b.SurfaceDistance.PackedValues);
+            var bIsSmaller = a.SurfaceDistance.PackedValues > b.SurfaceDistance.PackedValues;
+            var surfaceDistance = math.min(a.SurfaceDistance.PackedValues, b.SurfaceDistance.PackedValues);
             var combinedMaterial = PackedTerrainMaterial.Select(a.TerrainMaterial, b.TerrainMaterial, bIsSmaller);
 
             return new PackedTerrainData(new PackedFloat(surfaceDistance), combinedMaterial);
@@ -82,8 +81,8 @@ namespace Code.CubeMarching.TerrainChunkSystem
 
         public static PackedTerrainData CombineTerrainMax(PackedTerrainData a, PackedTerrainData b)
         {
-            bool4 bIsBigger = a.SurfaceDistance.PackedValues < b.SurfaceDistance.PackedValues;
-            float4 surfaceDistance = math.@select(a.SurfaceDistance.PackedValues, b.SurfaceDistance.PackedValues, bIsBigger);
+            var bIsBigger = a.SurfaceDistance.PackedValues < b.SurfaceDistance.PackedValues;
+            var surfaceDistance = math.select(a.SurfaceDistance.PackedValues, b.SurfaceDistance.PackedValues, bIsBigger);
             var combinedMaterial = PackedTerrainMaterial.Select(a.TerrainMaterial, b.TerrainMaterial, !bIsBigger);
 
             return new PackedTerrainData(new PackedFloat(surfaceDistance), combinedMaterial);
@@ -91,7 +90,7 @@ namespace Code.CubeMarching.TerrainChunkSystem
 
         public static PackedTerrainData CombineTerrainAdd(PackedTerrainData a, PackedTerrainData b)
         {
-            return new PackedTerrainData(a.SurfaceDistance + b.SurfaceDistance, a.TerrainMaterial);
+            return new(a.SurfaceDistance + b.SurfaceDistance, a.TerrainMaterial);
         }
 
         //https://www.iquilezles.org/www/articles/distfunctions/distfunctions.htm
@@ -101,10 +100,10 @@ namespace Code.CubeMarching.TerrainChunkSystem
             var b = terrainDataB.SurfaceDistance;
             var h = clamp(0.5f + 0.5f * (a - b) / blendFactor, 0.0f, 1.0f);
             var blendedSurfaceDistance = lerp(a, b, h) - blendFactor * h * (1.0f - h);
-            
-            bool4 bIsSmaller = terrainDataA.SurfaceDistance.PackedValues > terrainDataB.SurfaceDistance.PackedValues;
+
+            var bIsSmaller = terrainDataA.SurfaceDistance.PackedValues > terrainDataB.SurfaceDistance.PackedValues;
             var combinedMaterial = PackedTerrainMaterial.Select(terrainDataA.TerrainMaterial, terrainDataB.TerrainMaterial, bIsSmaller);
-            
+
             return new PackedTerrainData(blendedSurfaceDistance, combinedMaterial);
         }
 
@@ -114,22 +113,21 @@ namespace Code.CubeMarching.TerrainChunkSystem
             var b = terrainDataB.SurfaceDistance;
             var h = clamp(0.5f - 0.5f * (b + a) / blendFactor, 0.0f, 1.0f);
             var blendedSurfaceDistance = lerp(b, -a, h) + blendFactor * h * (1.0f - h);
-            
-            bool4 bIsSmaller = terrainDataA.SurfaceDistance.PackedValues > terrainDataB.SurfaceDistance.PackedValues;
+
+            var bIsSmaller = terrainDataA.SurfaceDistance.PackedValues > terrainDataB.SurfaceDistance.PackedValues;
             var combinedMaterial = PackedTerrainMaterial.Select(terrainDataA.TerrainMaterial, terrainDataB.TerrainMaterial, bIsSmaller);
 
             return new PackedTerrainData(blendedSurfaceDistance, combinedMaterial);
         }
 
-        
+
         /// <summary>
-        /// 
         /// </summary>
         /// <param name="data"></param>
         /// <returns></returns>
         public static TerrainChunkData FilterStatic(this TerrainChunkData data)
         {
-            for (int i = 0; i < TerrainChunkData.PackedCapacity; i++)
+            for (var i = 0; i < TerrainChunkData.PackedCapacity; i++)
             {
                 var packedTerrainData = data[i];
                 data[i] = packedTerrainData.FilterStatic();
@@ -140,7 +138,7 @@ namespace Code.CubeMarching.TerrainChunkSystem
 
         public static PackedTerrainData FilterStatic(this PackedTerrainData data)
         {
-            for (int i = 0; i < PackedTerrainData.UnpackedCapacity; i++)
+            for (var i = 0; i < PackedTerrainData.UnpackedCapacity; i++)
             {
                 if (!data[i].TerrainMaterial.IsStatic())
                 {

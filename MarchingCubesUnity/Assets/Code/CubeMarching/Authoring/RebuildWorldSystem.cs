@@ -4,8 +4,8 @@ namespace Code.CubeMarching.Authoring
 {
     public struct CMainTerrainCombiner : IComponentData
     {
-    }  
-    
+    }
+
     public struct CStaticTerrainCombiner : IComponentData
     {
     }
