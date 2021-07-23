@@ -56,10 +56,7 @@ namespace Code.CubeMarching.Utils
 #endif
             
             int indexInBuffer = listIndex * _listCapacity + subListIndex * _subListCapacity + currentCountInSubList;
-            if (indexInBuffer == 10487288)
-            {
-                Debug.Log("yo");
-            }
+         
             _buffer[indexInBuffer] = value;
             _subListCounts[listIndex * _subListCount + subListIndex] = currentCountInSubList + 1;
         }

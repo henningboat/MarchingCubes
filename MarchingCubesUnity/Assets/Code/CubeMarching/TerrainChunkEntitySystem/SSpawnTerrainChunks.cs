@@ -101,11 +101,10 @@ namespace Code.CubeMarching.TerrainChunkEntitySystem
 
             int clusterIndex = 0;
             
-            for (var x = 0; x < 2; x++)
-            for (var y = 0; y < 2; y++)
-            for (var z = 0; z < 2; z++)
+            for (var x = 0; x < 4; x++)
+            for (var y = 0; y < 1; y++)
+            for (var z = 0; z < 1; z++)
             {
-                //todo assign cluster index correctly if we spawn more than one entity
                 SpawnCluster(new int3(x * 8, y * 8, z * 8), clusterIndex);
                 clusterIndex++;
             }

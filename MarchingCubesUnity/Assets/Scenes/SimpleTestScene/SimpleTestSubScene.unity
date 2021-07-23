@@ -153,7 +153,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _material:
-    MaterialID: 0
+    MaterialID: 1
     Flags: 0
     Padding0: 0
     Padding1: 0
@@ -165,8 +165,8 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1347063224}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalPosition: {x: 31.8, y: 31.4, z: 35.3}
+  m_LocalScale: {x: 8.871736, y: 8.871736, z: 8.871736}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}

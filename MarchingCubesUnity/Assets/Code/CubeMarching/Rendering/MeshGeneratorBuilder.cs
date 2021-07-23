@@ -13,15 +13,26 @@ namespace Code.CubeMarching.Rendering
         private const int ClusterEntityVertexCount = ClusterVolume * MaxTrianglesPerCell;
         private const int ClusterLength = 64;
 
-        private const MeshUpdateFlags MeshUpdateFlagsNone =
+        public const MeshUpdateFlags MeshUpdateFlagsNone =
             MeshUpdateFlags.DontRecalculateBounds | MeshUpdateFlags.DontValidateIndices | MeshUpdateFlags.DontNotifyMeshUsers | MeshUpdateFlags.DontResetBoneBounds;
 
         private static readonly VertexAttributeDescriptor[] ClusterMeshTerrainDescriptors =
         {
             new(VertexAttribute.Position, VertexAttributeFormat.Float32, 4),
-            new(VertexAttribute.Normal)
+            new(VertexAttribute.Normal,VertexAttributeFormat.Float32,3)
         };
 
+        private struct VertexData
+        {
+            public readonly float4 vertex;
+            public readonly float3 normal;
+
+            public VertexData(float3 vertex, float3 normal)
+            {
+                this.vertex = new float4(vertex, 1);
+                this.normal = normal;
+            }
+        }
 
         public static CClusterMesh GenerateClusterMesh()
         {
@@ -32,12 +43,29 @@ namespace Code.CubeMarching.Rendering
 
             //todo optimize and cache
             var indexBuffer = new NativeArray<uint>(ClusterEntityVertexCount, Allocator.Temp, NativeArrayOptions.UninitializedMemory);
-            var randomVertexData = new NativeArray<float4>(ClusterEntityVertexCount, Allocator.Temp,NativeArrayOptions.UninitializedMemory);
+            var randomVertexData = new NativeArray<VertexData>(ClusterEntityVertexCount, Allocator.Temp,NativeArrayOptions.UninitializedMemory);
 
+            int vertexID = 0;
+            
+            for (int z = 0; z < 64; z++)
+            {
+                for (int y = 0; y < 64; y++)
+                {
+                    for (int x = 0; x < 64; x++)
+                    {
+                        randomVertexData[vertexID] = new VertexData(new float3(x,y,z), 1);
+                        vertexID++;
+                        randomVertexData[vertexID] = new VertexData(new float3(x+1,y,z), 1);
+                        vertexID++;
+                        randomVertexData[vertexID] = new VertexData(new float3(x,y+1,z), 1);
+                        vertexID++;
+                    }
+                }
+            }
+            
             for (var i = 0; i < indexBuffer.Length; i++)
             {
                 indexBuffer[i] = (uint) i;
-                randomVertexData[i] = new float4((float3) (Random.insideUnitSphere * 64) + 32, 1);
             }
 
             clusterMesh.SetVertexBufferData(randomVertexData, 0, 0, indexBuffer.Length, 0, MeshUpdateFlagsNone);
@@ -45,7 +73,7 @@ namespace Code.CubeMarching.Rendering
 
             clusterMesh.bounds = new Bounds {min = Vector3.zero, max = Vector3.one * ClusterLength};
 
-            clusterMesh.SetSubMesh(0, new SubMeshDescriptor(0, 33), MeshUpdateFlagsNone);
+            clusterMesh.SetSubMesh(0, new SubMeshDescriptor(0, 3), MeshUpdateFlagsNone);
 
             indexBuffer.Dispose();
             randomVertexData.Dispose();

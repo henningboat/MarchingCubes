@@ -4,7 +4,10 @@ using Code.CubeMarching.Utils;
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
 using Unity.Entities;
+using Unity.Mathematics;
 using UnityEngine;
+using UnityEngine.Rendering;
+using Random = Unity.Mathematics.Random;
 
 namespace Code.CubeMarching.Rendering
 {
@@ -29,7 +32,6 @@ namespace Code.CubeMarching.Rendering
                 var clusterEntities = clusterEntityQuery.ToEntityArray(Allocator.TempJob);
                 var clusterCount = clusterEntities.Length;
 
-                const int maxTriangleCountPerCluster = 1310720;
                 if (previousFrameClusterCount != clusterCount)
                 {
 
@@ -52,11 +54,13 @@ namespace Code.CubeMarching.Rendering
                     {
                         if (staticData.DistanceFieldChunkData.HasData || dynamicData.DistanceFieldChunkData.HasData)
                         {
+                            Random random = Random.CreateFromIndex((uint)chunkPosition.indexInCluster);
+                            
                             var clusterPosition = getClusterPosition[clusterChild.ClusterEntity];
-                            for (int i = 0; i < 512*5; i++)
+                            for (int i = 0; i < 512*3; i++)
                             {
                                 parallelSubListCollection.Write(clusterPosition.ClusterIndex, chunkPosition.indexInCluster,
-                                    new TriangulationPosition {position = chunkPosition.positionGS * 8 + i, triangulationTableIndex = 1});
+                                    new TriangulationPosition {position = chunkPosition.positionGS * 8 + new int3(random.NextFloat3(0, 8)), triangulationTableIndex = 1});
                             }
                         }
                     })
@@ -66,18 +70,29 @@ namespace Code.CubeMarching.Rendering
 
                 Dependency = parallelSubListCollection.ScheduleListCollapse(Dependency);
 
-                const int numChunksInCluster = 512;
+                Dependency.Complete();
 
-                // Dependency.Complete();
-                //
-                // string log = "";
-                // for (int i = 0; i < clusterCount; i++)
-                // {
-                //     log += parallelSubListCollection.ReadListLength(i) + "  ";
-                // }
-                //
-                // Debug.Log(log);
+                var clusterMeshRendererEntities = GetEntityQuery(typeof(CClusterMesh)).ToEntityArray(Allocator.TempJob);
 
+                for (int i = 0; i < clusterCount; i++)
+                {
+                    var clusterMesh = EntityManager.GetSharedComponentData<CClusterMesh>(clusterMeshRendererEntities[i]);
+                    int triangleCount = _triangulationIndices.ReadListLength(i);
+                    
+                    NativeArray<int> dummyIndexBuffer = new NativeArray<int>(triangleCount,Allocator.TempJob);
+                    for (int j = 0; j < dummyIndexBuffer.Length; j++)
+                    {
+                        dummyIndexBuffer[j] = j;
+                    }
+
+                     var gpuIndexBuffer = clusterMesh.mesh.GetIndexBuffer();
+                     gpuIndexBuffer.SetData(dummyIndexBuffer);
+                     clusterMesh.mesh.SetSubMeshes(new []{new SubMeshDescriptor(0,dummyIndexBuffer.Length)}, MeshGeneratorBuilder.MeshUpdateFlagsNone);
+                     gpuIndexBuffer.Dispose();
+                     dummyIndexBuffer.Dispose();
+                }
+                
+                clusterMeshRendererEntities.Dispose(Dependency);
                 clusterEntities.Dispose(Dependency);
             }
         }
