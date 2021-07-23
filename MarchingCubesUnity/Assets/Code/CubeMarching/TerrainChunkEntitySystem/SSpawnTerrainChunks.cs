@@ -36,23 +36,23 @@ namespace Code.CubeMarching.TerrainChunkEntitySystem
 
         #region Public methods
 
-        public void SpawnCluster(int3 clusterPositionGS)
+        public void SpawnCluster(int3 clusterPositionGS, int clusterIndex)
         {
             //spawn cluster
             var clusterEntity = EntityManager.CreateEntity(_clusterArchetype);
-            EntityManager.SetComponentData(clusterEntity, new CClusterPosition {PositionGS = clusterPositionGS});
+            EntityManager.SetComponentData(clusterEntity, new CClusterPosition {PositionGS = clusterPositionGS,ClusterIndex = clusterIndex});
             var clusterMesh = MeshGeneratorBuilder.GenerateClusterMesh();
             EntityManager.AddSharedComponentData(clusterEntity, clusterMesh);
             EntityManager.SetName(clusterEntity, "Cluster " + clusterPositionGS);
 
             //spawn terrain renderer
-
             var renderMeshDescriptor = new RenderMeshDescription(clusterMesh.mesh, Resources.Load<Material>("DefaultMaterial"), ShadowCastingMode.On, true);
 
             var rendererEntity = EntityManager.CreateEntity(typeof(ClusterChild),typeof(Translation));
             EntityManager.SetName(rendererEntity, "Cluster " + clusterPositionGS + " RenderMesh");
             RenderMeshUtility.AddComponents(rendererEntity, EntityManager, renderMeshDescriptor);
-
+            EntityManager.SetComponentData(rendererEntity, new Translation() {Value = clusterPositionGS * 8});
+            
             //spawn chunks for the cluster
             var createdChunks = EntityManager.CreateEntity(_chunkArchtype, 512, Allocator.Temp);
             for (var i = 0; i < createdChunks.Length; i++)
@@ -96,15 +96,19 @@ namespace Code.CubeMarching.TerrainChunkEntitySystem
 
             _clusterArchetype = EntityManager.CreateArchetype(
                 typeof(CClusterPosition),
-                typeof(TerrainInstruction));
+                typeof(TerrainInstruction),
+                typeof(TriangulationPosition));
 
-            for (var x = 0; x < 1; x++)
-            for (var y = 0; y < 1; y++)
-            for (var z = 0; z < 1; z++)
+            int clusterIndex = 0;
+            
+            for (var x = 0; x < 2; x++)
+            for (var y = 0; y < 2; y++)
+            for (var z = 0; z < 2; z++)
             {
-                SpawnCluster(new int3(x * 8, y * 8, z * 8));
+                //todo assign cluster index correctly if we spawn more than one entity
+                SpawnCluster(new int3(x * 8, y * 8, z * 8), clusterIndex);
+                clusterIndex++;
             }
-
 
             var entity = EntityManager.CreateEntity(typeof(TerrainChunkDataBuffer));
             var buffer = EntityManager.GetBuffer<TerrainChunkDataBuffer>(entity);
@@ -135,10 +139,17 @@ namespace Code.CubeMarching.TerrainChunkEntitySystem
         #endregion
     }
 
+    public struct TriangulationPosition : IBufferElementData
+    {
+        public int3 position;
+        public byte triangulationTableIndex;
+    }
+
     public struct CClusterPosition : IComponentData
     {
         #region Public Fields
 
+        public int ClusterIndex;
         public int3 PositionGS;
         public BitArray512 WriteMask;
 
