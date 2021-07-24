@@ -85,7 +85,7 @@ namespace Code.CubeMarching.TerrainChunkEntitySystem
         #region Protected methods
 
         protected override void OnCreate()
-        {
+        { 
             base.OnCreate();
             _chunkArchtype = EntityManager.CreateArchetype(
                 typeof(CTerrainEntityChunkPosition),
@@ -99,19 +99,22 @@ namespace Code.CubeMarching.TerrainChunkEntitySystem
                 typeof(TerrainInstruction),
                 typeof(TriangulationPosition));
 
-            int clusterIndex = 0;
+            //spawn data holder            
+            var entity = EntityManager.CreateEntity(typeof(TerrainChunkDataBuffer),typeof(TotalClustersCount));
+            var totalClustersCount = new TotalClustersCount() {Value = new int3(2, 1, 2)};
+            EntityManager.SetComponentData(entity, totalClustersCount);
             
-            for (var x = 0; x < 4; x++)
-            for (var y = 0; y < 1; y++)
-            for (var z = 0; z < 1; z++)
+            int clusterIndex = 0;
+
+            for (var x = 0; x < totalClustersCount.Value.x; x++)
+            for (var y = 0; y < totalClustersCount.Value.y; y++)
+            for (var z = 0; z < totalClustersCount.Value.z; z++)
             {
                 SpawnCluster(new int3(x * 8, y * 8, z * 8), clusterIndex);
                 clusterIndex++;
-            }
-
-            var entity = EntityManager.CreateEntity(typeof(TerrainChunkDataBuffer));
+            } 
+            
             var buffer = EntityManager.GetBuffer<TerrainChunkDataBuffer>(entity);
-
             buffer.Add(new TerrainChunkDataBuffer {Value = TerrainChunkData.Outside});
             buffer.Add(new TerrainChunkDataBuffer {Value = TerrainChunkData.Inside});
 

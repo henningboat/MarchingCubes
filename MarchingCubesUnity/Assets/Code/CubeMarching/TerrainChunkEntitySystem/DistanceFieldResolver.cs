@@ -19,7 +19,7 @@ namespace Code.CubeMarching.TerrainChunkEntitySystem
             var existingData = terrainChunkBuffer[backgroundDataIndex].Value;
 
             if (cluster.WriteMask[chunk.indexInCluster])
-            {
+            { 
                 //todo make the masks work again to reduce amount of computations
                 // var positionGS = chunk.positionGS;
                 //

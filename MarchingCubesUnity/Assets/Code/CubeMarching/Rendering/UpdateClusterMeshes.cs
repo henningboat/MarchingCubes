@@ -1,4 +1,5 @@
-﻿using System.Drawing;
+﻿using System;
+using System.Drawing;
 using Code.CubeMarching.TerrainChunkEntitySystem;
 using Code.CubeMarching.Utils;
 using Unity.Collections;
@@ -7,6 +8,7 @@ using Unity.Entities;
 using Unity.Mathematics;
 using UnityEngine;
 using UnityEngine.Rendering;
+using UnityEngine.TerrainUtils;
 using Random = Unity.Mathematics.Random;
 
 namespace Code.CubeMarching.Rendering
@@ -46,26 +48,49 @@ namespace Code.CubeMarching.Rendering
                 _triangulationIndices.Reset();
                 previousFrameClusterCount = clusterCount;
                 var getClusterPosition = GetComponentDataFromEntity<CClusterPosition>();
-
-
+                
                 var parallelSubListCollection = _triangulationIndices;
 
+                TerrainBufferAccessor accessor = new TerrainBufferAccessor(this); 
+                
                 Dependency = Entities.ForEach((CTerrainEntityChunkPosition chunkPosition, CTerrainChunkStaticData staticData, CTerrainChunkDynamicData dynamicData, ClusterChild clusterChild) =>
                     {
-                        if (staticData.DistanceFieldChunkData.HasData || dynamicData.DistanceFieldChunkData.HasData)
+                        if (staticData.DistanceFieldChunkData.HasData)
                         {
-                            Random random = Random.CreateFromIndex((uint)chunkPosition.indexInCluster);
+                            throw new NotImplementedException();
+                        }
+                        
+                        if (dynamicData.DistanceFieldChunkData.HasData)
+                        {
+                            var clusterIndex = getClusterPosition[clusterChild.ClusterEntity];
                             
-                            var clusterPosition = getClusterPosition[clusterChild.ClusterEntity];
-                            for (int i = 0; i < 512*3; i++)
+                            int3 positionOfChunkWS = chunkPosition.positionGS * 8;
+                            
+                            for (int subChunkIndex = 0; subChunkIndex < 8; subChunkIndex++)
                             {
-                                parallelSubListCollection.Write(clusterPosition.ClusterIndex, chunkPosition.indexInCluster,
-                                    new TriangulationPosition {position = chunkPosition.positionGS * 8 + new int3(random.NextFloat3(0, 8)), triangulationTableIndex = 1});
+                                if (!dynamicData.DistanceFieldChunkData.InnerDataMask.GetBit(subChunkIndex))
+                                {
+                                    continue;
+                                }
+
+                                int3 subChunkPositionInChunk = TerrainChunkEntitySystem.Utils.IndexToPositionWS(subChunkIndex, 2) * 4;
+                                const int subChunkCapacity = 64;
+                                for (int i = 0; i < subChunkCapacity; i++)
+                                {
+                                    int3 positionInSubChunk = TerrainChunkEntitySystem.Utils.IndexToPositionWS(i, 4);
+                                    int3 positionWS = positionOfChunkWS + subChunkPositionInChunk + positionInSubChunk;
+
+                                    if (math.abs(accessor.GetSurfaceDistance(positionWS)) < 1)
+                                    {
+                                        parallelSubListCollection.Write(clusterIndex.ClusterIndex, chunkPosition.indexInCluster, new TriangulationPosition() {position = positionWS});
+                                        parallelSubListCollection.Write(clusterIndex.ClusterIndex, chunkPosition.indexInCluster, new TriangulationPosition() {position = positionWS});
+                                        parallelSubListCollection.Write(clusterIndex.ClusterIndex, chunkPosition.indexInCluster, new TriangulationPosition() {position = positionWS});
+                                    }
+                                }
                             }
                         }
                     })
-                    //.WithNativeDisableParallelForRestriction(triangulationDataPerChunk)
-                    .WithReadOnly(getClusterPosition)
+                    .WithReadOnly(getClusterPosition).WithReadOnly(accessor)
                     .WithBurst().ScheduleParallel(Dependency);
 
                 Dependency = parallelSubListCollection.ScheduleListCollapse(Dependency);
