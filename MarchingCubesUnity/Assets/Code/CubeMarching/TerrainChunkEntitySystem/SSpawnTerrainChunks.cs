@@ -85,7 +85,7 @@ namespace Code.CubeMarching.TerrainChunkEntitySystem
         #region Protected methods
 
         protected override void OnCreate()
-        { 
+        {  
             base.OnCreate();
             _chunkArchtype = EntityManager.CreateArchetype(
                 typeof(CTerrainEntityChunkPosition),
@@ -100,10 +100,16 @@ namespace Code.CubeMarching.TerrainChunkEntitySystem
                 typeof(TriangulationPosition));
 
             //spawn data holder            
-            var entity = EntityManager.CreateEntity(typeof(TerrainChunkDataBuffer),typeof(TotalClustersCount));
-            var totalClustersCount = new TotalClustersCount() {Value = new int3(2, 1, 2)};
+            var entity = EntityManager.CreateEntity(typeof(TerrainChunkDataBuffer), typeof(TotalClustersCount), typeof(TerrainChunkIndexMap));
+            var totalClustersCount = new TotalClustersCount() {Value = new int3(1, 1, 1)};
             EntityManager.SetComponentData(entity, totalClustersCount);
-            
+            var terrainChunkIndexMaps = this.GetSingletonBuffer<TerrainChunkIndexMap>();
+            terrainChunkIndexMaps.ResizeUninitialized(totalClustersCount.Value.Volume() * 512);
+            for (int i = 0; i < terrainChunkIndexMaps.Length; i++)
+            {
+                terrainChunkIndexMaps[i] = default;
+            }
+             
             int clusterIndex = 0;
 
             for (var x = 0; x < totalClustersCount.Value.x; x++)
@@ -220,20 +226,11 @@ namespace Code.CubeMarching.TerrainChunkEntitySystem
 
         #region Public Fields
 
-        public NativeArray<int> IndexMap;
         public NativeList<TerrainChunkData> TerrainChunkData;
 
         #endregion
 
         #region Protected methods
-
-        protected override void OnStopRunning()
-        {
-            if (IndexMap.IsCreated)
-            {
-                IndexMap.Dispose();
-            }
-        }
 
         protected override void OnCreate()
         {
@@ -243,11 +240,6 @@ namespace Code.CubeMarching.TerrainChunkEntitySystem
         protected override void OnUpdate()
         {
             var terrainChunkData = TerrainChunkData;
-
-            if (IndexMap.IsCreated)
-            {
-                IndexMap.Dispose();
-            }
 
             terrainChunkData.Clear();
             terrainChunkData.Add(TerrainChunkSystem.TerrainChunkData.Outside);
@@ -259,9 +251,7 @@ namespace Code.CubeMarching.TerrainChunkEntitySystem
             IndexMapSize = 0;
             Entities.ForEach((in CClusterPosition clusterPosition) => { IndexMapSize = math.max(IndexMapSize, clusterPosition.PositionGS + 8); }).WithoutBurst().Run();
 
-            var indexMapCapacity = IndexMapSize.x * IndexMapSize.y * IndexMapSize.z;
-            IndexMap = new NativeArray<int>(indexMapCapacity, Allocator.TempJob);
-            var indexMap = IndexMap;
+            var indexMap = this.GetSingletonBuffer<TerrainChunkIndexMap>();
 
             var terrainChunkBuffer = EntityManager.GetBuffer<TerrainChunkDataBuffer>(GetSingletonEntity<TerrainChunkDataBuffer>());
 
@@ -278,7 +268,7 @@ namespace Code.CubeMarching.TerrainChunkEntitySystem
                     indexInDistanceFieldBuffer = dynamicDistanceField.DistanceFieldChunkData.IndexInDistanceFieldBuffer;
                     hasData = true;
                 }
-                else
+                else if(staticDistanceField.DistanceFieldChunkData.HasData)
                 {
                     indexInDistanceFieldBuffer = staticDistanceField.DistanceFieldChunkData.IndexInDistanceFieldBuffer;
                     hasData = true;
@@ -286,24 +276,30 @@ namespace Code.CubeMarching.TerrainChunkEntitySystem
 
                 if (hasData)
                 {
-                    var convertedData = ConvertDataForGPUFriendlyFormat(terrainChunkBuffer[indexInDistanceFieldBuffer].Value);
-                    terrainChunkData.Add(convertedData);
-                    indexMap[indexInChunkMap] = i.Value;
+                    // var convertedData = ConvertDataForGPUFriendlyFormat(terrainChunkBuffer[indexInDistanceFieldBuffer].Value);
+                    // terrainChunkData.Add(convertedData);
+                    indexMap[indexInChunkMap] = new TerrainChunkIndexMap() {Index = indexInDistanceFieldBuffer};
                     i.Value++;
                 }
                 else
                 {
                     if (staticDistanceField.DistanceFieldChunkData.ChunkInsideTerrain == 0)
                     {
-                        indexMap[indexInChunkMap] = 0;
+                        indexMap[indexInChunkMap] = new TerrainChunkIndexMap() {Index = 0};;
                     }
                     else
                     {
-                        indexMap[indexInChunkMap] = 1;
+                        indexMap[indexInChunkMap] = new TerrainChunkIndexMap() {Index = 1};
                     }
                 }
             }).Schedule(Dependency);
 
+            Dependency= Job.WithCode(() =>
+            {
+                terrainChunkData.Clear();
+                terrainChunkData.CopyFrom(terrainChunkBuffer.AsNativeArray().Reinterpret<TerrainChunkData>());
+            }).WithBurst().Schedule(Dependency);
+            
             i.Dispose(Dependency);
             //todo remove this
             Dependency.Complete();
@@ -434,5 +430,12 @@ namespace Code.CubeMarching.TerrainChunkEntitySystem
         public int IndexInShapeMap;
 
         #endregion
+    }
+    public static class Int3Extensions
+    {
+        public static int Volume(this int3 vector)
+        {
+            return vector.x * vector.y * vector.z;
+        }
     }
 }

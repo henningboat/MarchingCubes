@@ -10,11 +10,13 @@ using UnityEngine;
 using UnityEngine.Rendering;
 using UnityEngine.TerrainUtils;
 using Random = Unity.Mathematics.Random;
+using Code.CubeMarching.TerrainChunkEntitySystem;
 
 namespace Code.CubeMarching.Rendering
 {
     [ExecuteAlways]
     [UpdateInGroup(typeof(PresentationSystemGroup))]
+    [UpdateAfter(typeof(SPrepareGPUData))]
     public class UpdateClusterMeshes : SystemBase
     {
         private int previousFrameClusterCount = -1;
@@ -65,7 +67,7 @@ namespace Code.CubeMarching.Rendering
                             var clusterIndex = getClusterPosition[clusterChild.ClusterEntity];
                             
                             int3 positionOfChunkWS = chunkPosition.positionGS * 8;
-                            
+
                             for (int subChunkIndex = 0; subChunkIndex < 8; subChunkIndex++)
                             {
                                 if (!dynamicData.DistanceFieldChunkData.InnerDataMask.GetBit(subChunkIndex))
@@ -82,9 +84,12 @@ namespace Code.CubeMarching.Rendering
 
                                     if (math.abs(accessor.GetSurfaceDistance(positionWS)) < 1)
                                     {
-                                        parallelSubListCollection.Write(clusterIndex.ClusterIndex, chunkPosition.indexInCluster, new TriangulationPosition() {position = positionWS});
-                                        parallelSubListCollection.Write(clusterIndex.ClusterIndex, chunkPosition.indexInCluster, new TriangulationPosition() {position = positionWS});
-                                        parallelSubListCollection.Write(clusterIndex.ClusterIndex, chunkPosition.indexInCluster, new TriangulationPosition() {position = positionWS});
+                                        parallelSubListCollection.Write(clusterIndex.ClusterIndex, chunkPosition.indexInCluster,
+                                            new TriangulationPosition() {position = positionWS, triangulationTableIndex = 0});
+                                        parallelSubListCollection.Write(clusterIndex.ClusterIndex, chunkPosition.indexInCluster,
+                                            new TriangulationPosition() {position = positionWS, triangulationTableIndex = 1});
+                                        parallelSubListCollection.Write(clusterIndex.ClusterIndex, chunkPosition.indexInCluster,
+                                            new TriangulationPosition() {position = positionWS, triangulationTableIndex = 2});
                                     }
                                 }
                             }
@@ -107,7 +112,8 @@ namespace Code.CubeMarching.Rendering
                     NativeArray<int> dummyIndexBuffer = new NativeArray<int>(triangleCount,Allocator.TempJob);
                     for (int j = 0; j < dummyIndexBuffer.Length; j++)
                     {
-                        dummyIndexBuffer[j] = j;
+                        var triangulationPosition = _triangulationIndices.ReadListValue(i, j);
+                        dummyIndexBuffer[j] = Code.CubeMarching.TerrainChunkEntitySystem.Utils.PositionToIndex(triangulationPosition.position, 64)*3+triangulationPosition.triangulationTableIndex;
                     }
 
                      var gpuIndexBuffer = clusterMesh.mesh.GetIndexBuffer();

@@ -1,3 +1,4 @@
+using Code.CubeMarching.Authoring;
 using Code.CubeMarching.TerrainChunkEntitySystem;
 using Code.CubeMarching.TerrainChunkSystem;
 using Unity.Collections;
@@ -45,17 +46,18 @@ namespace Code.CubeMarching.Rendering
 
             var terrainSize = newSystem.IndexMapSize;
 
+            var indexMap = this.GetSingletonBuffer<TerrainChunkIndexMap>().Reinterpret<int>();
 
-            _globalTerrainIndexMap = new ComputeBuffer(newSystem.IndexMap.Length, 4);
-            _globalTerrainIndexMap.SetData(newSystem.IndexMap);
+            _globalTerrainIndexMap = new ComputeBuffer(indexMap.Length, 4);
+            _globalTerrainIndexMap.SetData(indexMap.AsNativeArray());
 
             var terrainChunkPositionsToRender = new NativeList<int3>(Allocator.Temp);
 
             for (var materialID = 0; materialID < _gpuDataPerMaterial.Length; materialID++)
             {
-                for (var i = 0; i < newSystem.IndexMap.Length; i++)
+                for (var i = 0; i < indexMap.Length; i++)
                 {
-                    if (newSystem.IndexMap[i] < 2)
+                    if (indexMap[i] < 2)
                     {
                         continue;
                     }

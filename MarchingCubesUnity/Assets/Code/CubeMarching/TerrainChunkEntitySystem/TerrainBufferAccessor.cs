@@ -8,7 +8,7 @@ namespace Code.CubeMarching.TerrainChunkEntitySystem
     public struct TerrainBufferAccessor
     {
         public readonly DynamicBuffer<TerrainChunkDataBuffer> DataBuffer;
-        //public readonly DynamicBuffer<TerrainChunkIndexMap> IndexBuffer;
+        public readonly DynamicBuffer<TerrainChunkIndexMap> IndexBuffer;
         public readonly TotalClustersCount ClustersCount;
 
         private const int clusterLength = 64;
@@ -18,21 +18,17 @@ namespace Code.CubeMarching.TerrainChunkEntitySystem
         public TerrainBufferAccessor(SystemBase systemBase)
         {
             DataBuffer = systemBase.GetSingletonBuffer<TerrainChunkDataBuffer>();
-            //IndexBuffer = systemBase.GetSingletonBuffer<TerrainChunkIndexMap>();
+            IndexBuffer = systemBase.GetSingletonBuffer<TerrainChunkIndexMap>();
             ClustersCount = systemBase.GetSingleton<TotalClustersCount>();
         }
 
         public float GetSurfaceDistance(int3 positionWS)
         {
-            positionWS = clamp(positionWS, 0, ClustersCount.Value);
-            
-            int indexInDataBuffer = 0;
-            int clusterIndex = Utils.PositionToIndex(positionWS / 64, ClustersCount.Value);
-            int indexInCluster = Utils.PositionToIndex(positionWS % clusterLength, 8);
+            positionWS = clamp(positionWS, 0, ClustersCount.Value * clusterLength);
 
-            TerrainChunkDataBuffer terrainChunkDataBuffer = DataBuffer[clusterIndex * chunksInCluster + indexInCluster];
+            int chunkIndex = IndexBuffer[Utils.PositionToIndex(positionWS / 8, ClustersCount.Value * (clusterLength / chunkLength))].Index;
 
-            return GetPointPosition(positionWS % chunkLength, terrainChunkDataBuffer);
+            return GetPointPosition(positionWS % chunkLength, DataBuffer[chunkIndex]);
         }
 
         private static float GetPointPosition(int3 positionWithinTerrainChunk, TerrainChunkDataBuffer chunk)
