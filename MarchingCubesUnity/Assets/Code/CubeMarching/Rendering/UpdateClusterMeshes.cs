@@ -57,11 +57,6 @@ namespace Code.CubeMarching.Rendering
                 
                 Dependency = Entities.ForEach((CTerrainEntityChunkPosition chunkPosition, CTerrainChunkStaticData staticData, CTerrainChunkDynamicData dynamicData, ClusterChild clusterChild) =>
                     {
-                        if (staticData.DistanceFieldChunkData.HasData)
-                        {
-                            throw new NotImplementedException();
-                        }
-                        
                         if (dynamicData.DistanceFieldChunkData.HasData)
                         {
                             var clusterIndex = getClusterPosition[clusterChild.ClusterEntity];
@@ -82,23 +77,30 @@ namespace Code.CubeMarching.Rendering
                                     int3 positionInSubChunk = TerrainChunkEntitySystem.Utils.IndexToPositionWS(i, 4);
                                     int3 positionWS = positionOfChunkWS + subChunkPositionInChunk + positionInSubChunk;
 
-                                    var surfaceDistance = accessor.GetSurfaceDistance(positionWS);
-                                    if (math.abs(surfaceDistance) < 1)
-                                    {
-                                        parallelSubListCollection.Write(clusterIndex.ClusterIndex, chunkPosition.indexInCluster,
-                                            new TriangulationPosition() {position = positionWS, triangulationTableIndex = 0});
-                                        parallelSubListCollection.Write(clusterIndex.ClusterIndex, chunkPosition.indexInCluster,
-                                            new TriangulationPosition() {position = positionWS, triangulationTableIndex = 1});
-                                        parallelSubListCollection.Write(clusterIndex.ClusterIndex, chunkPosition.indexInCluster,
-                                            new TriangulationPosition() {position = positionWS, triangulationTableIndex = 2});
-                                    }
+                                    byte triangulationIndex = 0;
+                                    triangulationIndex.SetBit(0, accessor.GetSurfaceDistance(positionWS + new int3(0, 0, 0)) > 0);
+                                    triangulationIndex.SetBit(1, accessor.GetSurfaceDistance(positionWS + new int3(1, 0, 0)) > 0);
+                                    triangulationIndex.SetBit(2, accessor.GetSurfaceDistance(positionWS + new int3(1, 0, 1)) > 0);
+                                    triangulationIndex.SetBit(3, accessor.GetSurfaceDistance(positionWS + new int3(0, 0, 1)) > 0);
+                                    triangulationIndex.SetBit(4, accessor.GetSurfaceDistance(positionWS + new int3(0, 1, 0)) > 0);
+                                    triangulationIndex.SetBit(5, accessor.GetSurfaceDistance(positionWS + new int3(1, 1, 0)) > 0);
+                                    triangulationIndex.SetBit(6, accessor.GetSurfaceDistance(positionWS + new int3(1, 1, 1)) > 0);
+                                    triangulationIndex.SetBit(7, accessor.GetSurfaceDistance(positionWS + new int3(0, 1, 1)) > 0);
+                                    
+                                    if(triangulationIndex==0||triangulationIndex==255)
+                                        continue;
+                                    
+                                    parallelSubListCollection.Write(clusterIndex.ClusterIndex,chunkPosition.indexInCluster,new TriangulationPosition(){position = positionWS,triangulationTableIndex = 0});
+                                    parallelSubListCollection.Write(clusterIndex.ClusterIndex,chunkPosition.indexInCluster,new TriangulationPosition(){position = positionWS,triangulationTableIndex = 1});
+                                    parallelSubListCollection.Write(clusterIndex.ClusterIndex,chunkPosition.indexInCluster,new TriangulationPosition(){position = positionWS,triangulationTableIndex = 2});
                                 }
                             }
                         }
                     })
                     .WithReadOnly(getClusterPosition).WithReadOnly(accessor)
-                    .WithBurst().ScheduleParallel(Dependency);
-
+                    .WithBurst().WithName("CalculateTriangulationIndices").
+                    ScheduleParallel(Dependency);
+ 
                 Dependency = parallelSubListCollection.ScheduleListCollapse(Dependency);
 
                 Dependency.Complete();

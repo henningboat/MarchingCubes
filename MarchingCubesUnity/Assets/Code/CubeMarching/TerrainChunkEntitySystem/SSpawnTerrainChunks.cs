@@ -338,7 +338,6 @@ namespace Code.CubeMarching.TerrainChunkEntitySystem
         public static int3 IndexToPositionWS(int i, int3 size)
         {
             var index = i;
-            const int chunkLength = RenderCubeMarchingSystem.ChunkLength;
 
             var x = index % size.x;
             var y = index / size.x % size.y;
