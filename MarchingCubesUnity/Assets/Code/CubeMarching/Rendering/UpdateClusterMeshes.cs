@@ -82,7 +82,8 @@ namespace Code.CubeMarching.Rendering
                                     int3 positionInSubChunk = TerrainChunkEntitySystem.Utils.IndexToPositionWS(i, 4);
                                     int3 positionWS = positionOfChunkWS + subChunkPositionInChunk + positionInSubChunk;
 
-                                    if (math.abs(accessor.GetSurfaceDistance(positionWS)) < 1)
+                                    var surfaceDistance = accessor.GetSurfaceDistance(positionWS);
+                                    if (math.abs(surfaceDistance) < 1)
                                     {
                                         parallelSubListCollection.Write(clusterIndex.ClusterIndex, chunkPosition.indexInCluster,
                                             new TriangulationPosition() {position = positionWS, triangulationTableIndex = 0});

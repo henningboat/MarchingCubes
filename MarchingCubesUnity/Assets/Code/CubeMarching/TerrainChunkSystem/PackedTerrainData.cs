@@ -39,6 +39,9 @@ namespace Code.CubeMarching.TerrainChunkSystem
             {
                 unsafe
                 {
+
+                    throw new NotImplementedException();
+                    
 #if ENABLE_UNITY_COLLECTIONS_CHECKS
                     if (i < 0 || i >= UnpackedCapacity)
                     {
@@ -54,6 +57,7 @@ namespace Code.CubeMarching.TerrainChunkSystem
             {
                 unsafe
                 {
+                    throw new NotImplementedException();
 #if ENABLE_UNITY_COLLECTIONS_CHECKS
                     if (i < 0 || i >= UnpackedCapacity)
                     {
