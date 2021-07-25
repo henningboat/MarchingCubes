@@ -35,9 +35,12 @@ float4 GetPointPosition(uint3 position)
     uint baseIndexOfTerrainChunk = _GlobalTerrainIndexMap[positionInIndexMap] * terrainChunkCapacity;
 
     uint3 positionWithinTerrainChunk = ((position + 8) % 8);
-    uint indexWithinTerrainChunk = indexFromCoord(positionWithinTerrainChunk.x, positionWithinTerrainChunk.y, positionWithinTerrainChunk.z);
 
-    uint indexInTerrainBuffer = baseIndexOfTerrainChunk + indexWithinTerrainChunk;
+    int subChunkIndex = indexFromCoordAndGridSize(positionWithinTerrainChunk/4,2);
+    
+    uint indexWithinSubChunk = indexFromCoordAndGridSize(position % 4,4);
+    uint indexInTerrainBuffer = baseIndexOfTerrainChunk + subChunkIndex * 64 + indexWithinSubChunk;
+    
 
     float surfaceDistance = _GlobalTerrainBuffer[indexInTerrainBuffer / 4].surfaceDistance[indexInTerrainBuffer % 4];
     if (_GlobalTerrainBuffer[indexInTerrainBuffer / 4].terrainMaterial.data[indexInTerrainBuffer % 4] != _MaterialIDFilter)
