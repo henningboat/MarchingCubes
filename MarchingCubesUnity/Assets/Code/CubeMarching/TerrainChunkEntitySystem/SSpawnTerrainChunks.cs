@@ -101,7 +101,7 @@ namespace Code.CubeMarching.TerrainChunkEntitySystem
 
             //spawn data holder            
             var entity = EntityManager.CreateEntity(typeof(TerrainChunkDataBuffer), typeof(TotalClustersCount), typeof(TerrainChunkIndexMap));
-            var totalClustersCount = new TotalClustersCount() {Value = new int3(2, 2, 2)};
+            var totalClustersCount = new TotalClustersCount() {Value = new int3(1, 1, 1)};
             EntityManager.SetComponentData(entity, totalClustersCount);
             var terrainChunkIndexMaps = this.GetSingletonBuffer<TerrainChunkIndexMap>();
             terrainChunkIndexMaps.ResizeUninitialized(totalClustersCount.Value.Volume() * 512);

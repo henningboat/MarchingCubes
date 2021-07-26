@@ -37,6 +37,7 @@ namespace Code.CubeMarching.Rendering
         public static CClusterMesh GenerateClusterMesh()
         {
             var clusterMesh = new Mesh {name = "ClusterMesh", hideFlags = HideFlags.HideAndDontSave};
+            clusterMesh.vertexBufferTarget |= GraphicsBuffer.Target.Raw;
 
             clusterMesh.SetVertexBufferParams(ClusterEntityVertexCount, ClusterMeshTerrainDescriptors);
             clusterMesh.SetIndexBufferParams(ClusterEntityVertexCount, IndexFormat.UInt32);
@@ -53,11 +54,11 @@ namespace Code.CubeMarching.Rendering
                 {
                     for (int x = 0; x < 64; x++)
                     {
-                        randomVertexData[vertexID] = new VertexData(new float3(x,y,z), 1);
+                        randomVertexData[vertexID] = default;
                         vertexID++;
-                        randomVertexData[vertexID] = new VertexData(new float3(x+1,y,z), 1);
+                        randomVertexData[vertexID] = default;
                         vertexID++;
-                        randomVertexData[vertexID] = new VertexData(new float3(x,y+1,z), 1);
+                        randomVertexData[vertexID] = default;
                         vertexID++;
                     }
                 }

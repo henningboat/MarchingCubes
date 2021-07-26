@@ -4,12 +4,13 @@ float4 _Time;
 #pragma kernel GetTrianglePositions
 #pragma kernel CalculateTriangulationThreadGroupSizeKernel
 #pragma kernel Triangulation
+#pragma kernel ClearVertexData
 
-RWStructuredBuffer<TerrainData4> _GlobalTerrainBuffer;
-RWStructuredBuffer<int> _GlobalTerrainIndexMap;
+StructuredBuffer<TerrainData4> _GlobalTerrainBuffer;
+StructuredBuffer<int> _GlobalTerrainIndexMap;
 StructuredBuffer<float4> _NormalBuffer;
 
-StructuredBuffer<int3> _TerrainChunkBasePosition;
+StructuredBuffer<int4> _TerrainChunkBasePosition;
 
 #include "Includes/GlobalDistanceField.hlsl"
 
@@ -17,21 +18,16 @@ groupshared float3 _GeneratedNormals;
 
 static const int numThreads = 8;
 
-struct Triangle {
-    float3 vertexC;
-    float3 normalC;
-    float4 colorC;
-    float3 vertexB;
-    float3 normalB;
-    float4 colorB;
-    float3 vertexA;
-    float3 normalA;
-    float4 colorA;
+struct VertexData {
+    float4 vertex;
+    float3 normal;
 };
 
 AppendStructuredBuffer<int4> _ValidTrianglePositions;
 StructuredBuffer<int4> _ValidTrianglePositionResults;
-AppendStructuredBuffer<Triangle> triangles;
+RWStructuredBuffer<VertexData> triangles;
+
+uint triangleWriteIndex=0;
 
 //todo make int3?
 float isoLevel;
@@ -98,14 +94,12 @@ float3 CalculateNormalForPosition(int3 localPosition)
 }
 
 
-
-
 [numthreads(numThreads,numThreads,numThreads)]
 void GetTrianglePositions (uint3 id : SV_DispatchThreadID, uint groupIndex : SV_GroupIndex, uint3 groupThreadID:SV_GroupThreadID)
 {
     const uint chunkIndex = id.x/8;
     id.x%=8;
-    const int3 terrainChunkBasePosition = _TerrainChunkBasePosition[chunkIndex];
+    const int3 terrainChunkBasePosition = _TerrainChunkBasePosition[chunkIndex]*8;
 
     LoadDataIntoLocalGrid(groupIndex * 2, terrainChunkBasePosition);
     LoadDataIntoLocalGrid(groupIndex * 2 + 1, terrainChunkBasePosition);
@@ -153,6 +147,12 @@ void CalculateTriangulationThreadGroupSizeKernel()
     _ArgsBuffer[1] =  ceil(_ArgsBuffer[0]/512.0f);
 }
 
+[numthreads(512,1,1)]
+void ClearVertexData (uint3 id : SV_DispatchThreadID)
+{
+    triangles[id.x]=(VertexData)0;
+}
+
 [numthreads(1,512,1)]
 void Triangulation (uint3 id : SV_DispatchThreadID)
 {
@@ -192,7 +192,9 @@ void Triangulation (uint3 id : SV_DispatchThreadID)
 
     
     // Create triangles for current cube configuration
-    for (int i = 0; triangulation[cubeIndex][i] != -1; i +=3) {
+    //todo make it work with multiple triangles again
+    for (int i = 0; triangulation[cubeIndex][i] != -1; i +=3)
+    {
         // Get indices of corner points A and B for each of the three edges
         // of the cube that need to be joined to form the triangle.
         int a0 = cornerIndexAFromEdge[triangulation[cubeIndex][i]];
@@ -204,38 +206,30 @@ void Triangulation (uint3 id : SV_DispatchThreadID)
         int a2 = cornerIndexAFromEdge[triangulation[cubeIndex][i+2]];
         int b2 = cornerIndexBFromEdge[triangulation[cubeIndex][i+2]];
 
-        Triangle tri;
+        VertexData vertexA;
+        VertexData vertexB;
+        VertexData vertexC;
         
         float tA;
         float tB;
         float tC;
          
-        tri.vertexA = interpolateVerts(cubeCorners[a0], cubeCorners[b0],tA);
-        tri.vertexB = interpolateVerts(cubeCorners[a1], cubeCorners[b1],tB);
-        tri.vertexC = interpolateVerts(cubeCorners[a2], cubeCorners[b2],tC);
+        vertexA.vertex = float4(interpolateVerts(cubeCorners[a0], cubeCorners[b0],tA),1);
+        vertexB.vertex = float4(interpolateVerts(cubeCorners[a1], cubeCorners[b1],tB),1);
+        vertexC.vertex = float4(interpolateVerts(cubeCorners[a2], cubeCorners[b2],tC),1);
         
-        tri.colorA = 0;
-        tri.colorB = 0;
-        tri.colorC = 0;
         // tri.colorA = interpolateColors(cubeColors[a0], cubeColors[b0],tA);
         // tri.colorB = interpolateColors(cubeColors[a1], cubeColors[b1],tB);
         // tri.colorC = interpolateColors(cubeColors[a2], cubeColors[b2],tC);
 
-        
-        float3 flatNormal = -normalize(cross(tri.vertexB-tri.vertexA, tri.vertexC-tri.vertexA));
-        
-
-        tri.normalA = flatNormal;
-        tri.normalB = flatNormal;
-        tri.normalC = flatNormal;
         //
         //
-        tri.normalA = interpolateNormals(cubeNormals[a0], cubeNormals[b0],tA);
-        tri.normalB = interpolateNormals(cubeNormals[a1], cubeNormals[b1],tB);
-        tri.normalC = interpolateNormals(cubeNormals[a2], cubeNormals[b2],tC);
+        vertexA.normal = interpolateNormals(cubeNormals[a0], cubeNormals[b0],tA);
+        vertexB.normal = interpolateNormals(cubeNormals[a1], cubeNormals[b1],tB);
+        vertexC.normal = interpolateNormals(cubeNormals[a2], cubeNormals[b2],tC);
 
-
-
-        triangles.Append(tri);
+        triangles[index*3+0]=vertexA;
+        triangles[index*3+1]=vertexB;
+        triangles[index*3+2]=vertexC;
     }
 }

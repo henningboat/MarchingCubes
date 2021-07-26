@@ -43,26 +43,26 @@ float4 GetPointPosition(uint3 position)
     
 
     float surfaceDistance = _GlobalTerrainBuffer[indexInTerrainBuffer / 4].surfaceDistance[indexInTerrainBuffer % 4];
-    if (_GlobalTerrainBuffer[indexInTerrainBuffer / 4].terrainMaterial.data[indexInTerrainBuffer % 4] != _MaterialIDFilter)
-    {
-        if(surfaceDistance<0)
-        {
-            if(_MaterialIDFilter==0){
-                surfaceDistance = 0.000001;
-            }else
-            {
-                surfaceDistance = -0.000001;
-            }
-        }
-    }
+    // if (_GlobalTerrainBuffer[indexInTerrainBuffer / 4].terrainMaterial.data[indexInTerrainBuffer % 4] != _MaterialIDFilter)
+    // {
+    //     if(surfaceDistance<0)
+    //     {
+    //         if(_MaterialIDFilter==0){
+    //             surfaceDistance = 0.000001;
+    //         }else
+    //         {
+    //             surfaceDistance = -0.000001;
+    //         }
+    //     }
+    // }
 
-    if (position.x <= 0 || position.y <= 0 || position.z <= 0 ||
-        position.x > _TerrainMapSize.x * 8 - 1 ||
-        position.y > _TerrainMapSize.y * 8 - 1 ||
-        position.z > _TerrainMapSize.z * 8 - 1)
-    {
-        surfaceDistance = 0.1f;
-    }
+    // if (position.x <= 0 || position.y <= 0 || position.z <= 0 ||
+    //     position.x > _TerrainMapSize.x * 8 - 1 ||
+    //     position.y > _TerrainMapSize.y * 8 - 1 ||
+    //     position.z > _TerrainMapSize.z * 8 - 1)
+    // {
+    //     surfaceDistance = 0.1f;
+    // }
 
     return float4(position.x, position.y, position.z, surfaceDistance);
 }

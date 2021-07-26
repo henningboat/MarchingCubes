@@ -32,7 +32,7 @@ namespace Code.CubeMarching.Rendering
         }
     
         protected override void OnUpdate()
-        {
+        {return;
             Dependency.Complete();
     
             _globalTerrainBuffer?.Dispose();
