@@ -89,13 +89,18 @@ namespace Code.CubeMarching.Rendering
                     {
                         if (dynamicData.DistanceFieldChunkData.HasData)
                         {
-                            var clusterIndex = getClusterPosition[clusterChild.ClusterEntity];
-
                             int3 positionOfChunkWS = chunkPosition.positionGS * 8;
-                            triangulationListWriter.AddNoResize(new TriangulationComputeShaderInstruction(positionOfChunkWS, 0));
+                            
+                            for (int i = 0; i < 8; i++)
+                            {
+                                if (dynamicData.DistanceFieldChunkData.InnerDataMask.GetBit(i))
+                                {
+                                    int3 subChunkOffset = TerrainChunkEntitySystem.Utils.IndexToPositionWS(i, 2) * 4;
+                                    triangulationListWriter.AddNoResize(new TriangulationComputeShaderInstruction(positionOfChunkWS + subChunkOffset,0));
+                                }
+                            }
                         }
                     })
-                    .WithReadOnly(getClusterPosition)
                     .WithBurst().WithName("CalculateTriangulationIndices").
                     ScheduleParallel(Dependency);
  
@@ -127,11 +132,6 @@ namespace Code.CubeMarching.Rendering
 
                 var clusterMeshRendererEntities = GetEntityQuery(typeof(CClusterMesh)).ToEntityArray(Allocator.TempJob);
                 
-                
-                // triangulationInstructions.Clear();
-                // triangulationInstructions.Add(new TriangulationComputeShaderInstruction(new int3(0, 0, 0), 0));
-                // triangulationInstructions.Add(new TriangulationComputeShaderInstruction(new int3(0, 8, 0), 0));
-                //         
 
                 for (int i = 0; i < clusterCount; i++)
                 {
@@ -175,7 +175,7 @@ namespace Code.CubeMarching.Rendering
         public void UpdateWithSurfaceData(ComputeBuffer globalTerrainBuffer, ComputeBuffer globalTerrainIndexMap, NativeList<TriangulationComputeShaderInstruction> triangulationInstructions, int3 clusterCounts, int materialIDFilter, Mesh mesh)
         {
             var trianbgleByteSize = (3 + 3 + 4) * 4;
-            var requiredTriangleCapacity = triangulationInstructions.Length * 4 * 4 * 4 * 5 * 8;
+            var requiredTriangleCapacity = triangulationInstructions.Length * 4 * 4 * 4 * 5;
             if (_trianglePositionBuffer == null || _trianglePositionBuffer.count < requiredTriangleCapacity)
             {
                 if (_trianglePositionBuffer != null)
