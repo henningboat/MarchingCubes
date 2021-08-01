@@ -101,8 +101,8 @@ namespace Code.CubeMarching.TerrainChunkEntitySystem
                 typeof(TriangulationPosition));
 
             //spawn data holder            
-            var entity = EntityManager.CreateEntity(typeof(TerrainChunkDataBuffer), typeof(TotalClustersCount), typeof(TerrainChunkIndexMap));
-            var totalClustersCount = new TotalClustersCount() {Value = new int3(1, 1, 1)};
+            var entity = EntityManager.CreateEntity(typeof(TerrainChunkDataBuffer), typeof(TotalClusterCounts), typeof(TerrainChunkIndexMap));
+            var totalClustersCount = new TotalClusterCounts() {Value = new int3(1, 1, 1)};
             EntityManager.SetComponentData(entity, totalClustersCount);
             var terrainChunkIndexMaps = this.GetSingletonBuffer<TerrainChunkIndexMap>();
             terrainChunkIndexMaps.ResizeUninitialized(totalClustersCount.Value.Volume() * 512);
@@ -181,133 +181,6 @@ namespace Code.CubeMarching.TerrainChunkEntitySystem
             }).WithBurst().ScheduleParallel();
         }
 
-        #endregion
-    }
-
-    [UpdateAfter(typeof(SBuildStaticGeometry))]
-    [WorldSystemFilter(WorldSystemFilterFlags.Editor | WorldSystemFilterFlags.Default)]
-    public class SPrepareGPUData : SystemBase
-    {
-        #region Properties
-    
-        public int3 IndexMapSize { get; private set; }
-    
-        #endregion
-    
-        #region Static Stuff
-    
-        public static TerrainChunkData ConvertDataForGPUFriendlyFormat(TerrainChunkData distanceFieldValue)
-        {
-            var result = new TerrainChunkData();
-            for (var subChunkIndex = 0; subChunkIndex < 8; subChunkIndex++)
-            {
-                var positionOfSubChunk = new int3(subChunkIndex % 2, subChunkIndex / 2 % 2, subChunkIndex / 4) * 4;
-                for (var indexInSubChunk = 0; indexInSubChunk < 16; indexInSubChunk++)
-                {
-                    var positionInsideSubChunk = new int3(0, indexInSubChunk % 4, indexInSubChunk / 4);
-    
-                    var totalPosition = positionInsideSubChunk + positionOfSubChunk;
-                    var index = totalPosition.x + totalPosition.y * 8 + totalPosition.z * 8 * 8;
-    
-                    result[index / 4] = distanceFieldValue[subChunkIndex * 16 + indexInSubChunk];
-                }
-            }
-    
-            return result;
-        }
-    
-        #endregion
-    
-        #region Unity methods
-    
-        protected override void OnDestroy()
-        {
-            TerrainChunkData.Dispose();
-        }
-    
-        #endregion
-    
-        #region Public Fields
-    
-        public NativeList<TerrainChunkData> TerrainChunkData;
-    
-        #endregion
-    
-        #region Protected methods
-    
-        protected override void OnCreate()
-        {
-            TerrainChunkData = new NativeList<TerrainChunkData>(Allocator.Persistent);
-        }
-    
-        protected override void OnUpdate()
-        {
-            var terrainChunkData = TerrainChunkData;
-    
-            terrainChunkData.Clear();
-            terrainChunkData.Add(TerrainChunkSystem.TerrainChunkData.Outside);
-            terrainChunkData.Add(TerrainChunkSystem.TerrainChunkData.Inside);
-    
-            var i = new NativeValue<int>(Allocator.TempJob);
-            i.Value = 2;
-    
-            IndexMapSize = 0;
-            Entities.ForEach((in CClusterPosition clusterPosition) => { IndexMapSize = math.max(IndexMapSize, clusterPosition.PositionGS + 8); }).WithoutBurst().Run();
-    
-            var indexMap = this.GetSingletonBuffer<TerrainChunkIndexMap>();
-    
-            var terrainChunkBuffer = EntityManager.GetBuffer<TerrainChunkDataBuffer>(GetSingletonEntity<TerrainChunkDataBuffer>());
-    
-            var indexMapSize = IndexMapSize;
-            Dependency = Entities.ForEach((CTerrainChunkStaticData staticDistanceField, CTerrainChunkDynamicData dynamicDistanceField, CTerrainEntityChunkPosition chunkPosition) =>
-            {
-                var indexInChunkMap = Utils.PositionToIndex(chunkPosition.positionGS, indexMapSize);
-    
-    
-                var indexInDistanceFieldBuffer = 0;
-                var hasData = false;
-                if (dynamicDistanceField.DistanceFieldChunkData.HasData)
-                {
-                    indexInDistanceFieldBuffer = dynamicDistanceField.DistanceFieldChunkData.IndexInDistanceFieldBuffer;
-                    hasData = true;
-                }
-                else if(staticDistanceField.DistanceFieldChunkData.HasData)
-                {
-                    indexInDistanceFieldBuffer = staticDistanceField.DistanceFieldChunkData.IndexInDistanceFieldBuffer;
-                    hasData = true;
-                }
-    
-                if (hasData)
-                {
-                    // var convertedData = ConvertDataForGPUFriendlyFormat(terrainChunkBuffer[indexInDistanceFieldBuffer].Value);
-                    // terrainChunkData.Add(convertedData);
-                    indexMap[indexInChunkMap] = new TerrainChunkIndexMap() {Index = indexInDistanceFieldBuffer};
-                    i.Value++;
-                }
-                else
-                {
-                    if (staticDistanceField.DistanceFieldChunkData.ChunkInsideTerrain == 0)
-                    {
-                        indexMap[indexInChunkMap] = new TerrainChunkIndexMap() {Index = 0};;
-                    }
-                    else
-                    {
-                        indexMap[indexInChunkMap] = new TerrainChunkIndexMap() {Index = 1};
-                    }
-                }
-            }).Schedule(Dependency);
-    
-            Dependency= Job.WithCode(() =>
-            {
-                terrainChunkData.Clear();
-                terrainChunkData.CopyFrom(terrainChunkBuffer.AsNativeArray().Reinterpret<TerrainChunkData>());
-            }).WithBurst().Schedule(Dependency);
-            
-            i.Dispose(Dependency);
-            //todo remove this
-            Dependency.Complete();
-        }
-    
         #endregion
     }
 

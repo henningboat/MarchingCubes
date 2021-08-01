@@ -17,7 +17,7 @@ namespace Code.CubeMarching.Authoring
         public int Index;
     }
 
-    public struct TotalClustersCount : IComponentData
+    public struct TotalClusterCounts : IComponentData
     {
         public int3 Value;
     }

@@ -11,7 +11,7 @@ namespace Code.CubeMarching.TerrainChunkEntitySystem
     {
         public readonly NativeArray<PackedTerrainData> DataBuffer;
         public readonly DynamicBuffer<TerrainChunkIndexMap> IndexBuffer;
-        public readonly TotalClustersCount ClustersCount;
+        public readonly TotalClusterCounts ClusterCounts;
 
         private const int clusterLength = 64;
         private const int chunkLength = 8;
@@ -23,15 +23,15 @@ namespace Code.CubeMarching.TerrainChunkEntitySystem
             {
                 DataBuffer = systemBase.GetSingletonBuffer<TerrainChunkDataBuffer>().AsNativeArray().Reinterpret<PackedTerrainData>(sizeof(TerrainChunkDataBuffer));
                 IndexBuffer = systemBase.GetSingletonBuffer<TerrainChunkIndexMap>();
-                ClustersCount = systemBase.GetSingleton<TotalClustersCount>();
+                ClusterCounts = systemBase.GetSingleton<TotalClusterCounts>();
             }
         }
 
         public float GetSurfaceDistance(int3 positionWS)
         {
-            positionWS = clamp(positionWS, 0, ClustersCount.Value * clusterLength);
+            positionWS = clamp(positionWS, 0, ClusterCounts.Value * clusterLength);
 
-            int chunkIndex = IndexBuffer[Utils.PositionToIndex(positionWS / 8, ClustersCount.Value * (clusterLength / chunkLength))].Index;
+            int chunkIndex = IndexBuffer[Utils.PositionToIndex(positionWS / 8, ClusterCounts.Value * (clusterLength / chunkLength))].Index;
 
             var surfaceDistance = GetPointPosition(positionWS % chunkLength, chunkIndex);
             return surfaceDistance;

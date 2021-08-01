@@ -1,5 +1,6 @@
 ﻿using Unity.Collections;
 using Unity.Entities;
+using UnityEditor;
 
 namespace Code.CubeMarching.Triangulation
 {
@@ -527,6 +528,17 @@ namespace Code.CubeMarching.Triangulation
             {-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1}
         };
 
+
+        [InitializeOnLoadMethod]
+        private static void CalculateLengthPerCube()
+        {
+            int[] length = new int[256];
+            for (int i = 0; i < 256; i++)
+            {
+                
+            }
+        }
+        
         public static int[] cornerIndexAFromEdge =
         {
             0,

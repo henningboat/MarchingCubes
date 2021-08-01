@@ -31,12 +31,11 @@ namespace Code.CubeMarching.Rendering
 
     [ExecuteAlways]
     [UpdateInGroup(typeof(PresentationSystemGroup))]
-    [UpdateAfter(typeof(SPrepareGPUData))]
+    [UpdateAfter(typeof(SUpdateIndexMap))]
     public class UpdateClusterMeshes : SystemBase
     {
         private int previousFrameClusterCount = -1;
 
-        private ParallelSubListCollection<TriangulationPosition> _triangulationIndices;
         private const int MaxIndexCountPerSubChunk = 4 * 4 * 4 * 5 * 3; //
 
         private ComputeBuffer _distanceFieldComputeBuffer;
@@ -52,7 +51,6 @@ namespace Code.CubeMarching.Rendering
         protected override void OnDestroy()
         {
             _gpuData.Dispose();
-            _triangulationIndices.Dispose();
         }
 
         protected override void OnUpdate()
@@ -61,24 +59,10 @@ namespace Code.CubeMarching.Rendering
             var clusterEntities = clusterEntityQuery.ToEntityArray(Allocator.TempJob);
             var clusterCount = clusterEntities.Length;
 
-            if (previousFrameClusterCount != clusterCount)
-            {
-
-                if (_triangulationIndices.IsCreated)
-                {
-                    _triangulationIndices.Dispose();
-                }
-
-                _triangulationIndices = new ParallelSubListCollection<TriangulationPosition>(clusterCount, 512, 512 * 5);
-            }
-
-            _triangulationIndices.Reset();
+          
             previousFrameClusterCount = clusterCount;
-            var getClusterPosition = GetComponentDataFromEntity<CClusterPosition>();
-                
-            var parallelSubListCollection = _triangulationIndices;
-            var clustersCount = GetSingleton<TotalClustersCount>();
-
+            
+            var clustersCount = GetSingleton<TotalClusterCounts>();
 
             NativeList<TriangulationComputeShaderInstruction> triangulationInstructions = new NativeList<TriangulationComputeShaderInstruction>(clusterCount * 512 * 8, Allocator.TempJob);
             var triangulationListWriter = triangulationInstructions.AsParallelWriter();
@@ -101,19 +85,16 @@ namespace Code.CubeMarching.Rendering
                 })
                 .WithBurst().WithName("CalculateTriangulationIndices").
                 ScheduleParallel(Dependency);
- 
-            Dependency = parallelSubListCollection.ScheduleListCollapse(Dependency);
 
             Dependency.Complete();
 
             _distanceFieldComputeBuffer?.Dispose();
             _indexMapComputeBuffer?.Dispose();
-    
-            //todo rename
-            var newSystem = World.GetExistingSystem<SPrepareGPUData>();
 
-            _distanceFieldComputeBuffer = new ComputeBuffer(newSystem.TerrainChunkData.Length * TerrainChunkData.PackedCapacity, 4 * 4 * 2);
-            _distanceFieldComputeBuffer.SetData(newSystem.TerrainChunkData.AsArray());
+
+            var terrainChunkDataBuffer = this.GetSingletonBuffer<TerrainChunkDataBuffer>().AsNativeArray().Reinterpret<TerrainChunkData>();
+            _distanceFieldComputeBuffer = new ComputeBuffer(terrainChunkDataBuffer.Length * TerrainChunkData.PackedCapacity, 4 * 4 * 2);
+            _distanceFieldComputeBuffer.SetData(terrainChunkDataBuffer);
     
     
             var indexMap = this.GetSingletonBuffer<TerrainChunkIndexMap>().Reinterpret<int>();
@@ -152,6 +133,7 @@ namespace Code.CubeMarching.Rendering
         private ComputeBuffer _trianglePositionBuffer;
         private ComputeBuffer _trianglePositionCountBuffer;
         private ComputeBuffer _chunksToTriangulize;
+        private ComputeBuffer _triangleCountPerSubChunk;
 
         public NewTerrainChunkGPUData()
         {
@@ -160,6 +142,8 @@ namespace Code.CubeMarching.Rendering
             _argsBuffer.SetData(new[] {3, 0, 0, 0});
             _trianglePositionCountBuffer = new ComputeBuffer(5, 4, ComputeBufferType.IndirectArguments);
             _trianglePositionCountBuffer.SetData(new[] {1, 1, 1, 1, 1});
+
+            _triangleCountPerSubChunk = new ComputeBuffer(512 * 8, 4);
             
             //todo resize to proper size
             _chunksToTriangulize = new ComputeBuffer(10000, 4 * 4, ComputeBufferType.Default);
@@ -181,6 +165,9 @@ namespace Code.CubeMarching.Rendering
             _chunksToTriangulize.SetData(triangulationInstructions.AsArray());
 
             int3 chunkCounts = 8 * clusterCounts;
+            int[] dataReadback = new int[512 * 8];
+            
+            _trianglePositionBuffer.SetData(dataReadback);
             
             //Fine positions in the grid that contain triangles
             var getPositionKernel = _computeShader.FindKernel("GetTrianglePositions");
@@ -191,6 +178,7 @@ namespace Code.CubeMarching.Rendering
             _computeShader.SetBuffer(getPositionKernel, "_ValidTrianglePositions", _trianglePositionBuffer);
             _computeShader.SetBuffer(getPositionKernel, "_GlobalTerrainBuffer", globalTerrainBuffer);
             _computeShader.SetBuffer(getPositionKernel, "_GlobalTerrainIndexMap", globalTerrainIndexMap);
+            _computeShader.SetBuffer(getPositionKernel, "_TriangleCountPerSubChunk", _triangleCountPerSubChunk);
             _trianglePositionBuffer.SetCounterValue(0);
             _computeShader.Dispatch(getPositionKernel, triangulationInstructions.Length, 1, 1);
             ComputeBuffer.CopyCount(_trianglePositionBuffer, _trianglePositionCountBuffer, 0);
@@ -221,6 +209,10 @@ namespace Code.CubeMarching.Rendering
             _computeShader.DispatchIndirect(triangulationKernel, _trianglePositionCountBuffer, 4);
             
             meshVertexBuffer.Dispose();
+
+
+            _triangleCountPerSubChunk.GetData(dataReadback);
+            Debug.Log(dataReadback.Length);
         }
 
         public const int ChunkLength = 8;
@@ -232,6 +224,7 @@ namespace Code.CubeMarching.Rendering
             _trianglePositionBuffer.Dispose();
             _chunksToTriangulize.Dispose();
             _trianglePositionCountBuffer.Dispose();
+            _triangleCountPerSubChunk.Dispose();
         }
     }
 }

@@ -25,13 +25,14 @@ struct VertexData {
 AppendStructuredBuffer<int4> _ValidTrianglePositions;
 StructuredBuffer<int4> _ValidTrianglePositionResults;
 RWStructuredBuffer<VertexData> triangles;
+RWStructuredBuffer<int> _TriangleCountPerSubChunk;
 
 uint triangleWriteIndex=0;
 
 //todo make int3?
 float isoLevel;
 
-groupshared int groupTriangleIndex=0;
+groupshared int groupTriangleCount=0;
 
 
 
@@ -110,10 +111,20 @@ void GetTrianglePositions (uint3 id : SV_DispatchThreadID, uint groupIndex : SV_
     if (cubeCorners[6].w > isoLevel) cubeIndex |= 64;
     if (cubeCorners[7].w > isoLevel) cubeIndex |= 128;
  
-    if(cubeIndex==0||cubeIndex==255)
-        return;
+    if(cubeIndex!=0 && cubeIndex!=255)
+    {
+        int indexForTriangle;
+        InterlockedAdd(groupTriangleCount,3,indexForTriangle);
     
-   _ValidTrianglePositions.Append(int4(positionWS, cubeIndex));
+        _ValidTrianglePositions.Append(int4(positionWS, cubeIndex));
+    }
+    
+    GroupMemoryBarrierWithGroupSync();
+
+    if(groupIndex==0)
+    {
+        _TriangleCountPerSubChunk[chunkIndex] = groupTriangleCount;
+    }
 }
 
 RWStructuredBuffer<int> _ArgsBuffer;
@@ -204,5 +215,6 @@ void Triangulation (uint3 id : SV_DispatchThreadID)
         triangles[baseIndex+0]=vertexC;
         triangles[baseIndex+1]=vertexB;
         triangles[baseIndex+2]=vertexA;
+       // return;
     }
 }
