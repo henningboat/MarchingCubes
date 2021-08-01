@@ -108,8 +108,6 @@ namespace Code.CubeMarching.Rendering
 
                 Dependency.Complete();
 
-                Debug.Log(triangulationInstructions.Length);
-
                 _distanceFieldComputeBuffer?.Dispose();
                 _indexMapComputeBuffer?.Dispose();
     

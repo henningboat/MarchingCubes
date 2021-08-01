@@ -21,26 +21,25 @@ namespace Code.CubeMarching.TerrainChunkEntitySystem
             if (cluster.WriteMask[chunk.indexInCluster])
             { 
                 //todo make the masks work again to reduce amount of computations
-                // var positionGS = chunk.positionGS;
-                //
-                // var positionsToCheck = new NativeArray<PackedFloat3>(2, Allocator.Temp);
-                // for (var i = 0; i < 2; i++)
-                // {
-                //     var offsetInChunk = new PackedFloat3(new float4(2, 6, 2, 6), new float4(2, 2, 6, 6), new float4(i) * 4 + 2);
-                //     positionsToCheck[i] = new float3(positionGS.x, positionGS.y, positionGS.z) * SSpawnTerrainChunks.TerrainChunkLength + offsetInChunk;
-                // }
-                //
-                // var iterator = new TerrainInstructionIterator(positionsToCheck, getTerrainInstructionBuffer[distanceField.ClusterEntity], chunk.indexInCluster, existingData);
-                //
-                // iterator.CalculateTerrainData();
-                //
-                // GetCoverageAndFillMaskFromSurfaceDistance(iterator._terrainDataBuffer, out var mask, out var insideTerrainMask);
-                //
-                // distanceField.InnerDataMask = mask;
-                // distanceField.ChunkInsideTerrain = insideTerrainMask;
-                //
-                // positionsToCheck.Dispose();
-                distanceField.InnerDataMask = 255;
+                 var positionGS = chunk.positionGS;
+                
+                 var positionsToCheck = new NativeArray<PackedFloat3>(2, Allocator.Temp);
+                 for (var i = 0; i < 2; i++)
+                 {
+                     var offsetInChunk = new PackedFloat3(new float4(2, 6, 2, 6), new float4(2, 2, 6, 6), new float4(i) * 4 + 2);
+                     positionsToCheck[i] = new float3(positionGS.x, positionGS.y, positionGS.z) * SSpawnTerrainChunks.TerrainChunkLength + offsetInChunk;
+                 }
+                
+                 var iterator = new TerrainInstructionIterator(positionsToCheck, getTerrainInstructionBuffer[clusterEntity], chunk.indexInCluster, existingData);
+                
+                 iterator.CalculateTerrainData();
+                
+                 GetCoverageAndFillMaskFromSurfaceDistance(iterator._terrainDataBuffer, out var mask, out var insideTerrainMask);
+
+                 distanceField.InnerDataMask = mask;
+                 distanceField.ChunkInsideTerrain = insideTerrainMask;
+                
+                 positionsToCheck.Dispose();
             }
             else
             {
@@ -54,15 +53,14 @@ namespace Code.CubeMarching.TerrainChunkEntitySystem
 
             if (distanceField.InnerDataMask != 0)
             {
-                CreatePositionsArray(distanceField, chunk, out var positions, out var positionIndexMapping);
+                CreatePositionsArray(distanceField, chunk, out var positions);
 
                 var iterator = new TerrainInstructionIterator(positions, getTerrainInstructionBuffer[clusterEntity], chunk.indexInCluster, existingData);
                 iterator.CalculateTerrainData();
 
-                terrainChunk = CopyResultsBackToBuffer(distanceField, terrainChunk, iterator, positionIndexMapping);
+                terrainChunk = CopyResultsBackToBuffer(distanceField, terrainChunk, iterator);
 
                 positions.Dispose();
-                positionIndexMapping.Dispose();
                 iterator.Dispose();
             }
             else
@@ -80,8 +78,7 @@ namespace Code.CubeMarching.TerrainChunkEntitySystem
             terrainChunkBuffer[distanceField.IndexInDistanceFieldBuffer] = new TerrainChunkDataBuffer {Value = terrainChunk};
         }
 
-        private static TerrainChunkData CopyResultsBackToBuffer(DistanceFieldChunkData distanceField, TerrainChunkData terrainChunk, TerrainInstructionIterator iterator,
-            NativeArray<int> positionIndexMapping)
+        private static TerrainChunkData CopyResultsBackToBuffer(DistanceFieldChunkData distanceField, TerrainChunkData terrainChunk, TerrainInstructionIterator iterator)
         {
             var readDataOffset = 0;
             for (var subChunkIndex = 0; subChunkIndex < 8; subChunkIndex++)
@@ -90,7 +87,7 @@ namespace Code.CubeMarching.TerrainChunkEntitySystem
                 {
                     for (var i = 0; i < 16; i++)
                     {
-                        terrainChunk[subChunkIndex * 16 + i] = iterator._terrainDataBuffer[positionIndexMapping[subChunkIndex * 16 + i]];
+                        terrainChunk[subChunkIndex * 16 + i] = iterator._terrainDataBuffer[readDataOffset + i];
                     }
 
                     readDataOffset += 16;
@@ -140,13 +137,12 @@ namespace Code.CubeMarching.TerrainChunkEntitySystem
         }
 
         // Returns a temp array of the positions that actually need to be computed
-        private static void CreatePositionsArray(DistanceFieldChunkData distanceField, CTerrainEntityChunkPosition chunk, out NativeArray<PackedFloat3> positions,
-            out NativeArray<int> positionIndexMapping)
+        private static void CreatePositionsArray(DistanceFieldChunkData distanceField, CTerrainEntityChunkPosition chunk, out NativeArray<PackedFloat3> positions)
         {
             var countBits = math.countbits((int) distanceField.InnerDataMask);
 
             positions = new NativeArray<PackedFloat3>(16 * countBits, Allocator.Temp);
-            positionIndexMapping = new NativeArray<int>(16 * countBits, Allocator.Temp);
+            new NativeArray<int>(16 * countBits, Allocator.Temp);
 
             var writtenPositionCount = 0;
             for (var subChunkIndex = 0; subChunkIndex < 8; subChunkIndex++)
@@ -157,8 +153,6 @@ namespace Code.CubeMarching.TerrainChunkEntitySystem
                     {
                         var positionWS = IndexToPositionWSPacked(subChunkIndex, indexInSubChunk, chunk.positionGS);
                         positions[writtenPositionCount + indexInSubChunk] = positionWS;
-
-                        positionIndexMapping[writtenPositionCount + indexInSubChunk] = 16 * subChunkIndex + indexInSubChunk;
                     }
 
                     writtenPositionCount += 16;
