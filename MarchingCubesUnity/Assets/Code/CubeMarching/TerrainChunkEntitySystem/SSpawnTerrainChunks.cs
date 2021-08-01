@@ -1,3 +1,4 @@
+using System;
 using System.Runtime.CompilerServices;
 using Code.CubeMarching.Authoring;
 using Code.CubeMarching.GeometryComponents;
@@ -188,13 +189,13 @@ namespace Code.CubeMarching.TerrainChunkEntitySystem
     public class SPrepareGPUData : SystemBase
     {
         #region Properties
-
+    
         public int3 IndexMapSize { get; private set; }
-
+    
         #endregion
-
+    
         #region Static Stuff
-
+    
         public static TerrainChunkData ConvertDataForGPUFriendlyFormat(TerrainChunkData distanceFieldValue)
         {
             var result = new TerrainChunkData();
@@ -204,65 +205,65 @@ namespace Code.CubeMarching.TerrainChunkEntitySystem
                 for (var indexInSubChunk = 0; indexInSubChunk < 16; indexInSubChunk++)
                 {
                     var positionInsideSubChunk = new int3(0, indexInSubChunk % 4, indexInSubChunk / 4);
-
+    
                     var totalPosition = positionInsideSubChunk + positionOfSubChunk;
                     var index = totalPosition.x + totalPosition.y * 8 + totalPosition.z * 8 * 8;
-
+    
                     result[index / 4] = distanceFieldValue[subChunkIndex * 16 + indexInSubChunk];
                 }
             }
-
+    
             return result;
         }
-
+    
         #endregion
-
+    
         #region Unity methods
-
+    
         protected override void OnDestroy()
         {
             TerrainChunkData.Dispose();
         }
-
+    
         #endregion
-
+    
         #region Public Fields
-
+    
         public NativeList<TerrainChunkData> TerrainChunkData;
-
+    
         #endregion
-
+    
         #region Protected methods
-
+    
         protected override void OnCreate()
         {
             TerrainChunkData = new NativeList<TerrainChunkData>(Allocator.Persistent);
         }
-
+    
         protected override void OnUpdate()
         {
             var terrainChunkData = TerrainChunkData;
-
+    
             terrainChunkData.Clear();
             terrainChunkData.Add(TerrainChunkSystem.TerrainChunkData.Outside);
             terrainChunkData.Add(TerrainChunkSystem.TerrainChunkData.Inside);
-
+    
             var i = new NativeValue<int>(Allocator.TempJob);
             i.Value = 2;
-
+    
             IndexMapSize = 0;
             Entities.ForEach((in CClusterPosition clusterPosition) => { IndexMapSize = math.max(IndexMapSize, clusterPosition.PositionGS + 8); }).WithoutBurst().Run();
-
+    
             var indexMap = this.GetSingletonBuffer<TerrainChunkIndexMap>();
-
+    
             var terrainChunkBuffer = EntityManager.GetBuffer<TerrainChunkDataBuffer>(GetSingletonEntity<TerrainChunkDataBuffer>());
-
+    
             var indexMapSize = IndexMapSize;
             Dependency = Entities.ForEach((CTerrainChunkStaticData staticDistanceField, CTerrainChunkDynamicData dynamicDistanceField, CTerrainEntityChunkPosition chunkPosition) =>
             {
                 var indexInChunkMap = Utils.PositionToIndex(chunkPosition.positionGS, indexMapSize);
-
-
+    
+    
                 var indexInDistanceFieldBuffer = 0;
                 var hasData = false;
                 if (dynamicDistanceField.DistanceFieldChunkData.HasData)
@@ -275,7 +276,7 @@ namespace Code.CubeMarching.TerrainChunkEntitySystem
                     indexInDistanceFieldBuffer = staticDistanceField.DistanceFieldChunkData.IndexInDistanceFieldBuffer;
                     hasData = true;
                 }
-
+    
                 if (hasData)
                 {
                     // var convertedData = ConvertDataForGPUFriendlyFormat(terrainChunkBuffer[indexInDistanceFieldBuffer].Value);
@@ -295,7 +296,7 @@ namespace Code.CubeMarching.TerrainChunkEntitySystem
                     }
                 }
             }).Schedule(Dependency);
-
+    
             Dependency= Job.WithCode(() =>
             {
                 terrainChunkData.Clear();
@@ -306,7 +307,7 @@ namespace Code.CubeMarching.TerrainChunkEntitySystem
             //todo remove this
             Dependency.Complete();
         }
-
+    
         #endregion
     }
 
@@ -319,6 +320,14 @@ namespace Code.CubeMarching.TerrainChunkEntitySystem
         public CTerrainModifierTransformation Translation;
 
         #endregion
+
+        public uint CalculateHash()
+        {
+            //todo add TerrainMaterial to hash ones there is a proper implementation
+            uint hash = TerrainModifier.CalculateHash();
+            hash.AddToHash(Translation.CalculateHash());
+            return hash;
+        }
     }
 
     public struct GizmosVisualization
@@ -373,6 +382,8 @@ namespace Code.CubeMarching.TerrainChunkEntitySystem
         public byte InnerDataMask;
         public int IndexInDistanceFieldBuffer;
         public bool HasData => InnerDataMask != 0;
+        public uint CurrentGeometryInstructionsHash;
+        public bool InstructionsChangedSinceLastFrame;
     }
 
     public struct ClusterChild : IComponentData
@@ -410,8 +421,34 @@ namespace Code.CubeMarching.TerrainChunkEntitySystem
         public GeometryShapeTranslationTuple TerrainShape;
         public CGenericTerrainTransformation TerrainTransformation;
         public WorldToLocal WorldToLocal;
+        public uint Hash;
 
         #endregion
+
+        public uint CalculateHash()
+        {
+            uint hash = math.hash(new uint3((uint) TerrainInstructionType, (uint) CombinerDepth, (uint) DependencyIndex));
+            
+            switch (TerrainInstructionType)
+            {
+                case TerrainInstructionType.Shape:
+                    hash.AddToHash(TerrainShape.CalculateHash());
+                    break;
+                case TerrainInstructionType.Combiner:
+                    hash.AddToHash(Combiner.CalculateHash());
+                    break;
+                case TerrainInstructionType.Transformation:
+                    throw new NotImplementedException();
+                    break;
+                case TerrainInstructionType.None:
+                case TerrainInstructionType.CopyOriginal:
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+
+            return hash;
+        }
     }
 
     public enum TerrainInstructionType : byte
@@ -437,6 +474,14 @@ namespace Code.CubeMarching.TerrainChunkEntitySystem
         public static int Volume(this int3 vector)
         {
             return vector.x * vector.y * vector.z;
+        }
+    }
+
+    public static class UintExtensions
+    {
+        public static void AddToHash(ref this uint a, uint b)
+        {
+            a = math.hash(new uint2(a, b));
         }
     }
 }

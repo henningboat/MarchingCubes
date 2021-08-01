@@ -138,6 +138,28 @@ namespace Code.CubeMarching.Authoring
             }
         }
 
+        public unsafe uint CalculateHash()
+        {
+            var ptr = UnsafeUtility.AddressOf(ref TerrainModifierDataA);
+            switch (TerrainModifierType)
+            {
+                case TerrainModifierType.Sphere:
+                    return ((CShapeSphere*) ptr)->CalculateHash();
+                    break;
+                case TerrainModifierType.BoundingBox:
+                    return ((CShapeBoundingBox*) ptr)->CalculateHash();
+                    break;
+                case TerrainModifierType.Torus:
+                    return ((CShapeTorus*) ptr)->CalculateHash();
+                    break;
+                case TerrainModifierType.Noise:
+                    return ((CShapeNoise*) ptr)->CalculateHash();
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+        }
+
         #endregion
     }
 }

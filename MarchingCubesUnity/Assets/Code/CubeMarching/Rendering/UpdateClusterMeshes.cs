@@ -57,93 +57,88 @@ namespace Code.CubeMarching.Rendering
 
         protected override void OnUpdate()
         {
-            unsafe
+            var clusterEntityQuery = GetEntityQuery(typeof(CClusterPosition));
+            var clusterEntities = clusterEntityQuery.ToEntityArray(Allocator.TempJob);
+            var clusterCount = clusterEntities.Length;
+
+            if (previousFrameClusterCount != clusterCount)
             {
-                var clusterEntityQuery = GetEntityQuery(typeof(CClusterPosition));
-                var clusterEntities = clusterEntityQuery.ToEntityArray(Allocator.TempJob);
-                var clusterCount = clusterEntities.Length;
 
-                if (previousFrameClusterCount != clusterCount)
+                if (_triangulationIndices.IsCreated)
                 {
-
-                    if (_triangulationIndices.IsCreated)
-                    {
-                        _triangulationIndices.Dispose();
-                    }
-
-                    _triangulationIndices = new ParallelSubListCollection<TriangulationPosition>(clusterCount, 512, 512 * 5);
+                    _triangulationIndices.Dispose();
                 }
 
-                _triangulationIndices.Reset();
-                previousFrameClusterCount = clusterCount;
-                var getClusterPosition = GetComponentDataFromEntity<CClusterPosition>();
+                _triangulationIndices = new ParallelSubListCollection<TriangulationPosition>(clusterCount, 512, 512 * 5);
+            }
+
+            _triangulationIndices.Reset();
+            previousFrameClusterCount = clusterCount;
+            var getClusterPosition = GetComponentDataFromEntity<CClusterPosition>();
                 
-                var parallelSubListCollection = _triangulationIndices;
-                var clustersCount = GetSingleton<TotalClustersCount>();
+            var parallelSubListCollection = _triangulationIndices;
+            var clustersCount = GetSingleton<TotalClustersCount>();
 
 
-                NativeList<TriangulationComputeShaderInstruction> triangulationInstructions = new NativeList<TriangulationComputeShaderInstruction>(clusterCount * 512 * 8, Allocator.TempJob);
-                var triangulationListWriter = triangulationInstructions.AsParallelWriter();
+            NativeList<TriangulationComputeShaderInstruction> triangulationInstructions = new NativeList<TriangulationComputeShaderInstruction>(clusterCount * 512 * 8, Allocator.TempJob);
+            var triangulationListWriter = triangulationInstructions.AsParallelWriter();
 
-                Dependency = Entities.ForEach((CTerrainEntityChunkPosition chunkPosition, CTerrainChunkStaticData staticData, CTerrainChunkDynamicData dynamicData, ClusterChild clusterChild) =>
+            Dependency = Entities.ForEach((CTerrainEntityChunkPosition chunkPosition, CTerrainChunkStaticData staticData, CTerrainChunkDynamicData dynamicData, ClusterChild clusterChild) =>
+                {
+                    if (dynamicData.DistanceFieldChunkData.HasData && dynamicData.DistanceFieldChunkData.InstructionsChangedSinceLastFrame)
                     {
-                        if (dynamicData.DistanceFieldChunkData.HasData)
-                        {
-                            int3 positionOfChunkWS = chunkPosition.positionGS * 8;
+                        int3 positionOfChunkWS = chunkPosition.positionGS * 8;
                             
-                            for (int i = 0; i < 8; i++)
+                        for (int i = 0; i < 8; i++)
+                        {
+                            if (dynamicData.DistanceFieldChunkData.InnerDataMask.GetBit(i))
                             {
-                                if (dynamicData.DistanceFieldChunkData.InnerDataMask.GetBit(i))
-                                {
-                                    int3 subChunkOffset = TerrainChunkEntitySystem.Utils.IndexToPositionWS(i, 2) * 4;
-                                    triangulationListWriter.AddNoResize(new TriangulationComputeShaderInstruction(positionOfChunkWS + subChunkOffset,0));
-                                }
+                                int3 subChunkOffset = TerrainChunkEntitySystem.Utils.IndexToPositionWS(i, 2) * 4;
+                                triangulationListWriter.AddNoResize(new TriangulationComputeShaderInstruction(positionOfChunkWS + subChunkOffset,0));
                             }
                         }
-                    })
-                    .WithBurst().WithName("CalculateTriangulationIndices").
-                    ScheduleParallel(Dependency);
+                    }
+                })
+                .WithBurst().WithName("CalculateTriangulationIndices").
+                ScheduleParallel(Dependency);
  
-                Dependency = parallelSubListCollection.ScheduleListCollapse(Dependency);
+            Dependency = parallelSubListCollection.ScheduleListCollapse(Dependency);
 
-                Dependency.Complete();
+            Dependency.Complete();
 
-                _distanceFieldComputeBuffer?.Dispose();
-                _indexMapComputeBuffer?.Dispose();
+            _distanceFieldComputeBuffer?.Dispose();
+            _indexMapComputeBuffer?.Dispose();
     
-                //todo rename
-                var newSystem = World.GetExistingSystem<SPrepareGPUData>();
+            //todo rename
+            var newSystem = World.GetExistingSystem<SPrepareGPUData>();
 
-                _distanceFieldComputeBuffer = new ComputeBuffer(newSystem.TerrainChunkData.Length * TerrainChunkData.PackedCapacity, 4 * 4 * 2);
-                _distanceFieldComputeBuffer.SetData(newSystem.TerrainChunkData.AsArray());
+            _distanceFieldComputeBuffer = new ComputeBuffer(newSystem.TerrainChunkData.Length * TerrainChunkData.PackedCapacity, 4 * 4 * 2);
+            _distanceFieldComputeBuffer.SetData(newSystem.TerrainChunkData.AsArray());
     
-                var terrainSize = newSystem.IndexMapSize;
     
-                var indexMap = this.GetSingletonBuffer<TerrainChunkIndexMap>().Reinterpret<int>();
+            var indexMap = this.GetSingletonBuffer<TerrainChunkIndexMap>().Reinterpret<int>();
     
-                _indexMapComputeBuffer = new ComputeBuffer(indexMap.Length, 4);
-                _indexMapComputeBuffer.SetData(indexMap.AsNativeArray());
+            _indexMapComputeBuffer = new ComputeBuffer(indexMap.Length, 4);
+            _indexMapComputeBuffer.SetData(indexMap.AsNativeArray());
     
-                var terrainChunkPositionsToRender = new NativeList<int3>(Allocator.Temp);
- 
-
-
-                var clusterMeshRendererEntities = GetEntityQuery(typeof(CClusterMesh)).ToEntityArray(Allocator.TempJob);
+            var clusterMeshRendererEntities = GetEntityQuery(typeof(CClusterMesh)).ToEntityArray(Allocator.TempJob);
                 
 
-                for (int i = 0; i < clusterCount; i++)
+            for (int i = 0; i < clusterCount; i++)
+            {
+                var clusterMesh = EntityManager.GetSharedComponentData<CClusterMesh>(clusterMeshRendererEntities[i]);
+
+                if (triangulationInstructions.Length > 0)
                 {
-                    var clusterMesh = EntityManager.GetSharedComponentData<CClusterMesh>(clusterMeshRendererEntities[i]);
-
-                    _gpuData.UpdateWithSurfaceData(_distanceFieldComputeBuffer,_indexMapComputeBuffer,triangulationInstructions,clustersCount.Value,0,clusterMesh.mesh);
-
-                    clusterMesh.mesh.SetSubMeshes(new[] {new SubMeshDescriptor(0, clusterMesh.mesh.vertexCount)}, MeshGeneratorBuilder.MeshUpdateFlagsNone);
+                    _gpuData.UpdateWithSurfaceData(_distanceFieldComputeBuffer, _indexMapComputeBuffer, triangulationInstructions, clustersCount.Value, 0, clusterMesh.mesh);
                 }
 
-                clusterMeshRendererEntities.Dispose(Dependency);
-                clusterEntities.Dispose(Dependency);
-                triangulationInstructions.Dispose();
+                clusterMesh.mesh.SetSubMeshes(new[] {new SubMeshDescriptor(0, clusterMesh.mesh.vertexCount)}, MeshGeneratorBuilder.MeshUpdateFlagsNone);
             }
+
+            clusterMeshRendererEntities.Dispose(Dependency);
+            clusterEntities.Dispose(Dependency);
+            triangulationInstructions.Dispose();
         }
         
         

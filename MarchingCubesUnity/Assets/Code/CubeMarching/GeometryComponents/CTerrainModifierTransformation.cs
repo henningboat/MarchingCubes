@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using Code.CubeMarching.TerrainChunkEntitySystem;
 using Code.SIMDMath;
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
@@ -175,6 +176,14 @@ namespace Code.CubeMarching.GeometryComponents
             var hasNonUniformScale = hasScale && Math.Abs(transform.lossyScale.x - transform.lossyScale.y) < math.EPSILON && Math.Abs(transform.lossyScale.x - transform.lossyScale.z) < math.EPSILON;
 
             return new CTerrainModifierTransformation(transform.position, transform.rotation);
+        }
+
+        public uint CalculateHash()
+        {
+            var hash = math.hash(inverseRotationScaleMatrix);
+            hash.AddToHash(math.hash(objectOrigin));
+            hash.AddToHash((uint) Type);
+            return hash;
         }
     }
 

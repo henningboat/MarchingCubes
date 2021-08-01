@@ -4,6 +4,7 @@ using Code.CubeMarching.Rendering;
 using Code.SIMDMath;
 using JetBrains.Annotations;
 using Unity.Entities;
+using Unity.Mathematics;
 using Unity.Transforms;
 using UnityEngine;
 using static Code.SIMDMath.SimdMath;
@@ -72,6 +73,11 @@ namespace Code.CubeMarching.GeometryComponents
             {
                 min = center - radius, max = center + radius
             };
+        }
+
+        public uint CalculateHash()
+        {
+            return math.asuint(radius);
         }
 
         public TerrainModifierType Type => TerrainModifierType.Sphere;

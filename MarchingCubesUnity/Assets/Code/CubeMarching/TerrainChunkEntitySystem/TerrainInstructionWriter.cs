@@ -84,6 +84,14 @@ namespace Code.CubeMarching.TerrainChunkEntitySystem
             coverageHandler->Dispose(this);
 
             UnsafeUtility.Free(coverageHandler, Allocator.Temp);
+
+            //calculate hashes for all written instructions
+            for (int i = 0; i < terrainInstructions.Length; i++)
+            {
+                var terrainInstruction = terrainInstructions[i];
+                terrainInstruction.Hash = terrainInstruction.CalculateHash();
+                terrainInstructions[i] = terrainInstruction;
+            }
         }
 
         #endregion

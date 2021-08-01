@@ -3,6 +3,7 @@ using Code.CubeMarching.Authoring;
 using Code.CubeMarching.Rendering;
 using Code.SIMDMath;
 using Unity.Entities;
+using Unity.Mathematics;
 using Unity.Transforms;
 using UnityEngine;
 
@@ -49,6 +50,11 @@ namespace Code.CubeMarching.GeometryComponents
             {
                 min = center - extends, max = center + extends
             };
+        }
+
+        public uint CalculateHash()
+        {
+            return math.hash(new float2(radius, thickness));
         }
 
         public TerrainModifierType Type => TerrainModifierType.Torus;

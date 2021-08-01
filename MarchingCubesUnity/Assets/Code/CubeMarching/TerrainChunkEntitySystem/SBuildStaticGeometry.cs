@@ -1,4 +1,5 @@
 ﻿using Code.CubeMarching.Authoring;
+using Code.CubeMarching.StateHashing;
 using Unity.Entities;
 using Unity.Mathematics;
 using UnityEngine;
@@ -16,6 +17,7 @@ namespace Code.CubeMarching.TerrainChunkEntitySystem
             var terrainChunkBuffer = this.GetSingletonBuffer<TerrainChunkDataBuffer>();
             var isPlaying = Application.isPlaying && UnityEngine.Time.frameCount > 1;
             var getClusterPosition = GetComponentDataFromEntity<CClusterPosition>(true);
+            GeometryInstructionsHasher hasher = new GeometryInstructionsHasher(this);
 
             //Static geometry 
             {
@@ -31,6 +33,11 @@ namespace Code.CubeMarching.TerrainChunkEntitySystem
 
                 Dependency = Entities.ForEach((ref CTerrainChunkStaticData distanceField, in ClusterChild clusterChild, in CTerrainEntityChunkPosition chunkPosition) =>
                 {
+                    hasher.Execute(ref distanceField.DistanceFieldChunkData, chunkPosition, clusterChild);
+
+                    if (!distanceField.DistanceFieldChunkData.InstructionsChangedSinceLastFrame)
+                        return;
+                    
                     DistanceFieldResolver.CalculateDistanceFieldForChunk(terrainChunkBuffer, ref distanceField.DistanceFieldChunkData, chunkPosition, getTerrainInstructionBuffer,clusterChild.ClusterEntity,
                         getClusterPosition[clusterChild.ClusterEntity],
                         distanceField.DistanceFieldChunkData.IndexInDistanceFieldBuffer, isPlaying);
@@ -50,16 +57,21 @@ namespace Code.CubeMarching.TerrainChunkEntitySystem
                 //Calculate Distance Fields
                 var getTerrainInstructionBuffer = GetBufferFromEntity<TerrainInstruction>(true);
 
-                Dependency = Entities.ForEach((ref CTerrainChunkDynamicData distanceField, in CTerrainChunkStaticData staticData, in CTerrainEntityChunkPosition chunkPosition, in ClusterChild clusterChild) =>
+                Dependency = Entities.ForEach((ref CTerrainChunkDynamicData distanceField, in CTerrainChunkStaticData staticDistanceField, in CTerrainEntityChunkPosition chunkPosition, in ClusterChild clusterChild) =>
                 {
+                    hasher.Execute(ref distanceField.DistanceFieldChunkData, chunkPosition, clusterChild);
+
+                    if (!distanceField.DistanceFieldChunkData.InstructionsChangedSinceLastFrame)
+                        return;
+                    
                     int existingData;
-                    if (staticData.DistanceFieldChunkData.HasData)
+                    if (staticDistanceField.DistanceFieldChunkData.HasData)
                     {
-                        existingData = staticData.DistanceFieldChunkData.IndexInDistanceFieldBuffer;
+                        existingData = staticDistanceField.DistanceFieldChunkData.IndexInDistanceFieldBuffer;
                     }
                     else
                     {
-                        if (staticData.DistanceFieldChunkData.InnerDataMask > 0)
+                        if (staticDistanceField.DistanceFieldChunkData.InnerDataMask > 0)
                         {
                             existingData = 1;
                         }

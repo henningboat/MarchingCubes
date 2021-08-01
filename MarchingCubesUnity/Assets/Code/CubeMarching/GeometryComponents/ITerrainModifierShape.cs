@@ -15,5 +15,7 @@ namespace Code.CubeMarching
 
         [UsedImplicitly]
         TerrainBounds CalculateBounds(Translation translation);
+
+        uint CalculateHash();
     }
 }

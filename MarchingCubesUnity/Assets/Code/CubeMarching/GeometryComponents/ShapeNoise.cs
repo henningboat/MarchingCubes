@@ -45,6 +45,11 @@ namespace Code.CubeMarching.GeometryComponents
             return new() {min = int.MinValue, max = int.MaxValue};
         }
 
+        public uint CalculateHash()
+        {
+            return math.hash(new float4x2(new float4(strength, offset), new float4(valueOffset, scale)));
+        }
+
         public TerrainModifierType Type => TerrainModifierType.Noise;
 
         private PackedFloat cnoise4(PackedFloat3 input)

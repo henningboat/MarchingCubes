@@ -1,4 +1,6 @@
-﻿using Unity.Entities;
+﻿using Code.CubeMarching.TerrainChunkEntitySystem;
+using Unity.Entities;
+using Unity.Mathematics;
 
 namespace Code.CubeMarching.GeometryComponents
 {
@@ -10,5 +12,12 @@ namespace Code.CubeMarching.GeometryComponents
         public CombinerOperation Operation;
 
         #endregion
+
+        public uint CalculateHash()
+        {
+            uint hash = math.asuint(BlendFactor);
+            hash.AddToHash((uint) Operation);
+            return hash;
+        }
     }
 }

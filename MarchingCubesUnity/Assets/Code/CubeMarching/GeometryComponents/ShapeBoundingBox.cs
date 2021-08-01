@@ -84,6 +84,11 @@ namespace Code.CubeMarching.GeometryComponents
             };
         }
 
+        public uint CalculateHash()
+        {
+            return math.hash(new float4(extends, boundWidth));
+        }
+
         public TerrainModifierType Type => TerrainModifierType.BoundingBox;
 
         #endregion
