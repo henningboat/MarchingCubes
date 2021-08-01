@@ -32,8 +32,8 @@ uint triangleWriteIndex=0;
 //todo make int3?
 float isoLevel;
 
-static const int localGridSize=10;
-groupshared float4 _grid[localGridSize*localGridSize*localGridSize];
+groupshared int groupTriangleIndex=0;
+
 
 
 float3 interpolateVerts(float4 v1, float4 v2, out float t) {
@@ -56,22 +56,6 @@ int GetIndexOfVert(float3 positionOS, int3 basePositionOfChunk)
     const int3 positionIndex = floor(positionOS);
     const int index = positionIndex.x+positionIndex.y*8+positionIndex.z*64;
     return index;
-}
-
-uint3 IndexToGridPosition(uint groupIndex)
-{
-    return uint3(groupIndex, groupIndex / localGridSize, groupIndex / (localGridSize*localGridSize)) % localGridSize;
-}
-
-uint GridPositionToIndex(uint3 gridPosition)
-{
-    return gridPosition.x + gridPosition.y*localGridSize+gridPosition.z*localGridSize*localGridSize;
-}
-
-void LoadDataIntoLocalGrid(uint groupIndex, uint3 chunkBasePosition)
-{
-    const uint3 positionToLoad = IndexToGridPosition(groupIndex) + chunkBasePosition;
-    _grid[groupIndex]=GetPointPosition(positionToLoad);
 }
 
 float3 CalculateNormalForPosition(int3 localPosition)
@@ -98,27 +82,20 @@ float3 CalculateNormalForPosition(int3 localPosition)
 void GetTrianglePositions (uint3 id : SV_DispatchThreadID, uint groupIndex : SV_GroupIndex, uint3 groupThreadID:SV_GroupThreadID)
 {
     const uint chunkIndex = id.x/8;
-    id.x%=8;
-    const int3 terrainChunkBasePosition = _TerrainChunkBasePosition[chunkIndex]*8;
+    const int3 terrainChunkBasePosition = _TerrainChunkBasePosition[chunkIndex].xyz;
 
-    LoadDataIntoLocalGrid(groupIndex * 2, terrainChunkBasePosition);
-    LoadDataIntoLocalGrid(groupIndex * 2 + 1, terrainChunkBasePosition);
-
-    GroupMemoryBarrierWithGroupSync ();
-
-    float4 cubeCorners[8] = {
-        _grid[GridPositionToIndex(int3(id.x, id.y, id.z))],
-        _grid[GridPositionToIndex(int3(id.x + 1, id.y, id.z))], 
-        _grid[GridPositionToIndex(int3(id.x + 1, id.y, id.z + 1))],
-        _grid[GridPositionToIndex(int3(id.x, id.y, id.z + 1))],
-        _grid[GridPositionToIndex(int3(id.x, id.y + 1, id.z))],
-        _grid[GridPositionToIndex(int3(id.x + 1, id.y + 1, id.z))],
-        _grid[GridPositionToIndex(int3(id.x + 1, id.y + 1, id.z + 1))],
-        _grid[GridPositionToIndex(int3(id.x, id.y + 1, id.z + 1))]
-    };
-
+    int3 positionWS = groupThreadID + terrainChunkBasePosition;
     
-    id+=terrainChunkBasePosition;
+    float4 cubeCorners[8] = {
+        GetPointPosition((int3(positionWS.x, positionWS.y, positionWS.z))),
+       GetPointPosition((int3(positionWS.x + 1, positionWS.y, positionWS.z))),
+       GetPointPosition((int3(positionWS.x + 1, positionWS.y, positionWS.z + 1))),
+       GetPointPosition((int3(positionWS.x, positionWS.y, positionWS.z + 1))),
+       GetPointPosition((int3(positionWS.x, positionWS.y + 1, positionWS.z))),
+       GetPointPosition((int3(positionWS.x + 1, positionWS.y + 1, positionWS.z))),
+       GetPointPosition((int3(positionWS.x + 1, positionWS.y + 1, positionWS.z + 1))),
+       GetPointPosition((int3(positionWS.x, positionWS.y + 1, positionWS.z + 1)))
+    };
 
     // Calculate unique index for each cube configuration.
     // There are 256 possible values
@@ -137,7 +114,7 @@ void GetTrianglePositions (uint3 id : SV_DispatchThreadID, uint groupIndex : SV_
     if(cubeIndex==0||cubeIndex==255)
         return;
     
-    _ValidTrianglePositions.Append(int4(id,cubeIndex));
+   _ValidTrianglePositions.Append(int4(positionWS, cubeIndex));
 }
 
 RWStructuredBuffer<int> _ArgsBuffer;
@@ -157,15 +134,28 @@ void ClearVertexData (uint3 id : SV_DispatchThreadID)
 void Triangulation (uint3 id : SV_DispatchThreadID)
 {
     int index = id.x*512+id.y;
-
     if(index>=_ArgsBuffer[0])
         return;
+
+
+    // VertexData vertexA=(VertexData)0;
+    // VertexData vertexB=(VertexData)0;
+    // VertexData vertexC=(VertexData)0;
+    //
+    // float3 positionWSs = _ValidTrianglePositionResults[index].xyz;
+    // vertexA.vertex = float4(positionWSs,0)+float4(0,0,0,0);
+    // vertexB.vertex = float4(positionWSs,0)+float4(1,0,0,0);
+    // vertexC.vertex = float4(positionWSs,0)+float4(0,1,0,0);
+    //
+    // int baseIndex = 5*3*index;
+    // triangles[baseIndex+0]=vertexC;
+    // triangles[baseIndex+1]=vertexB;
+    // triangles[baseIndex+2]=vertexA;
+    // return;
 
     int3 positionWS = _ValidTrianglePositionResults[index].xyz;
     int cubeIndex = _ValidTrianglePositionResults[index].w;
     
-    //id+=terrainChunkBasePosition;
-
     float4 cubeCorners[8] = {
         GetPointPosition((int3(positionWS.x, positionWS.y, positionWS.z))),
        GetPointPosition((int3(positionWS.x + 1, positionWS.y, positionWS.z))),
@@ -190,7 +180,6 @@ void Triangulation (uint3 id : SV_DispatchThreadID)
         CalculateNormalForPosition((int3(positionWS.x, positionWS.y + 1, positionWS.z + 1)))
     };
 
-    
     // Create triangles for current cube configuration
     //todo make it work with multiple triangles again
     for (int i = 0; triangulation[cubeIndex][i] != -1; i +=3)
@@ -228,8 +217,9 @@ void Triangulation (uint3 id : SV_DispatchThreadID)
         vertexB.normal = interpolateNormals(cubeNormals[a1], cubeNormals[b1],tB);
         vertexC.normal = interpolateNormals(cubeNormals[a2], cubeNormals[b2],tC);
 
-        triangles[index*3+0]=vertexA;
-        triangles[index*3+1]=vertexB;
-        triangles[index*3+2]=vertexC;
+        int baseIndex = 5*3*index+i;
+        triangles[baseIndex+0]=vertexC;
+        triangles[baseIndex+1]=vertexB;
+        triangles[baseIndex+2]=vertexA;
     }
 }

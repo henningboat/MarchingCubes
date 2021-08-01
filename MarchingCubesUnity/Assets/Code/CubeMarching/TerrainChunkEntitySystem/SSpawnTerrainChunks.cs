@@ -124,14 +124,16 @@ namespace Code.CubeMarching.TerrainChunkEntitySystem
             buffer.Add(new TerrainChunkDataBuffer {Value = TerrainChunkData.Outside});
             buffer.Add(new TerrainChunkDataBuffer {Value = TerrainChunkData.Inside});
 
-            Entities.ForEach((ref CTerrainChunkStaticData distanceField) =>
+            
+            Entities.ForEach((ref CTerrainChunkDynamicData distanceField) =>
             {
                 distanceField.DistanceFieldChunkData.IndexInDistanceFieldBuffer = buffer.Length;
                 //todo, this probably costs a lot of performance, since it constantly has to resize the array. 
                 //better just count how much we need and resize ones
                 buffer.Add(default);
             }).Run();
-            Entities.ForEach((ref CTerrainChunkDynamicData distanceField) =>
+            
+            Entities.ForEach((ref CTerrainChunkStaticData distanceField) =>
             {
                 distanceField.DistanceFieldChunkData.IndexInDistanceFieldBuffer = buffer.Length;
                 //todo, this probably costs a lot of performance, since it constantly has to resize the array. 

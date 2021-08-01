@@ -39,6 +39,21 @@ namespace Code.CubeMarching.GeometryComponents
     [StructLayout(LayoutKind.Explicit, Size = 4 * 16)]
     public struct CShapeSphere : IComponentData, ITerrainModifierShape
     {
+        public bool Equals(CShapeSphere other)
+        {
+            return radius.Equals(other.radius);
+        }
+
+        public override bool Equals(object obj)
+        {
+            return obj is CShapeSphere other && Equals(other);
+        }
+
+        public override int GetHashCode()
+        {
+            return radius.GetHashCode();
+        }
+
         #region ActualData
 
         [FieldOffset(0)] public float radius;

@@ -79,9 +79,6 @@ namespace Code.CubeMarching.Rendering
                 var getClusterPosition = GetComponentDataFromEntity<CClusterPosition>();
                 
                 var parallelSubListCollection = _triangulationIndices;
-
-                TerrainBufferAccessor accessor = new TerrainBufferAccessor(this);
-
                 var clustersCount = GetSingleton<TotalClustersCount>();
 
 
@@ -93,46 +90,12 @@ namespace Code.CubeMarching.Rendering
                         if (dynamicData.DistanceFieldChunkData.HasData)
                         {
                             var clusterIndex = getClusterPosition[clusterChild.ClusterEntity];
-                            
+
                             int3 positionOfChunkWS = chunkPosition.positionGS * 8;
-
-                            for (int subChunkIndex = 0; subChunkIndex < 8; subChunkIndex++)
-                            {
-                                if (!dynamicData.DistanceFieldChunkData.InnerDataMask.GetBit(subChunkIndex))
-                                {
-                                    continue;
-                                }
-
-                                triangulationListWriter.AddNoResize(new TriangulationComputeShaderInstruction(positionOfChunkWS / 8, subChunkIndex));
-                                
-                                int3 subChunkPositionInChunk = TerrainChunkEntitySystem.Utils.IndexToPositionWS(subChunkIndex, 2) * 4;
-                                const int subChunkCapacity = 64;
-                                for (int i = 0; i < subChunkCapacity; i++)
-                                {
-                                    int3 positionInSubChunk = TerrainChunkEntitySystem.Utils.IndexToPositionWS(i, 4);
-                                    int3 positionWS = positionOfChunkWS + subChunkPositionInChunk + positionInSubChunk;
-                                
-                                    byte triangulationIndex = 0;
-                                    triangulationIndex.SetBit(0, accessor.GetSurfaceDistance(positionWS + new int3(0, 0, 0)) > 0);
-                                    triangulationIndex.SetBit(1, accessor.GetSurfaceDistance(positionWS + new int3(1, 0, 0)) > 0);
-                                    triangulationIndex.SetBit(2, accessor.GetSurfaceDistance(positionWS + new int3(1, 0, 1)) > 0);
-                                    triangulationIndex.SetBit(3, accessor.GetSurfaceDistance(positionWS + new int3(0, 0, 1)) > 0);
-                                    triangulationIndex.SetBit(4, accessor.GetSurfaceDistance(positionWS + new int3(0, 1, 0)) > 0);
-                                    triangulationIndex.SetBit(5, accessor.GetSurfaceDistance(positionWS + new int3(1, 1, 0)) > 0);
-                                    triangulationIndex.SetBit(6, accessor.GetSurfaceDistance(positionWS + new int3(1, 1, 1)) > 0);
-                                    triangulationIndex.SetBit(7, accessor.GetSurfaceDistance(positionWS + new int3(0, 1, 1)) > 0);
-                                    
-                                    if(triangulationIndex==0||triangulationIndex==255)
-                                        continue;
-                                    
-                                    parallelSubListCollection.Write(clusterIndex.ClusterIndex,chunkPosition.indexInCluster,new TriangulationPosition(){position = positionWS,triangulationTableIndex = 0});
-                                    parallelSubListCollection.Write(clusterIndex.ClusterIndex,chunkPosition.indexInCluster,new TriangulationPosition(){position = positionWS,triangulationTableIndex = 1});
-                                    parallelSubListCollection.Write(clusterIndex.ClusterIndex,chunkPosition.indexInCluster,new TriangulationPosition(){position = positionWS,triangulationTableIndex = 2});
-                                }
-                            }
+                            triangulationListWriter.AddNoResize(new TriangulationComputeShaderInstruction(positionOfChunkWS, 0));
                         }
                     })
-                    .WithReadOnly(getClusterPosition).WithReadOnly(accessor)
+                    .WithReadOnly(getClusterPosition)
                     .WithBurst().WithName("CalculateTriangulationIndices").
                     ScheduleParallel(Dependency);
  
@@ -147,8 +110,8 @@ namespace Code.CubeMarching.Rendering
     
                 //todo rename
                 var newSystem = World.GetExistingSystem<SPrepareGPUData>();
-    
-                _distanceFieldComputeBuffer = new ComputeBuffer(newSystem.TerrainChunkData.Length * TerrainChunkData.UnPackedCapacity, TerrainChunkData.UnpackedElementSize);
+
+                _distanceFieldComputeBuffer = new ComputeBuffer(newSystem.TerrainChunkData.Length * TerrainChunkData.PackedCapacity, 4 * 4 * 2);
                 _distanceFieldComputeBuffer.SetData(newSystem.TerrainChunkData.AsArray());
     
                 var terrainSize = newSystem.IndexMapSize;
@@ -159,11 +122,16 @@ namespace Code.CubeMarching.Rendering
                 _indexMapComputeBuffer.SetData(indexMap.AsNativeArray());
     
                 var terrainChunkPositionsToRender = new NativeList<int3>(Allocator.Temp);
-    
-               
+ 
 
 
-                        var clusterMeshRendererEntities = GetEntityQuery(typeof(CClusterMesh)).ToEntityArray(Allocator.TempJob);
+                var clusterMeshRendererEntities = GetEntityQuery(typeof(CClusterMesh)).ToEntityArray(Allocator.TempJob);
+                
+                
+                // triangulationInstructions.Clear();
+                // triangulationInstructions.Add(new TriangulationComputeShaderInstruction(new int3(0, 0, 0), 0));
+                // triangulationInstructions.Add(new TriangulationComputeShaderInstruction(new int3(0, 8, 0), 0));
+                //         
 
                 for (int i = 0; i < clusterCount; i++)
                 {
@@ -204,10 +172,10 @@ namespace Code.CubeMarching.Rendering
             _chunksToTriangulize = new ComputeBuffer(10000, 4 * 4, ComputeBufferType.Default);
         }
 
-        public void UpdateWithSurfaceData(ComputeBuffer globalTerrainBuffer, ComputeBuffer globalTerrainIndexMap, NativeList<TriangulationComputeShaderInstruction> triangulationInstructions, int3 terrainMapSize, int materialIDFilter, Mesh mesh)
+        public void UpdateWithSurfaceData(ComputeBuffer globalTerrainBuffer, ComputeBuffer globalTerrainIndexMap, NativeList<TriangulationComputeShaderInstruction> triangulationInstructions, int3 clusterCounts, int materialIDFilter, Mesh mesh)
         {
             var trianbgleByteSize = (3 + 3 + 4) * 4;
-            var requiredTriangleCapacity = triangulationInstructions.Length * 4 * 4 * 4 * 5;
+            var requiredTriangleCapacity = triangulationInstructions.Length * 4 * 4 * 4 * 5 * 8;
             if (_trianglePositionBuffer == null || _trianglePositionBuffer.count < requiredTriangleCapacity)
             {
                 if (_trianglePositionBuffer != null)
@@ -219,11 +187,13 @@ namespace Code.CubeMarching.Rendering
             }
             _chunksToTriangulize.SetData(triangulationInstructions.AsArray());
 
+            int3 chunkCounts = 8 * clusterCounts;
+            
             //Fine positions in the grid that contain triangles
             var getPositionKernel = _computeShader.FindKernel("GetTrianglePositions");
             _computeShader.SetInt("numPointsPerAxis", ChunkLength);
             _computeShader.SetInt("_MaterialIDFilter", materialIDFilter);
-            _computeShader.SetInts("_TerrainMapSize", terrainMapSize.x, terrainMapSize.y, terrainMapSize.z);
+            _computeShader.SetInts("_TerrainMapSize", chunkCounts.x, chunkCounts.y, chunkCounts.z);
             _computeShader.SetBuffer(getPositionKernel, "_TerrainChunkBasePosition", _chunksToTriangulize);
             _computeShader.SetBuffer(getPositionKernel, "_ValidTrianglePositions", _trianglePositionBuffer);
             _computeShader.SetBuffer(getPositionKernel, "_GlobalTerrainBuffer", globalTerrainBuffer);
@@ -246,7 +216,7 @@ namespace Code.CubeMarching.Rendering
             var triangulationKernel = _computeShader.FindKernel("Triangulation");
             _computeShader.SetInt("numPointsPerAxis", ChunkLength);
             _computeShader.SetInt("_MaterialIDFilter", materialIDFilter);
-            _computeShader.SetInts("_TerrainMapSize", terrainMapSize.x, terrainMapSize.y, terrainMapSize.z);
+            _computeShader.SetInts("_TerrainMapSize", chunkCounts.x, chunkCounts.y, chunkCounts.z);
 
 
             

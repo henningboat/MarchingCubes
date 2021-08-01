@@ -24,59 +24,50 @@ int GetPointPositionInIndexMap(uint3 position)
     positionInIndexMap.x = position.x / 8;
     positionInIndexMap.y = position.y / 8;
     positionInIndexMap.z = position.z / 8;
-    uint indexInTerrainIndexMap = indexFromCoordAndGridSize(positionInIndexMap, _TerrainMapSize);
+    
+    const uint indexInTerrainIndexMap = indexFromCoordAndGridSize(positionInIndexMap, _TerrainMapSize);
     return indexInTerrainIndexMap;
 }
 
 float4 GetPointPosition(uint3 position)
 {
-    uint positionInIndexMap = GetPointPositionInIndexMap(position);
-    uint terrainChunkCapacity = 512;
-    uint baseIndexOfTerrainChunk = _GlobalTerrainIndexMap[positionInIndexMap] * terrainChunkCapacity;
+    const uint positionInIndexMap = GetPointPositionInIndexMap(position);
+    const uint terrainChunkCapacity = 512;
+     int chunkIndex = _GlobalTerrainIndexMap[positionInIndexMap];
+   // chunkIndex=2+8;
+    const uint baseIndexOfTerrainChunk = chunkIndex * terrainChunkCapacity;
 
-    uint3 positionWithinTerrainChunk = ((position + 8) % 8);
+    const uint3 positionWithinTerrainChunk = position % 8;
 
-    int subChunkIndex = indexFromCoordAndGridSize(positionWithinTerrainChunk/4,2);
-    
-    uint indexWithinSubChunk = indexFromCoordAndGridSize(position % 4,4);
-    uint indexInTerrainBuffer = baseIndexOfTerrainChunk + subChunkIndex * 64 + indexWithinSubChunk;
+    const int subChunkIndex = indexFromCoordAndGridSize(positionWithinTerrainChunk/4,2);
+
+    const uint indexWithinSubChunk = indexFromCoordAndGridSize(position % 4,4);
+    const uint indexInTerrainBuffer = baseIndexOfTerrainChunk + subChunkIndex * 64 + indexWithinSubChunk;
     
 
     float surfaceDistance = _GlobalTerrainBuffer[indexInTerrainBuffer / 4].surfaceDistance[indexInTerrainBuffer % 4];
-    // if (_GlobalTerrainBuffer[indexInTerrainBuffer / 4].terrainMaterial.data[indexInTerrainBuffer % 4] != _MaterialIDFilter)
-    // {
-    //     if(surfaceDistance<0)
-    //     {
-    //         if(_MaterialIDFilter==0){
-    //             surfaceDistance = 0.000001;
-    //         }else
-    //         {
-    //             surfaceDistance = -0.000001;
-    //         }
-    //     }
-    // }
 
-    // if (position.x <= 0 || position.y <= 0 || position.z <= 0 ||
-    //     position.x > _TerrainMapSize.x * 8 - 1 ||
-    //     position.y > _TerrainMapSize.y * 8 - 1 ||
-    //     position.z > _TerrainMapSize.z * 8 - 1)
-    // {
-    //     surfaceDistance = 0.1f;
-    // }
-
+    if (position.x <= 0 || position.y <= 0 || position.z <= 0 ||
+        position.x > _TerrainMapSize.x * 8 - 1 ||
+        position.y > _TerrainMapSize.y * 8 - 1 ||
+        position.z > _TerrainMapSize.z * 8 - 1)
+    {
+        surfaceDistance = 0.1f;
+    }
+    
     return float4(position.x, position.y, position.z, surfaceDistance);
 }
 
 float4 GetColorAtPosition(int3 position)
 {
-    int positionInIndexMap = GetPointPositionInIndexMap(position);
-    int terrainChunkCapacity = 512;
-    int baseIndexOfTerrainChunk = _GlobalTerrainIndexMap[positionInIndexMap] * terrainChunkCapacity;
+    const int positionInIndexMap = GetPointPositionInIndexMap(position);
+    const int terrainChunkCapacity = 512;
+    const int baseIndexOfTerrainChunk = _GlobalTerrainIndexMap[positionInIndexMap] * terrainChunkCapacity;
 
-    int3 positionWithinTerrainChunk = ((position + 8) % 8);
-    int indexWithinTerrainChunk = indexFromCoord(positionWithinTerrainChunk.x, positionWithinTerrainChunk.y, positionWithinTerrainChunk.z);
+    const int3 positionWithinTerrainChunk = ((position + 8) % 8);
+    const int indexWithinTerrainChunk = indexFromCoord(positionWithinTerrainChunk.x, positionWithinTerrainChunk.y, positionWithinTerrainChunk.z);
 
-    int indexInTerrainBuffer = baseIndexOfTerrainChunk + indexWithinTerrainChunk;
+    const int indexInTerrainBuffer = baseIndexOfTerrainChunk + indexWithinTerrainChunk;
 
     float4 color = _GlobalTerrainBuffer[indexInTerrainBuffer / 4].terrainMaterial.data[indexInTerrainBuffer % 4] == 0 ? float4(1, 0, 0, 1) : float4(0, 1, 1, 1);
 
@@ -88,15 +79,15 @@ float GetSurfaceDistanceInterpolated(float3 positionWS)
     int3 id = floor(positionWS);
 
 
-    float3 positinWithinCube = frac(positionWS);
+    const float3 positinWithinCube = frac(positionWS);
 
-    float4 bottonPlane = lerp(lerp(GetPointPosition(int3(id.x, id.y, id.z)), GetPointPosition(int3(id.x + 1, id.y, id.z)), positinWithinCube.x),
-                              lerp(GetPointPosition(int3(id.x, id.y, id.z + 1)), GetPointPosition(int3(id.x + 1, id.y, id.z + 1)), positinWithinCube.x), positinWithinCube.z);
+    const float4 bottonPlane = lerp(lerp(GetPointPosition(int3(id.x, id.y, id.z)), GetPointPosition(int3(id.x + 1, id.y, id.z)), positinWithinCube.x),
+                                    lerp(GetPointPosition(int3(id.x, id.y, id.z + 1)), GetPointPosition(int3(id.x + 1, id.y, id.z + 1)), positinWithinCube.x), positinWithinCube.z);
 
-    float4 topPlane = lerp(lerp(GetPointPosition(int3(id.x, id.y + 1, id.z)), GetPointPosition(int3(id.x + 1, id.y + 1, id.z)), positinWithinCube.x),
-                           lerp(GetPointPosition(int3(id.x, id.y + 1, id.z + 1)), GetPointPosition(int3(id.x + 1, id.y + 1, id.z + 1)), positinWithinCube.x), positinWithinCube.z);
+    const float4 topPlane = lerp(lerp(GetPointPosition(int3(id.x, id.y + 1, id.z)), GetPointPosition(int3(id.x + 1, id.y + 1, id.z)), positinWithinCube.x),
+                                 lerp(GetPointPosition(int3(id.x, id.y + 1, id.z + 1)), GetPointPosition(int3(id.x + 1, id.y + 1, id.z + 1)), positinWithinCube.x), positinWithinCube.z);
 
-    float4 result = lerp(bottonPlane, topPlane, positinWithinCube.y);
+    const float4 result = lerp(bottonPlane, topPlane, positinWithinCube.y);
     return result.w;
 }
 
