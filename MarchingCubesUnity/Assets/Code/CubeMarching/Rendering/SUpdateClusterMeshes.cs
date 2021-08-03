@@ -32,7 +32,7 @@ namespace Code.CubeMarching.Rendering
     [ExecuteAlways]
     [UpdateInGroup(typeof(PresentationSystemGroup))]
     [UpdateAfter(typeof(SUpdateIndexMap))]
-    public class UpdateClusterMeshes : SystemBase
+    public class SUpdateClusterMeshes : SystemBase
     {
         private int previousFrameClusterCount = -1;
         
@@ -149,8 +149,8 @@ namespace Code.CubeMarching.Rendering
 
         public void UpdateWithSurfaceData(ComputeBuffer globalTerrainBuffer, ComputeBuffer globalTerrainIndexMap, NativeList<TriangulationComputeShaderInstruction> triangulationInstructions, int3 clusterCounts, int materialIDFilter, Mesh mesh)
         {
-            var trianbgleByteSize = (3 + 3 + 4) * 4;
-            var requiredTriangleCapacity = triangulationInstructions.Length * 4 * 4 * 4 * 5;
+            int trianbgleByteSize = (3 + 3 + 4) * 4;
+            int requiredTriangleCapacity = triangulationInstructions.Length * 4 * 4 * 4 * 5;
             if (_trianglePositionBuffer == null || _trianglePositionBuffer.count < requiredTriangleCapacity)
             {
                 if (_trianglePositionBuffer != null)
@@ -197,7 +197,7 @@ namespace Code.CubeMarching.Rendering
             _computeShader.SetInts("_TerrainMapSize", chunkCounts.x, chunkCounts.y, chunkCounts.z);
 
 
-            
+             
             _computeShader.SetBuffer(triangulationKernel, "triangles", meshVertexBuffer);
             _computeShader.SetBuffer(triangulationKernel, "_GlobalTerrainBuffer", globalTerrainBuffer);
             _computeShader.SetBuffer(triangulationKernel, "_GlobalTerrainIndexMap", globalTerrainIndexMap);
@@ -206,10 +206,6 @@ namespace Code.CubeMarching.Rendering
             _computeShader.DispatchIndirect(triangulationKernel, _trianglePositionCountBuffer, 4);
             
             meshVertexBuffer.Dispose();
-
-
-            _triangleCountPerSubChunk.GetData(dataReadback);
-            Debug.Log(dataReadback.Length);
         }
 
         public const int ChunkLength = 8;

@@ -85,10 +85,13 @@ float3 CalculateNormalForPosition(int3 localPosition)
     return normalize(combinedNormal);
 }
 
+int indexForTriangle;
 
 [numthreads(4,4,4)]
 void GetTrianglePositions (uint3 id : SV_DispatchThreadID, uint groupIndex : SV_GroupIndex, uint3 groupThreadID:SV_GroupThreadID)
 {
+    GroupMemoryBarrierWithGroupSync();
+    
     const uint chunkIndex = id.x/4;
     const int3 terrainChunkBasePosition = _TerrainChunkBasePosition[chunkIndex].xyz;
 
@@ -126,11 +129,13 @@ void GetTrianglePositions (uint3 id : SV_DispatchThreadID, uint groupIndex : SV_
     
     int subChunkIndexInCluster = chunkIndexInCluster * 8 + subChunkIndex;
     
+   
     if(cubeIndex!=0 && cubeIndex!=255)
     {
-        int indexForTriangle;
-        InterlockedAdd(groupTriangleCount,trianglesPerCubeIndex[cubeIndex],indexForTriangle);
+        int triangleCount = trianglesPerCubeIndex[cubeIndex];
 
+        InterlockedAdd(groupTriangleCount, triangleCount, indexForTriangle);
+    
         const int maxTrianglesPerSubChunk =  4 * 4 * 4 * 5;
 
         TriangulationInstruction result = (TriangulationInstruction)0;
@@ -143,7 +148,7 @@ void GetTrianglePositions (uint3 id : SV_DispatchThreadID, uint groupIndex : SV_
     }
     
     GroupMemoryBarrierWithGroupSync();
-
+    
     if(groupIndex==0)
     {
         _TriangleCountPerSubChunk[subChunkIndexInCluster] = groupTriangleCount;
@@ -170,9 +175,35 @@ void Triangulation (uint3 id : SV_DispatchThreadID)
     if(index>=_ArgsBuffer[0])
         return;
 
-    const TriangulationInstruction valid_triangle_position_result = _ValidTrianglePositionResults[index];
+    TriangulationInstruction valid_triangle_position_result = _ValidTrianglePositionResults[index];
     int3 positionWS = valid_triangle_position_result.positionWS;
     int cubeIndex = valid_triangle_position_result.cubeIndex;
+
+    
+    //
+    // VertexData vertexA;
+    // VertexData vertexB;
+    // VertexData vertexC;
+    //     
+    // float tA;
+    // float tB;
+    // float tC;
+    //      
+    // vertexA.vertex = float4(positionWS,1)+float4(0,0,0,0);
+    // vertexB.vertex = float4(positionWS,1)+float4(0,1,0,0);
+    // vertexC.vertex = float4(positionWS,1)+float4(1,0,0,0);
+    //
+    //
+    // //
+    // vertexA.normal = 0;
+    // vertexB.normal = 0;
+    // vertexC.normal = 0;
+    //
+    // int baseIndex = valid_triangle_position_result.vertexBufferPosition;
+    // triangles[baseIndex+0]=vertexC;
+    // triangles[baseIndex+1]=vertexB;
+    // triangles[baseIndex+2]=vertexA;
+
     
     float4 cubeCorners[8] = {
         GetPointPosition((int3(positionWS.x, positionWS.y, positionWS.z))),
@@ -184,9 +215,9 @@ void Triangulation (uint3 id : SV_DispatchThreadID)
        GetPointPosition((int3(positionWS.x + 1, positionWS.y + 1, positionWS.z + 1))),
        GetPointPosition((int3(positionWS.x, positionWS.y + 1, positionWS.z + 1)))
     };
-
     
-
+    
+    
     float3 cubeNormals[8] = {
         CalculateNormalForPosition((int3(positionWS.x, positionWS.y, positionWS.z))),
         CalculateNormalForPosition((int3(positionWS.x + 1, positionWS.y, positionWS.z))),
@@ -197,7 +228,7 @@ void Triangulation (uint3 id : SV_DispatchThreadID)
         CalculateNormalForPosition((int3(positionWS.x + 1, positionWS.y + 1, positionWS.z + 1))),
         CalculateNormalForPosition((int3(positionWS.x, positionWS.y + 1, positionWS.z + 1)))
     };
-
+    
     // Create triangles for current cube configuration
     //todo make it work with multiple triangles again
     for (int i = 0; triangulation[cubeIndex][i] != -1; i +=3)
@@ -206,13 +237,13 @@ void Triangulation (uint3 id : SV_DispatchThreadID)
         // of the cube that need to be joined to form the triangle.
         int a0 = cornerIndexAFromEdge[triangulation[cubeIndex][i]];
         int b0 = cornerIndexBFromEdge[triangulation[cubeIndex][i]];
-
+    
         int a1 = cornerIndexAFromEdge[triangulation[cubeIndex][i+1]];
         int b1 = cornerIndexBFromEdge[triangulation[cubeIndex][i+1]];
-
+    
         int a2 = cornerIndexAFromEdge[triangulation[cubeIndex][i+2]];
         int b2 = cornerIndexBFromEdge[triangulation[cubeIndex][i+2]];
-
+    
         VertexData vertexA;
         VertexData vertexB;
         VertexData vertexC;
@@ -225,16 +256,10 @@ void Triangulation (uint3 id : SV_DispatchThreadID)
         vertexB.vertex = float4(interpolateVerts(cubeCorners[a1], cubeCorners[b1],tB),1);
         vertexC.vertex = float4(interpolateVerts(cubeCorners[a2], cubeCorners[b2],tC),1);
         
-        // tri.colorA = interpolateColors(cubeColors[a0], cubeColors[b0],tA);
-        // tri.colorB = interpolateColors(cubeColors[a1], cubeColors[b1],tB);
-        // tri.colorC = interpolateColors(cubeColors[a2], cubeColors[b2],tC);
-
-        //
-        //
         vertexA.normal = interpolateNormals(cubeNormals[a0], cubeNormals[b0],tA);
         vertexB.normal = interpolateNormals(cubeNormals[a1], cubeNormals[b1],tB);
         vertexC.normal = interpolateNormals(cubeNormals[a2], cubeNormals[b2],tC);
-
+    
         int baseIndex = valid_triangle_position_result.vertexBufferPosition + i;
         triangles[baseIndex+0]=vertexC;
         triangles[baseIndex+1]=vertexB;
