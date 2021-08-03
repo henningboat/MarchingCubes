@@ -35,9 +35,7 @@ namespace Code.CubeMarching.Rendering
     public class UpdateClusterMeshes : SystemBase
     {
         private int previousFrameClusterCount = -1;
-
-        private const int MaxIndexCountPerSubChunk = 4 * 4 * 4 * 5 * 3; //
-
+        
         private ComputeBuffer _distanceFieldComputeBuffer;
         private ComputeBuffer _indexMapComputeBuffer;
 
@@ -160,14 +158,14 @@ namespace Code.CubeMarching.Rendering
                     _trianglePositionBuffer.Dispose();
                 }
 
-                _trianglePositionBuffer = new ComputeBuffer(requiredTriangleCapacity, 4 * 4, ComputeBufferType.Append);
+                _trianglePositionBuffer = new ComputeBuffer(requiredTriangleCapacity, 8 * 4, ComputeBufferType.Append);
             }
             _chunksToTriangulize.SetData(triangulationInstructions.AsArray());
 
             int3 chunkCounts = 8 * clusterCounts;
             int[] dataReadback = new int[512 * 8];
             
-            _trianglePositionBuffer.SetData(dataReadback);
+            _triangleCountPerSubChunk.SetData(dataReadback);
             
             //Fine positions in the grid that contain triangles
             var getPositionKernel = _computeShader.FindKernel("GetTrianglePositions");
@@ -180,10 +178,9 @@ namespace Code.CubeMarching.Rendering
             _computeShader.SetBuffer(getPositionKernel, "_GlobalTerrainIndexMap", globalTerrainIndexMap);
             _computeShader.SetBuffer(getPositionKernel, "_TriangleCountPerSubChunk", _triangleCountPerSubChunk);
             _trianglePositionBuffer.SetCounterValue(0);
-            _computeShader.Dispatch(getPositionKernel, triangulationInstructions.Length, 1, 1);
+            _computeShader.Dispatch(getPositionKernel, triangulationInstructions.Length, 1, 1); 
             ComputeBuffer.CopyCount(_trianglePositionBuffer, _trianglePositionCountBuffer, 0);
 
-            
             var meshVertexBuffer = mesh.GetVertexBuffer(0);
             
             var clearVertexData = _computeShader.FindKernel("ClearVertexData");

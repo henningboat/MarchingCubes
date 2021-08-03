@@ -22,8 +22,16 @@ struct VertexData {
     float3 normal;
 };
 
-AppendStructuredBuffer<int4> _ValidTrianglePositions;
-StructuredBuffer<int4> _ValidTrianglePositionResults;
+struct TriangulationInstruction
+{
+    int3 positionWS;
+    int cubeIndex;
+    int vertexBufferPosition;
+    int3 padding;
+};
+
+AppendStructuredBuffer<TriangulationInstruction> _ValidTrianglePositions;
+StructuredBuffer<TriangulationInstruction> _ValidTrianglePositionResults;
 RWStructuredBuffer<VertexData> triangles;
 RWStructuredBuffer<int> _TriangleCountPerSubChunk;
 
@@ -110,20 +118,35 @@ void GetTrianglePositions (uint3 id : SV_DispatchThreadID, uint groupIndex : SV_
     if (cubeCorners[5].w > isoLevel) cubeIndex |= 32;
     if (cubeCorners[6].w > isoLevel) cubeIndex |= 64;
     if (cubeCorners[7].w > isoLevel) cubeIndex |= 128;
- 
+
+
+    int3 positionInCluster = positionWS % 64;
+    int chunkIndexInCluster = indexFromCoordAndGridSize(positionInCluster/8,8);
+    int subChunkIndex = indexFromCoordAndGridSize((positionInCluster % 8)/4,2);
+    
+    int subChunkIndexInCluster = chunkIndexInCluster * 8 + subChunkIndex;
+    
     if(cubeIndex!=0 && cubeIndex!=255)
     {
         int indexForTriangle;
-        InterlockedAdd(groupTriangleCount,3,indexForTriangle);
-    
-        _ValidTrianglePositions.Append(int4(positionWS, cubeIndex));
+        InterlockedAdd(groupTriangleCount,trianglesPerCubeIndex[cubeIndex],indexForTriangle);
+
+        const int maxTrianglesPerSubChunk =  4 * 4 * 4 * 5;
+
+        TriangulationInstruction result = (TriangulationInstruction)0;
+        result.positionWS=positionWS;
+        result.cubeIndex=cubeIndex;
+
+        result.vertexBufferPosition =  3 * maxTrianglesPerSubChunk * subChunkIndexInCluster + indexForTriangle;
+        
+        _ValidTrianglePositions.Append(result);
     }
     
     GroupMemoryBarrierWithGroupSync();
 
     if(groupIndex==0)
     {
-        _TriangleCountPerSubChunk[chunkIndex] = groupTriangleCount;
+        _TriangleCountPerSubChunk[subChunkIndexInCluster] = groupTriangleCount;
     }
 }
 
@@ -147,8 +170,9 @@ void Triangulation (uint3 id : SV_DispatchThreadID)
     if(index>=_ArgsBuffer[0])
         return;
 
-    int3 positionWS = _ValidTrianglePositionResults[index].xyz;
-    int cubeIndex = _ValidTrianglePositionResults[index].w;
+    const TriangulationInstruction valid_triangle_position_result = _ValidTrianglePositionResults[index];
+    int3 positionWS = valid_triangle_position_result.positionWS;
+    int cubeIndex = valid_triangle_position_result.cubeIndex;
     
     float4 cubeCorners[8] = {
         GetPointPosition((int3(positionWS.x, positionWS.y, positionWS.z))),
@@ -211,10 +235,9 @@ void Triangulation (uint3 id : SV_DispatchThreadID)
         vertexB.normal = interpolateNormals(cubeNormals[a1], cubeNormals[b1],tB);
         vertexC.normal = interpolateNormals(cubeNormals[a2], cubeNormals[b2],tC);
 
-        int baseIndex = 5*3*index+i;
+        int baseIndex = valid_triangle_position_result.vertexBufferPosition + i;
         triangles[baseIndex+0]=vertexC;
         triangles[baseIndex+1]=vertexB;
         triangles[baseIndex+2]=vertexA;
-       // return;
     }
 }

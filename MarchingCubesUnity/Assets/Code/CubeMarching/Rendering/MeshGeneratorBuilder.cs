@@ -10,7 +10,8 @@ namespace Code.CubeMarching.Rendering
     {
         private const int ClusterVolume = ClusterLength * ClusterLength * ClusterLength;
         private const int MaxTrianglesPerCell = 5;
-        private const int ClusterEntityVertexCount = ClusterVolume * MaxTrianglesPerCell;
+        private const int VerticesPerTriangle = 3;
+        private const int ClusterEntityVertexCount = ClusterVolume * MaxTrianglesPerCell * VerticesPerTriangle;
         private const int ClusterLength = 64;
 
         public const MeshUpdateFlags MeshUpdateFlagsNone =

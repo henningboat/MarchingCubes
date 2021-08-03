@@ -90,7 +90,7 @@ namespace Code.CubeMarching.Triangulation
                 needsNewTriangle = true;
                 _triangleIndex = 0;
             }
-
+ 
             public bool TryGetTriangleMarch(int3 positionWS, BlobAssetReference<TriangulationTables.TriangulationDataBlobAsset> triangulationData,  TerrainCollisionDataAccessor terrain,
                 out float3 a, out float3 b, out float3 c, out uint collisionKey)
             {
