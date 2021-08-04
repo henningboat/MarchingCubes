@@ -39,12 +39,13 @@ namespace Code.CubeMarching.Rendering
         {
             var clusterMesh = new Mesh {name = "ClusterMesh", hideFlags = HideFlags.HideAndDontSave};
             clusterMesh.vertexBufferTarget |= GraphicsBuffer.Target.Raw;
+            clusterMesh.indexBufferTarget |= GraphicsBuffer.Target.Raw;
 
             clusterMesh.SetVertexBufferParams(ClusterEntityVertexCount, ClusterMeshTerrainDescriptors);
             clusterMesh.SetIndexBufferParams(ClusterEntityVertexCount, IndexFormat.UInt32);
 
             //todo optimize and cache
-            var indexBuffer = new NativeArray<uint>(ClusterEntityVertexCount, Allocator.Temp, NativeArrayOptions.UninitializedMemory);
+            var indexBuffer = new NativeArray<uint>(ClusterEntityVertexCount, Allocator.Temp, NativeArrayOptions.ClearMemory);
             var randomVertexData = new NativeArray<VertexData>(ClusterEntityVertexCount, Allocator.Temp,NativeArrayOptions.UninitializedMemory);
 
             int vertexID = 0;
@@ -65,10 +66,10 @@ namespace Code.CubeMarching.Rendering
                 }
             }
             
-            for (var i = 0; i < indexBuffer.Length; i++)
-            {
-                indexBuffer[i] = (uint) i;
-            }
+            // for (var i = 0; i < indexBuffer.Length; i++)
+            // {
+            //     indexBuffer[i] = (uint) i;
+            // }
 
             clusterMesh.SetVertexBufferData(randomVertexData, 0, 0, indexBuffer.Length, 0, MeshUpdateFlagsNone);
             clusterMesh.SetIndexBufferData(indexBuffer, 0, 0, indexBuffer.Length, MeshUpdateFlagsNone);

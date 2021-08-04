@@ -111,8 +111,6 @@ namespace Code.CubeMarching.Rendering
                 {
                     _gpuData.UpdateWithSurfaceData(_distanceFieldComputeBuffer, _indexMapComputeBuffer, triangulationInstructions, clustersCount.Value, 0, clusterMesh.mesh);
                 }
-
-                clusterMesh.mesh.SetSubMeshes(new[] {new SubMeshDescriptor(0, clusterMesh.mesh.vertexCount)}, MeshGeneratorBuilder.MeshUpdateFlagsNone);
             }
 
             clusterMeshRendererEntities.Dispose(Dependency);
@@ -132,6 +130,7 @@ namespace Code.CubeMarching.Rendering
         private ComputeBuffer _trianglePositionCountBuffer;
         private ComputeBuffer _chunksToTriangulize;
         private ComputeBuffer _triangleCountPerSubChunk;
+        private ComputeBuffer _indexBufferCounter;
 
         public NewTerrainChunkGPUData()
         {
@@ -139,15 +138,16 @@ namespace Code.CubeMarching.Rendering
             _argsBuffer = new ComputeBuffer(4, 4, ComputeBufferType.IndirectArguments);
             _argsBuffer.SetData(new[] {3, 0, 0, 0});
             _trianglePositionCountBuffer = new ComputeBuffer(5, 4, ComputeBufferType.IndirectArguments);
-            _trianglePositionCountBuffer.SetData(new[] {1, 1, 1, 1, 1});
 
             _triangleCountPerSubChunk = new ComputeBuffer(512 * 8, 4);
             
             //todo resize to proper size
             _chunksToTriangulize = new ComputeBuffer(10000, 4 * 4, ComputeBufferType.Default);
+            _indexBufferCounter = new ComputeBuffer(1, 4, default);
         }
 
-        public void UpdateWithSurfaceData(ComputeBuffer globalTerrainBuffer, ComputeBuffer globalTerrainIndexMap, NativeList<TriangulationComputeShaderInstruction> triangulationInstructions, int3 clusterCounts, int materialIDFilter, Mesh mesh)
+        public void UpdateWithSurfaceData(ComputeBuffer globalTerrainBuffer, ComputeBuffer globalTerrainIndexMap, NativeList<TriangulationComputeShaderInstruction> triangulationInstructions,
+            int3 clusterCounts, int materialIDFilter, Mesh mesh)
         {
             int trianbgleByteSize = (3 + 3 + 4) * 4;
             int requiredTriangleCapacity = triangulationInstructions.Length * 4 * 4 * 4 * 5;
@@ -160,13 +160,17 @@ namespace Code.CubeMarching.Rendering
 
                 _trianglePositionBuffer = new ComputeBuffer(requiredTriangleCapacity, 8 * 4, ComputeBufferType.Append);
             }
+
             _chunksToTriangulize.SetData(triangulationInstructions.AsArray());
 
             int3 chunkCounts = 8 * clusterCounts;
             int[] dataReadback = new int[512 * 8];
-            
+            _trianglePositionCountBuffer.SetData(new[] {1, 1, 1, 1, 1});
+
+            _indexBufferCounter.SetData(new int[] {0});
+
             _triangleCountPerSubChunk.SetData(dataReadback);
-            
+
             //Fine positions in the grid that contain triangles
             var getPositionKernel = _computeShader.FindKernel("GetTrianglePositions");
             _computeShader.SetInt("numPointsPerAxis", ChunkLength);
@@ -178,15 +182,15 @@ namespace Code.CubeMarching.Rendering
             _computeShader.SetBuffer(getPositionKernel, "_GlobalTerrainIndexMap", globalTerrainIndexMap);
             _computeShader.SetBuffer(getPositionKernel, "_TriangleCountPerSubChunk", _triangleCountPerSubChunk);
             _trianglePositionBuffer.SetCounterValue(0);
-            _computeShader.Dispatch(getPositionKernel, triangulationInstructions.Length, 1, 1); 
+            _computeShader.Dispatch(getPositionKernel, triangulationInstructions.Length, 1, 1);
             ComputeBuffer.CopyCount(_trianglePositionBuffer, _trianglePositionCountBuffer, 0);
 
             var meshVertexBuffer = mesh.GetVertexBuffer(0);
-            
+
             var clearVertexData = _computeShader.FindKernel("ClearVertexData");
-            _computeShader.SetBuffer(clearVertexData,  "triangles", meshVertexBuffer);
+            _computeShader.SetBuffer(clearVertexData, "triangles", meshVertexBuffer);
             _computeShader.Dispatch(clearVertexData, mesh.vertexCount / 512, 1, 1);
-            
+
             var calculateTriangulationThreadGroupSizeKernel = _computeShader.FindKernel("CalculateTriangulationThreadGroupSizeKernel");
             _computeShader.SetBuffer(calculateTriangulationThreadGroupSizeKernel, "_ArgsBuffer", _trianglePositionCountBuffer);
             _computeShader.Dispatch(calculateTriangulationThreadGroupSizeKernel, 1, 1, 1);
@@ -197,15 +201,29 @@ namespace Code.CubeMarching.Rendering
             _computeShader.SetInts("_TerrainMapSize", chunkCounts.x, chunkCounts.y, chunkCounts.z);
 
 
-             
+
             _computeShader.SetBuffer(triangulationKernel, "triangles", meshVertexBuffer);
             _computeShader.SetBuffer(triangulationKernel, "_GlobalTerrainBuffer", globalTerrainBuffer);
             _computeShader.SetBuffer(triangulationKernel, "_GlobalTerrainIndexMap", globalTerrainIndexMap);
             _computeShader.SetBuffer(triangulationKernel, "_ValidTrianglePositionResults", _trianglePositionBuffer);
             _computeShader.SetBuffer(triangulationKernel, "_ArgsBuffer", _trianglePositionCountBuffer);
             _computeShader.DispatchIndirect(triangulationKernel, _trianglePositionCountBuffer, 4);
-            
+
+            var meshIndexBuffer = mesh.GetIndexBuffer();
+
+            var indexBufferKernel = _computeShader.FindKernel("BuildIndexBuffer");
+            _computeShader.SetBuffer(indexBufferKernel, "_TerrainChunkBasePosition", _chunksToTriangulize);
+            _computeShader.SetBuffer(indexBufferKernel, "_TriangleCountPerSubChunk", _triangleCountPerSubChunk);
+            _computeShader.SetBuffer(indexBufferKernel, "_IndexBufferCounter", _indexBufferCounter);
+            _computeShader.SetBuffer(indexBufferKernel, "_ClusterMeshIndexBuffer", meshIndexBuffer);
+            _computeShader.SetInts("_TerrainMapSize", chunkCounts.x, chunkCounts.y, chunkCounts.z);
+            _computeShader.Dispatch(indexBufferKernel, 4096, 1, 1);
+
             meshVertexBuffer.Dispose();
+            meshIndexBuffer.Dispose();
+
+            mesh.SetSubMeshes(new[] {new SubMeshDescriptor(0, 4*4*4*5*3*triangulationInstructions.Length)}, MeshGeneratorBuilder.MeshUpdateFlagsNone);
+            //mesh.SetSubMeshes(new[] {new SubMeshDescriptor(0, mesh.vertexCount)}, MeshGeneratorBuilder.MeshUpdateFlagsNone);
         }
 
         public const int ChunkLength = 8;
@@ -218,6 +236,7 @@ namespace Code.CubeMarching.Rendering
             _chunksToTriangulize.Dispose();
             _trianglePositionCountBuffer.Dispose();
             _triangleCountPerSubChunk.Dispose();
+            _indexBufferCounter.Dispose();
         }
     }
 }

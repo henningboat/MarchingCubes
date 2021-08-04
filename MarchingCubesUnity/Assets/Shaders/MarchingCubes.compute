@@ -5,6 +5,7 @@ float4 _Time;
 #pragma kernel CalculateTriangulationThreadGroupSizeKernel
 #pragma kernel Triangulation
 #pragma kernel ClearVertexData
+#pragma kernel BuildIndexBuffer
 
 StructuredBuffer<TerrainData4> _GlobalTerrainBuffer;
 StructuredBuffer<int> _GlobalTerrainIndexMap;
@@ -87,11 +88,19 @@ float3 CalculateNormalForPosition(int3 localPosition)
 
 int indexForTriangle;
 
+int GetSubChunkIndexFromPosition(int3 positionWS)
+{
+    const int3 positionInCluster = positionWS % 64;
+    const int chunkIndexInCluster = indexFromCoordAndGridSize(positionInCluster/8,8);
+    const int subChunkIndex = indexFromCoordAndGridSize((positionInCluster % 8)/4,2);
+
+    const int subChunkIndexInCluster = chunkIndexInCluster * 8 + subChunkIndex;
+    return subChunkIndexInCluster;
+}
+
 [numthreads(4,4,4)]
 void GetTrianglePositions (uint3 id : SV_DispatchThreadID, uint groupIndex : SV_GroupIndex, uint3 groupThreadID:SV_GroupThreadID)
 {
-    GroupMemoryBarrierWithGroupSync();
-    
     const uint chunkIndex = id.x/4;
     const int3 terrainChunkBasePosition = _TerrainChunkBasePosition[chunkIndex].xyz;
 
@@ -123,18 +132,14 @@ void GetTrianglePositions (uint3 id : SV_DispatchThreadID, uint groupIndex : SV_
     if (cubeCorners[7].w > isoLevel) cubeIndex |= 128;
 
 
-    int3 positionInCluster = positionWS % 64;
-    int chunkIndexInCluster = indexFromCoordAndGridSize(positionInCluster/8,8);
-    int subChunkIndex = indexFromCoordAndGridSize((positionInCluster % 8)/4,2);
-    
-    int subChunkIndexInCluster = chunkIndexInCluster * 8 + subChunkIndex;
+    int subChunkIndexInCluster = GetSubChunkIndexFromPosition(positionWS);
     
    
     if(cubeIndex!=0 && cubeIndex!=255)
     {
         int triangleCount = trianglesPerCubeIndex[cubeIndex];
 
-        InterlockedAdd(groupTriangleCount, triangleCount, indexForTriangle);
+        InterlockedAdd(_TriangleCountPerSubChunk[subChunkIndexInCluster], triangleCount, indexForTriangle);
     
         const int maxTrianglesPerSubChunk =  4 * 4 * 4 * 5;
 
@@ -145,13 +150,6 @@ void GetTrianglePositions (uint3 id : SV_DispatchThreadID, uint groupIndex : SV_
         result.vertexBufferPosition =  3 * maxTrianglesPerSubChunk * subChunkIndexInCluster + indexForTriangle;
         
         _ValidTrianglePositions.Append(result);
-    }
-    
-    GroupMemoryBarrierWithGroupSync();
-    
-    if(groupIndex==0)
-    {
-        _TriangleCountPerSubChunk[subChunkIndexInCluster] = groupTriangleCount;
     }
 }
 
@@ -264,5 +262,38 @@ void Triangulation (uint3 id : SV_DispatchThreadID)
         triangles[baseIndex+0]=vertexC;
         triangles[baseIndex+1]=vertexB;
         triangles[baseIndex+2]=vertexA;
+    }
+}
+
+RWStructuredBuffer<uint> _ClusterMeshIndexBuffer;
+RWStructuredBuffer<uint> _IndexBufferCounter;
+
+[numthreads(1,1,1)]
+void BuildIndexBuffer (uint3 id : SV_DispatchThreadID)
+{
+    int3 subClusterPosition = _TerrainChunkBasePosition[id.x].xyz + 2;
+   int subChunkIndexInCluster = GetSubChunkIndexFromPosition(subClusterPosition);
+
+    // Todo make interlocked Add work to get the index buffer tighter together and
+    // eventually cut the rest from the mesh
+    
+    //int vertexCountOfSubChunk = _TriangleCountPerSubChunk[subChunkIndexInCluster];
+    // int indexBufferOffset=0;
+    // InterlockedAdd(_IndexBufferCounter[0],maxVertsPerCluster, indexBufferOffset);
+
+    int maxVertsPerCluster = 4*4*4*5*3;
+    int indexBufferOffset = id.x*maxVertsPerCluster;
+    
+    int vertexOffset=maxVertsPerCluster*subChunkIndexInCluster;
+
+    AllMemoryBarrier();
+    
+    for(int i = 0;i<maxVertsPerCluster;i++)
+    {
+         //if(i<vertexCountOfSubChunk)
+         {
+            int index = id.x*maxVertsPerCluster+i;
+            _ClusterMeshIndexBuffer[indexBufferOffset+i] = vertexOffset+i;//i + indexBufferOffset;
+        }
     }
 }
