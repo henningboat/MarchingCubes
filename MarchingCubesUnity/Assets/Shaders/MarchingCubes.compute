@@ -35,6 +35,7 @@ AppendStructuredBuffer<TriangulationInstruction> _ValidTrianglePositions;
 StructuredBuffer<TriangulationInstruction> _ValidTrianglePositionResults;
 RWStructuredBuffer<VertexData> triangles;
 RWStructuredBuffer<int> _TriangleCountPerSubChunk;
+StructuredBuffer<int> _TriangleCountPerSubChunkResult;
 
 uint triangleWriteIndex=0;
 
@@ -146,6 +147,7 @@ void GetTrianglePositions (uint3 id : SV_DispatchThreadID, uint groupIndex : SV_
         TriangulationInstruction result = (TriangulationInstruction)0;
         result.positionWS=positionWS;
         result.cubeIndex=cubeIndex;
+        result.padding=subChunkIndexInCluster;
 
         result.vertexBufferPosition =  3 * maxTrianglesPerSubChunk * subChunkIndexInCluster + indexForTriangle;
         
@@ -268,21 +270,22 @@ void Triangulation (uint3 id : SV_DispatchThreadID)
 RWStructuredBuffer<uint> _ClusterMeshIndexBuffer;
 RWStructuredBuffer<uint> _IndexBufferCounter;
 
+int _TriangulationSubChunkCount;
+
 [numthreads(1,1,1)]
 void BuildIndexBuffer (uint3 id : SV_DispatchThreadID)
 {
+    if(id.x>=_TriangulationSubChunkCount)
+        return;
+    
     int3 subClusterPosition = _TerrainChunkBasePosition[id.x].xyz + 2;
    int subChunkIndexInCluster = GetSubChunkIndexFromPosition(subClusterPosition);
 
-    // Todo make interlocked Add work to get the index buffer tighter together and
-    // eventually cut the rest from the mesh
-    
-    //int vertexCountOfSubChunk = _TriangleCountPerSubChunk[subChunkIndexInCluster];
-    // int indexBufferOffset=0;
-    // InterlockedAdd(_IndexBufferCounter[0],maxVertsPerCluster, indexBufferOffset);
+    int vertexCountOfSubChunk = _TriangleCountPerSubChunkResult[subChunkIndexInCluster];
+     int indexBufferOffset=0;
+     InterlockedAdd(_IndexBufferCounter[0],vertexCountOfSubChunk, indexBufferOffset);
 
     int maxVertsPerCluster = 4*4*4*5*3;
-    int indexBufferOffset = id.x*maxVertsPerCluster;
     
     int vertexOffset=maxVertsPerCluster*subChunkIndexInCluster;
 
@@ -290,7 +293,7 @@ void BuildIndexBuffer (uint3 id : SV_DispatchThreadID)
     
     for(int i = 0;i<maxVertsPerCluster;i++)
     {
-         //if(i<vertexCountOfSubChunk)
+         if(i<vertexCountOfSubChunk)
          {
             int index = id.x*maxVertsPerCluster+i;
             _ClusterMeshIndexBuffer[indexBufferOffset+i] = vertexOffset+i;//i + indexBufferOffset;

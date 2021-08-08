@@ -200,8 +200,6 @@ namespace Code.CubeMarching.Rendering
             _computeShader.SetInt("_MaterialIDFilter", materialIDFilter);
             _computeShader.SetInts("_TerrainMapSize", chunkCounts.x, chunkCounts.y, chunkCounts.z);
 
-
-
             _computeShader.SetBuffer(triangulationKernel, "triangles", meshVertexBuffer);
             _computeShader.SetBuffer(triangulationKernel, "_GlobalTerrainBuffer", globalTerrainBuffer);
             _computeShader.SetBuffer(triangulationKernel, "_GlobalTerrainIndexMap", globalTerrainIndexMap);
@@ -213,17 +211,32 @@ namespace Code.CubeMarching.Rendering
 
             var indexBufferKernel = _computeShader.FindKernel("BuildIndexBuffer");
             _computeShader.SetBuffer(indexBufferKernel, "_TerrainChunkBasePosition", _chunksToTriangulize);
-            _computeShader.SetBuffer(indexBufferKernel, "_TriangleCountPerSubChunk", _triangleCountPerSubChunk);
+            _computeShader.SetBuffer(indexBufferKernel, "_TriangleCountPerSubChunkResult", _triangleCountPerSubChunk);
             _computeShader.SetBuffer(indexBufferKernel, "_IndexBufferCounter", _indexBufferCounter);
             _computeShader.SetBuffer(indexBufferKernel, "_ClusterMeshIndexBuffer", meshIndexBuffer);
+            _computeShader.SetInt("_TriangulationSubChunkCount", triangulationInstructions.Length);
             _computeShader.SetInts("_TerrainMapSize", chunkCounts.x, chunkCounts.y, chunkCounts.z);
             _computeShader.Dispatch(indexBufferKernel, 4096, 1, 1);
 
             meshVertexBuffer.Dispose();
             meshIndexBuffer.Dispose();
 
-            mesh.SetSubMeshes(new[] {new SubMeshDescriptor(0, 4*4*4*5*3*triangulationInstructions.Length)}, MeshGeneratorBuilder.MeshUpdateFlagsNone);
-            //mesh.SetSubMeshes(new[] {new SubMeshDescriptor(0, mesh.vertexCount)}, MeshGeneratorBuilder.MeshUpdateFlagsNone);
+            _triangleCountPerSubChunk.GetData(dataReadback);
+
+            int totdalIndexCount = 0;
+            for (int i = 0; i < dataReadback.Length; i++)
+            {
+                totdalIndexCount += dataReadback[i];
+            }
+
+            if (totdalIndexCount >= mesh.vertexCount)
+            {
+                throw new OutOfMemoryException($"Index count {totdalIndexCount}");
+            }
+            
+            //Debug.Log(totdalIndexCount);
+            
+            mesh.SetSubMeshes(new[] {new SubMeshDescriptor(0, totdalIndexCount)}, MeshGeneratorBuilder.MeshUpdateFlagsNone);
         }
 
         public const int ChunkLength = 8;
