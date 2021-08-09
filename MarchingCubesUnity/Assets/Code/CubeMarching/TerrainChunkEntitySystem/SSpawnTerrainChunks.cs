@@ -45,7 +45,8 @@ namespace Code.CubeMarching.TerrainChunkEntitySystem
             var clusterMesh = MeshGeneratorBuilder.GenerateClusterMesh();
             EntityManager.AddSharedComponentData(clusterEntity, clusterMesh);
             EntityManager.SetName(clusterEntity, "Cluster " + clusterPositionGS);
-
+            EntityManager.AddSharedComponentData(clusterEntity, ClusterMeshGPUBuffers.CreateGPUData());
+            
             //spawn terrain renderer
             var renderMeshDescriptor = new RenderMeshDescription(clusterMesh.mesh, Resources.Load<Material>("DefaultMaterial"), ShadowCastingMode.On, true);
 
@@ -53,6 +54,8 @@ namespace Code.CubeMarching.TerrainChunkEntitySystem
             EntityManager.SetName(rendererEntity, "Cluster " + clusterPositionGS + " RenderMesh");
             RenderMeshUtility.AddComponents(rendererEntity, EntityManager, renderMeshDescriptor);
             EntityManager.SetComponentData(rendererEntity, new Translation() {Value = clusterPositionGS * 8});
+
+            NativeArray<CClusterChildListElement> chunkList = new NativeArray<CClusterChildListElement>(512, Allocator.Temp);
             
             //spawn chunks for the cluster
             var createdChunks = EntityManager.CreateEntity(_chunkArchtype, 512, Allocator.Temp);
@@ -71,7 +74,11 @@ namespace Code.CubeMarching.TerrainChunkEntitySystem
                 EntityManager.SetComponentData(chunkEntity, staticDataData);
                 EntityManager.SetComponentData(chunkEntity, dynamicData);
                 EntityManager.SetComponentData(chunkEntity, new ClusterChild {ClusterEntity = clusterEntity});
+                chunkList[i] = new CClusterChildListElement() {Entity = chunkEntity};
             }
+
+            EntityManager.GetBuffer<CClusterChildListElement>(clusterEntity).CopyFrom(chunkList);
+            chunkList.Dispose();
         }
 
         #endregion
@@ -98,11 +105,13 @@ namespace Code.CubeMarching.TerrainChunkEntitySystem
             _clusterArchetype = EntityManager.CreateArchetype(
                 typeof(CClusterPosition),
                 typeof(TerrainInstruction),
-                typeof(TriangulationPosition));
+                typeof(CTriangulationInstruction),
+                typeof(CSubChunkWithTrianglesIndex),
+                typeof(CClusterChildListElement));
 
             //spawn data holder            
             var entity = EntityManager.CreateEntity(typeof(TerrainChunkDataBuffer), typeof(TotalClusterCounts), typeof(TerrainChunkIndexMap));
-            var totalClustersCount = new TotalClusterCounts() {Value = new int3(1, 1, 1)};
+            var totalClustersCount = new TotalClusterCounts() {Value = new int3(4, 1, 1)};
             EntityManager.SetComponentData(entity, totalClustersCount);
             var terrainChunkIndexMaps = this.GetSingletonBuffer<TerrainChunkIndexMap>();
             terrainChunkIndexMaps.ResizeUninitialized(totalClustersCount.Value.Volume() * 512);
@@ -110,7 +119,7 @@ namespace Code.CubeMarching.TerrainChunkEntitySystem
             {
                 terrainChunkIndexMaps[i] = default;
             }
-             
+            
             int clusterIndex = 0;
 
             for (var x = 0; x < totalClustersCount.Value.x; x++)
@@ -150,10 +159,9 @@ namespace Code.CubeMarching.TerrainChunkEntitySystem
         #endregion
     }
 
-    public struct TriangulationPosition : IBufferElementData
+    public struct CClusterChildListElement : IBufferElementData
     {
-        public int3 position;
-        public byte triangulationTableIndex;
+        public Entity Entity;
     }
 
     public struct CClusterPosition : IComponentData
