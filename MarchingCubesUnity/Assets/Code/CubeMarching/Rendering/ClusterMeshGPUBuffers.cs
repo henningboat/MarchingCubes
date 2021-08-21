@@ -23,12 +23,15 @@ namespace Code.CubeMarching.Rendering
             result._argsBuffer = new ComputeBuffer(4, 4, ComputeBufferType.IndirectArguments);
             result._argsBuffer.SetData(new[] {3, 0, 0, 0});
             result._trianglePositionCountBuffer = new ComputeBuffer(5, 4, ComputeBufferType.IndirectArguments);
-            
+
             result._triangleCountPerSubChunk = new ComputeBuffer(512 * 8, 4);
-            
-            
+
+
             result._chunksToTriangulize = new ComputeBuffer(10000, 4 * 4, ComputeBufferType.Default);
-            result._indexBufferCounter = new ComputeBuffer(1, 4, default);
+            result._indexBufferCounter = new ComputeBuffer(2, 4, default);
+
+            result._triangleCountPerSubChunk.SetData(new[] {result._triangleCountPerSubChunk.count});
+
             return result;
         }
 
@@ -36,12 +39,20 @@ namespace Code.CubeMarching.Rendering
             DynamicBuffer<CSubChunkWithTrianglesIndex> cSubChunkWithTrianglesIndices,
             int3 clusterCounts, int materialIDFilter, Mesh mesh, int3 clusterPositionWS)
         {
-            int3 chunkCounts = 8 * clusterCounts;
+            var chunkCounts = 8 * clusterCounts;
             
+            const int maxTrianglesPerSubChunk = 4 * 4 * 4 * 5;
+            cSubChunkWithTrianglesIndices.ResizeUninitialized(4096);
+            var indexCount = math.min(mesh.vertexCount, cSubChunkWithTrianglesIndices.Length * maxTrianglesPerSubChunk * 3);
+
+            _indexBufferCounter.SetData(new int[] {0, 0});
+            
+            //todo
+           // fromome reason, the mesh vertex buffer get's overwritten instead of cached. I wonder why
             if (triangulationInstructions.Length > 0)
             {
-                int trianbgleByteSize = (3 + 3 + 4) * 4;
-                int requiredTriangleCapacity = triangulationInstructions.Length * 4 * 4 * 4 * 5;
+                var trianbgleByteSize = (3 + 3 + 4) * 4;
+                var requiredTriangleCapacity = triangulationInstructions.Length * 4 * 4 * 4 * 5;
                 if (_trianglePositionBuffer == null || _trianglePositionBuffer.count < requiredTriangleCapacity)
                 {
                     if (_trianglePositionBuffer != null)
@@ -57,9 +68,7 @@ namespace Code.CubeMarching.Rendering
                 int[] dataReadback = new int[512 * 8];
                 _trianglePositionCountBuffer.SetData(new[] {1, 1, 1, 1, 1});
 
-                _indexBufferCounter.SetData(new int[] {0});
-
-                _triangleCountPerSubChunk.SetData(dataReadback);
+                //_triangleCountPerSubChunk.SetData(dataReadback);
 
                 //Fine positions in the grid that contain triangles
                 var getPositionKernel = _computeShader.FindKernel("GetTrianglePositions");
@@ -102,24 +111,24 @@ namespace Code.CubeMarching.Rendering
 
             var meshIndexBuffer = mesh.GetIndexBuffer();
 
-            
+
             _chunksToTriangulize.SetData(cSubChunkWithTrianglesIndices.AsNativeArray());
 
-            
+
             var indexBufferKernel = _computeShader.FindKernel("BuildIndexBuffer");
             _computeShader.SetBuffer(indexBufferKernel, "_TerrainChunkBasePosition", _chunksToTriangulize);
             _computeShader.SetBuffer(indexBufferKernel, "_TriangleCountPerSubChunkResult", _triangleCountPerSubChunk);
             _computeShader.SetBuffer(indexBufferKernel, "_IndexBufferCounter", _indexBufferCounter);
             _computeShader.SetBuffer(indexBufferKernel, "_ClusterMeshIndexBuffer", meshIndexBuffer);
-            _computeShader.SetInt("_TriangulationSubChunkCount", cSubChunkWithTrianglesIndices.Length);
+            _computeShader.SetInt("_IndexBufferSize", indexCount);
             _computeShader.SetInts("_TerrainMapSize", chunkCounts.x, chunkCounts.y, chunkCounts.z);
-            _computeShader.Dispatch(indexBufferKernel, 4096, 1, 1);
+            _computeShader.Dispatch(indexBufferKernel, cSubChunkWithTrianglesIndices.Length, 1, 1);
 
             meshIndexBuffer.Dispose();
 
             //todo asyncly read back exact vertex count, in the meantime we use an approximation
 
-           // _triangleCountPerSubChunk.GetData(dataReadback);
+            // _triangleCountPerSubChunk.GetData(dataReadback);
             // int totdalIndexCount = 0;
             // for (int i = 0; i < dataReadback.Length; i++)
             // {
@@ -132,13 +141,11 @@ namespace Code.CubeMarching.Rendering
             // }
 
             //mesh.SetSubMeshes(new[] {new SubMeshDescriptor(0, totdalIndexCount)}, MeshGeneratorBuilder.MeshUpdateFlagsNone);
-            int maxTrianglesPerSubChunk = 4 * 4 * 4 * 5;
-            int indexCount = math.min(mesh.vertexCount,cSubChunkWithTrianglesIndices.Length*maxTrianglesPerSubChunk*3);
             mesh.SetSubMeshes(new[] {new SubMeshDescriptor(0, indexCount)}, MeshGeneratorBuilder.MeshUpdateFlagsNone);
         }
 
         public const int ChunkLength = 8;
-        
+
 
         public void Dispose()
         {

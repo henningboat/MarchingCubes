@@ -596,7 +596,7 @@ PlayerSettings:
   scriptingDefineSymbols:
     0: UNITY_POST_PROCESSING_STACK_V2
     1: 
-    Standalone: ENABLE_HYBRID_RENDERER_V2
+    Standalone: 
   additionalCompilerArguments: {}
   platformArchitecture: {}
   scriptingBackend:

@@ -38,6 +38,7 @@ RWStructuredBuffer<int> _TriangleCountPerSubChunk;
 StructuredBuffer<int> _TriangleCountPerSubChunkResult;
 
 uint triangleWriteIndex=0;
+int3 _ClusterPositionWS;
 
 //todo make int3?
 float isoLevel;
@@ -101,7 +102,7 @@ int GetSubChunkIndexFromPosition(int3 positionWS)
 
 [numthreads(4,4,4)]
 void GetTrianglePositions (uint3 id : SV_DispatchThreadID, uint groupIndex : SV_GroupIndex, uint3 groupThreadID:SV_GroupThreadID)
-{
+{   
     const uint chunkIndex = id.x/4;
     const int3 terrainChunkBasePosition = _TerrainChunkBasePosition[chunkIndex].xyz;
 
@@ -134,8 +135,11 @@ void GetTrianglePositions (uint3 id : SV_DispatchThreadID, uint groupIndex : SV_
 
 
     int subChunkIndexInCluster = GetSubChunkIndexFromPosition(positionWS);
-    
-   
+
+    //todo would be better to have a local group shared counter to avoid the memory barrier 
+    _TriangleCountPerSubChunk[subChunkIndexInCluster]=0;
+    GroupMemoryBarrier();
+
     if(cubeIndex!=0 && cubeIndex!=255)
     {
         int triangleCount = trianglesPerCubeIndex[cubeIndex];
@@ -162,10 +166,11 @@ void CalculateTriangulationThreadGroupSizeKernel()
     _ArgsBuffer[1] =  ceil(_ArgsBuffer[0]/512.0f);
 }
 
-[numthreads(512,1,1)]
+[numthreads(1,512,1)]
 void ClearVertexData (uint3 id : SV_DispatchThreadID)
 {
-    triangles[id.x]=(VertexData)0;
+    int index = id.x*512+id.y;
+    triangles[index]=(VertexData)0;
 }
 
 [numthreads(1,512,1)]
@@ -255,6 +260,10 @@ void Triangulation (uint3 id : SV_DispatchThreadID)
         vertexA.vertex = float4(interpolateVerts(cubeCorners[a0], cubeCorners[b0],tA),1);
         vertexB.vertex = float4(interpolateVerts(cubeCorners[a1], cubeCorners[b1],tB),1);
         vertexC.vertex = float4(interpolateVerts(cubeCorners[a2], cubeCorners[b2],tC),1);
+
+        vertexA.vertex.xyz -= _ClusterPositionWS;
+        vertexB.vertex.xyz -= _ClusterPositionWS;
+        vertexC.vertex.xyz -= _ClusterPositionWS;
         
         vertexA.normal = interpolateNormals(cubeNormals[a0], cubeNormals[b0],tA);
         vertexB.normal = interpolateNormals(cubeNormals[a1], cubeNormals[b1],tB);
@@ -271,13 +280,11 @@ RWStructuredBuffer<uint> _ClusterMeshIndexBuffer;
 RWStructuredBuffer<uint> _IndexBufferCounter;
 
 int _TriangulationSubChunkCount;
+int _IndexBufferSize;
 
 [numthreads(1,1,1)]
 void BuildIndexBuffer (uint3 id : SV_DispatchThreadID)
 {
-    if(id.x>=_TriangulationSubChunkCount)
-        return;
-    
     int3 subClusterPosition = _TerrainChunkBasePosition[id.x].xyz + 2;
    int subChunkIndexInCluster = GetSubChunkIndexFromPosition(subClusterPosition);
 
@@ -286,6 +293,9 @@ void BuildIndexBuffer (uint3 id : SV_DispatchThreadID)
      InterlockedAdd(_IndexBufferCounter[0],vertexCountOfSubChunk, indexBufferOffset);
 
     int maxVertsPerCluster = 4*4*4*5*3;
+
+    int zeroIndexBufferOffset;
+    InterlockedAdd(_IndexBufferCounter[1],maxVertsPerCluster - vertexCountOfSubChunk, zeroIndexBufferOffset);
     
     int vertexOffset=maxVertsPerCluster*subChunkIndexInCluster;
 
@@ -293,10 +303,14 @@ void BuildIndexBuffer (uint3 id : SV_DispatchThreadID)
     
     for(int i = 0;i<maxVertsPerCluster;i++)
     {
-         if(i<vertexCountOfSubChunk)
-         {
-            int index = id.x*maxVertsPerCluster+i;
-            _ClusterMeshIndexBuffer[indexBufferOffset+i] = vertexOffset+i;//i + indexBufferOffset;
-        }
+        _ClusterMeshIndexBuffer[vertexOffset+i]=vertexOffset+i;
+        // if(i<vertexCountOfSubChunk)
+        // {
+        //     _ClusterMeshIndexBuffer[indexBufferOffset+i] = vertexOffset+i;
+        // }
+        // else
+        // {
+        //     _ClusterMeshIndexBuffer[(_IndexBufferSize-zeroIndexBufferOffset) - (i-vertexCountOfSubChunk)]=0;
+        // }
     }
 }
