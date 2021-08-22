@@ -16,15 +16,6 @@
       "dependencies": {},
       "url": "https://packages.unity.com"
     },
-    "com.unity.collab-proxy": {
-      "version": "1.7.1",
-      "depth": 0,
-      "source": "registry",
-      "dependencies": {
-        "com.unity.nuget.newtonsoft-json": "2.0.0"
-      },
-      "url": "https://packages.unity.com"
-    },
     "com.unity.collections": {
       "version": "0.15.0-preview.21",
       "depth": 1,
@@ -121,7 +112,7 @@
     },
     "com.unity.nuget.newtonsoft-json": {
       "version": "2.0.0",
-      "depth": 1,
+      "depth": 2,
       "source": "registry",
       "dependencies": {},
       "url": "https://packages.unity.com"

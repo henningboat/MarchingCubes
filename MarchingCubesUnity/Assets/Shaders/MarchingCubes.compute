@@ -1,6 +1,7 @@
 ﻿#include "Includes/MarchTables.compute"
 #include "Includes/TerrainData.hlsl"
 float4 _Time;
+#pragma kernel ResetSubChunkTriangleCount
 #pragma kernel GetTrianglePositions
 #pragma kernel CalculateTriangulationThreadGroupSizeKernel
 #pragma kernel Triangulation
@@ -100,9 +101,24 @@ int GetSubChunkIndexFromPosition(int3 positionWS)
     return subChunkIndexInCluster;
 }
 
+
+
+[numthreads(1,1,1)]
+void ResetSubChunkTriangleCount (uint3 id : SV_DispatchThreadID)
+{
+    const uint chunkIndex = id.x;
+    //the +2 is probably unnecessary
+    const int3 terrainChunkBasePosition = _TerrainChunkBasePosition[chunkIndex].xyz + 2;
+    const int subChunkIndexInCluster = GetSubChunkIndexFromPosition(terrainChunkBasePosition);
+
+    _TriangleCountPerSubChunk[subChunkIndexInCluster] = 0;
+}
+
+
+
 [numthreads(4,4,4)]
 void GetTrianglePositions (uint3 id : SV_DispatchThreadID, uint groupIndex : SV_GroupIndex, uint3 groupThreadID:SV_GroupThreadID)
-{   
+{
     const uint chunkIndex = id.x/4;
     const int3 terrainChunkBasePosition = _TerrainChunkBasePosition[chunkIndex].xyz;
 
@@ -133,16 +149,11 @@ void GetTrianglePositions (uint3 id : SV_DispatchThreadID, uint groupIndex : SV_
     if (cubeCorners[6].w > isoLevel) cubeIndex |= 64;
     if (cubeCorners[7].w > isoLevel) cubeIndex |= 128;
 
-
-    int subChunkIndexInCluster = GetSubChunkIndexFromPosition(positionWS);
-
-    //todo would be better to have a local group shared counter to avoid the memory barrier 
-    _TriangleCountPerSubChunk[subChunkIndexInCluster]=0;
-    GroupMemoryBarrier();
-
+    const int subChunkIndexInCluster = GetSubChunkIndexFromPosition(positionWS);
+    
     if(cubeIndex!=0 && cubeIndex!=255)
     {
-        int triangleCount = trianglesPerCubeIndex[cubeIndex];
+        const int triangleCount = trianglesPerCubeIndex[cubeIndex];
 
         InterlockedAdd(_TriangleCountPerSubChunk[subChunkIndexInCluster], triangleCount, indexForTriangle);
     
@@ -185,31 +196,6 @@ void Triangulation (uint3 id : SV_DispatchThreadID)
     int cubeIndex = valid_triangle_position_result.cubeIndex;
 
     
-    //
-    // VertexData vertexA;
-    // VertexData vertexB;
-    // VertexData vertexC;
-    //     
-    // float tA;
-    // float tB;
-    // float tC;
-    //      
-    // vertexA.vertex = float4(positionWS,1)+float4(0,0,0,0);
-    // vertexB.vertex = float4(positionWS,1)+float4(0,1,0,0);
-    // vertexC.vertex = float4(positionWS,1)+float4(1,0,0,0);
-    //
-    //
-    // //
-    // vertexA.normal = 0;
-    // vertexB.normal = 0;
-    // vertexC.normal = 0;
-    //
-    // int baseIndex = valid_triangle_position_result.vertexBufferPosition;
-    // triangles[baseIndex+0]=vertexC;
-    // triangles[baseIndex+1]=vertexB;
-    // triangles[baseIndex+2]=vertexA;
-
-    
     float4 cubeCorners[8] = {
         GetPointPosition((int3(positionWS.x, positionWS.y, positionWS.z))),
        GetPointPosition((int3(positionWS.x + 1, positionWS.y, positionWS.z))),
@@ -232,7 +218,7 @@ void Triangulation (uint3 id : SV_DispatchThreadID)
         CalculateNormalForPosition((int3(positionWS.x + 1, positionWS.y + 1, positionWS.z))),
         CalculateNormalForPosition((int3(positionWS.x + 1, positionWS.y + 1, positionWS.z + 1))),
         CalculateNormalForPosition((int3(positionWS.x, positionWS.y + 1, positionWS.z + 1)))
-    };
+    }; 
     
     // Create triangles for current cube configuration
     //todo make it work with multiple triangles again
@@ -303,14 +289,14 @@ void BuildIndexBuffer (uint3 id : SV_DispatchThreadID)
     
     for(int i = 0;i<maxVertsPerCluster;i++)
     {
-        _ClusterMeshIndexBuffer[vertexOffset+i]=vertexOffset+i;
-        // if(i<vertexCountOfSubChunk)
-        // {
-        //     _ClusterMeshIndexBuffer[indexBufferOffset+i] = vertexOffset+i;
-        // }
-        // else
-        // {
-        //     _ClusterMeshIndexBuffer[(_IndexBufferSize-zeroIndexBufferOffset) - (i-vertexCountOfSubChunk)]=0;
-        // }
+        //_ClusterMeshIndexBuffer[vertexOffset+i]=vertexOffset+i;
+        if(i<vertexCountOfSubChunk)
+        {
+            _ClusterMeshIndexBuffer[indexBufferOffset+i] = vertexOffset+i;
+        }
+        else
+        {
+            _ClusterMeshIndexBuffer[(_IndexBufferSize-zeroIndexBufferOffset) - (i-vertexCountOfSubChunk)]=0;
+        }
     }
 }

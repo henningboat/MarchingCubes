@@ -42,7 +42,7 @@ namespace Code.CubeMarching.Rendering
             var chunkCounts = 8 * clusterCounts;
             
             const int maxTrianglesPerSubChunk = 4 * 4 * 4 * 5;
-            cSubChunkWithTrianglesIndices.ResizeUninitialized(4096);
+            
             var indexCount = math.min(mesh.vertexCount, cSubChunkWithTrianglesIndices.Length * maxTrianglesPerSubChunk * 3);
 
             _indexBufferCounter.SetData(new int[] {0, 0});
@@ -65,11 +65,14 @@ namespace Code.CubeMarching.Rendering
 
                 _chunksToTriangulize.SetData(triangulationInstructions.AsNativeArray());
 
-                int[] dataReadback = new int[512 * 8];
                 _trianglePositionCountBuffer.SetData(new[] {1, 1, 1, 1, 1});
 
-                //_triangleCountPerSubChunk.SetData(dataReadback);
-
+                var resetTriangleCountKernel = _computeShader.FindKernel("ResetSubChunkTriangleCount");
+                _computeShader.SetBuffer(resetTriangleCountKernel, "_TerrainChunkBasePosition", _chunksToTriangulize);
+                _computeShader.SetBuffer(resetTriangleCountKernel, "_TriangleCountPerSubChunk", _triangleCountPerSubChunk);
+                _computeShader.Dispatch(resetTriangleCountKernel, triangulationInstructions.Length, 1, 1);
+                
+                
                 //Fine positions in the grid that contain triangles
                 var getPositionKernel = _computeShader.FindKernel("GetTrianglePositions");
                 _computeShader.SetInt("numPointsPerAxis", ChunkLength);
@@ -86,9 +89,9 @@ namespace Code.CubeMarching.Rendering
 
                 var meshVertexBuffer = mesh.GetVertexBuffer(0);
 
-                var clearVertexData = _computeShader.FindKernel("ClearVertexData");
-                _computeShader.SetBuffer(clearVertexData, "triangles", meshVertexBuffer);
-                _computeShader.Dispatch(clearVertexData, mesh.vertexCount / 512, 1, 1);
+                // var clearVertexData = _computeShader.FindKernel("ClearVertexData");
+                // _computeShader.SetBuffer(clearVertexData, "triangles", meshVertexBuffer);
+                // _computeShader.Dispatch(clearVertexData, mesh.vertexCount / 512, 1, 1);
 
                 var calculateTriangulationThreadGroupSizeKernel = _computeShader.FindKernel("CalculateTriangulationThreadGroupSizeKernel");
                 _computeShader.SetBuffer(calculateTriangulationThreadGroupSizeKernel, "_ArgsBuffer", _trianglePositionCountBuffer);
