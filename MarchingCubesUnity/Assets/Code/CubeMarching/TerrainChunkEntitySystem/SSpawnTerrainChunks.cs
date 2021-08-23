@@ -46,6 +46,12 @@ namespace Code.CubeMarching.TerrainChunkEntitySystem
             EntityManager.AddSharedComponentData(clusterEntity, clusterMesh);
             EntityManager.SetName(clusterEntity, "Cluster " + clusterPositionGS);
             EntityManager.AddSharedComponentData(clusterEntity, ClusterMeshGPUBuffers.CreateGPUData());
+
+            var vertexCountPerSubChunk = EntityManager.GetBuffer<CVertexCountPerSubCluster>(clusterEntity);
+            for (int i = 0; i <Constants.SubChunksInCluster; i++)
+            {
+                vertexCountPerSubChunk.Add(default);
+            }
             
             //spawn terrain renderer
             var renderMeshDescriptor = new RenderMeshDescription(clusterMesh.mesh, Resources.Load<Material>("DefaultMaterial"), ShadowCastingMode.On, true);
@@ -107,8 +113,9 @@ namespace Code.CubeMarching.TerrainChunkEntitySystem
                 typeof(TerrainInstruction),
                 typeof(CTriangulationInstruction),
                 typeof(CSubChunkWithTrianglesIndex),
-                typeof(CClusterChildListElement));
-
+                typeof(CClusterChildListElement),
+                typeof(CVertexCountPerSubCluster));
+            
             //spawn data holder            
             var entity = EntityManager.CreateEntity(typeof(TerrainChunkDataBuffer), typeof(TotalClusterCounts), typeof(TerrainChunkIndexMap));
             var totalClustersCount = new TotalClusterCounts() {Value = new int3(1, 1, 1)};
@@ -155,8 +162,13 @@ namespace Code.CubeMarching.TerrainChunkEntitySystem
         protected override void OnUpdate()
         {
         }
-
+        
         #endregion
+    }
+
+    public struct CFrameCount : IComponentData
+    {
+        public int Value;
     }
 
     public struct CClusterChildListElement : IBufferElementData
@@ -171,11 +183,13 @@ namespace Code.CubeMarching.TerrainChunkEntitySystem
         public int ClusterIndex;
         public int3 PositionGS;
         public BitArray512 WriteMask;
+        public int totalVertexCount;
 
         #endregion
     }
 
-    [UpdateAfter(typeof(SSpawnTerrainChunks))]
+
+    [UpdateAfter(typeof(SUpdateFrameCount))]
     [WorldSystemFilter(WorldSystemFilterFlags.Editor | WorldSystemFilterFlags.Default)]
     public class SCalculateSphereBounds : SystemBase
     {
@@ -263,6 +277,8 @@ namespace Code.CubeMarching.TerrainChunkEntitySystem
         public byte InnerDataMask;
         public int IndexInDistanceFieldBuffer;
         public bool HasData => InnerDataMask != 0;
+        public int InstructionChangeFrameCount;
+
         public uint CurrentGeometryInstructionsHash;
         public bool InstructionsChangedSinceLastFrame;
     }

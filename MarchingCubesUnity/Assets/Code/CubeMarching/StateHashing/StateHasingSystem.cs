@@ -16,7 +16,7 @@ namespace Code.CubeMarching.StateHashing
             _getClusterPosition = systemBase.GetComponentDataFromEntity<CClusterPosition>();
         }
 
-        public void Execute(ref DistanceFieldChunkData chunk, in CTerrainEntityChunkPosition chunkPosition,in ClusterChild clusterChild)
+        public void Execute(ref DistanceFieldChunkData chunk, in CTerrainEntityChunkPosition chunkPosition, in ClusterChild clusterChild, int frameCount)
         {
             uint hash = 0;
             var instructions = _getTerrainInstructions[clusterChild.ClusterEntity];
@@ -37,6 +37,11 @@ namespace Code.CubeMarching.StateHashing
 
             var hashChanged = chunk.CurrentGeometryInstructionsHash != hash;
             chunk.InstructionsChangedSinceLastFrame = hashChanged;
+            if (hashChanged)
+            {
+                chunk.InstructionChangeFrameCount = frameCount;
+            }
+
             chunk.CurrentGeometryInstructionsHash = hash;
         }
     }

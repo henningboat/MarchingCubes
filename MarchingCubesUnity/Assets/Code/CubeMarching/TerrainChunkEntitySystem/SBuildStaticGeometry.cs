@@ -19,6 +19,8 @@ namespace Code.CubeMarching.TerrainChunkEntitySystem
             var getClusterPosition = GetComponentDataFromEntity<CClusterPosition>(true);
             GeometryInstructionsHasher hasher = new GeometryInstructionsHasher(this);
 
+            int frameCount = GetSingleton<CFrameCount>().Value;
+            
             //Static geometry 
             {
                 //Write Instructions
@@ -33,7 +35,7 @@ namespace Code.CubeMarching.TerrainChunkEntitySystem
 
                 Dependency = Entities.ForEach((ref CTerrainChunkStaticData distanceField, in ClusterChild clusterChild, in CTerrainEntityChunkPosition chunkPosition) =>
                 {
-                    hasher.Execute(ref distanceField.DistanceFieldChunkData, chunkPosition, clusterChild);
+                    hasher.Execute(ref distanceField.DistanceFieldChunkData, chunkPosition, clusterChild, frameCount);
 
                     if (!distanceField.DistanceFieldChunkData.InstructionsChangedSinceLastFrame)
                         return;
@@ -59,7 +61,7 @@ namespace Code.CubeMarching.TerrainChunkEntitySystem
 
                 Dependency = Entities.ForEach((ref CTerrainChunkDynamicData distanceField, in CTerrainChunkStaticData staticDistanceField, in CTerrainEntityChunkPosition chunkPosition, in ClusterChild clusterChild) =>
                 {
-                    hasher.Execute(ref distanceField.DistanceFieldChunkData, chunkPosition, clusterChild);
+                    hasher.Execute(ref distanceField.DistanceFieldChunkData, chunkPosition, clusterChild,frameCount);
 
                     if (!distanceField.DistanceFieldChunkData.InstructionsChangedSinceLastFrame)
                         return;
