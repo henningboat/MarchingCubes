@@ -19,9 +19,6 @@ namespace Code.CubeMarching.Rendering
         private ComputeBuffer _triangleCountPerSubChunk;
         private ComputeBuffer _indexBufferCounter;
         private NativeArray<int> _countPerSubChunkReadback;
-        private AsyncGPUReadbackRequest _readback;
-        private bool _isWaitingForReadback;
-        private AsyncReadbackUtility.ReadbackData _recentReadback;
 
         public static ClusterMeshGPUBuffers CreateGPUData()
         {
@@ -40,9 +37,10 @@ namespace Code.CubeMarching.Rendering
             result._triangleCountPerSubChunk.SetData(new[] {result._triangleCountPerSubChunk.count});
 
             result._countPerSubChunkReadback = new NativeArray<int>(512 * 8, Allocator.Persistent);
-
-            result._readback = default;
-            result._isWaitingForReadback = default;
+            
+            
+            var requiredTriangleCapacity = Constants.SubChunksInCluster * 4 * 4 * 4 * 5;
+            result._trianglePositionBuffer = new ComputeBuffer(requiredTriangleCapacity, 8 * 4, ComputeBufferType.Append);
 
             return result;
         }
@@ -71,24 +69,10 @@ namespace Code.CubeMarching.Rendering
 
                 indexCount = math.min(mesh.vertexCount, cSubChunkWithTrianglesIndices.Length * maxTrianglesPerSubChunk * 3);
 
-                _indexBufferCounter.SetData(new int[] {0, 0});
-
-                //todo
-                // fromome reason, the mesh vertex buffer get's overwritten instead of cached. I wonder why
+                _indexBufferCounter.SetData(new[] {0, 0});
+                
                 if (triangulationInstructions.Length > 0)
                 {
-                    var trianbgleByteSize = (3 + 3 + 4) * 4;
-                    var requiredTriangleCapacity = triangulationInstructions.Length * 4 * 4 * 4 * 5;
-                    if (_trianglePositionBuffer == null || _trianglePositionBuffer.count < requiredTriangleCapacity)
-                    {
-                        if (_trianglePositionBuffer != null)
-                        {
-                            _trianglePositionBuffer.Dispose();
-                        }
-
-                        _trianglePositionBuffer = new ComputeBuffer(requiredTriangleCapacity, 8 * 4, ComputeBufferType.Append);
-                    }
-
                     _chunksToTriangulize.SetData(triangulationInstructions.AsNativeArray());
 
                     _trianglePositionCountBuffer.SetData(new[] {1, 1, 1, 1, 1});
@@ -161,8 +145,6 @@ namespace Code.CubeMarching.Rendering
 
 
             mesh.SetSubMeshes(new[] {new SubMeshDescriptor(0, clusterParameters.vertexCount)}, MeshGeneratorBuilder.MeshUpdateFlagsNone);
-
-            _isWaitingForReadback = true;
         }
 
         public const int ChunkLength = 8;
