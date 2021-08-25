@@ -43,14 +43,15 @@ namespace Code.CubeMarching.Rendering
 
             result._readback = default;
             result._isWaitingForReadback = default;
-            
+
             return result;
         }
 
         public void UpdateWithSurfaceData(ComputeBuffer globalTerrainBuffer, ComputeBuffer globalTerrainIndexMap,
             DynamicBuffer<CTriangulationInstruction> triangulationInstructions,
             DynamicBuffer<CSubChunkWithTrianglesIndex> cSubChunkWithTrianglesIndices,
-            int3 clusterCounts, int materialIDFilter, Mesh mesh, CClusterPosition cluster, int frameTimeStamp,CClusterParameters clusterParameters)
+            int3 clusterCounts, int materialIDFilter, Mesh mesh, CClusterPosition cluster,
+            int frameTimeStamp, CClusterParameters clusterParameters)
         {
             var chunkCounts = 8 * clusterCounts;
 
@@ -64,8 +65,10 @@ namespace Code.CubeMarching.Rendering
             }
             else
             {
-                var clusterPositionWS = cluster.PositionGS * 8;
+                clusterParameters.lastVertexBufferChangeTimestamp = frameTimeStamp;
                 
+                var clusterPositionWS = cluster.PositionGS * 8;
+
                 indexCount = math.min(mesh.vertexCount, cSubChunkWithTrianglesIndices.Length * maxTrianglesPerSubChunk * 3);
 
                 _indexBufferCounter.SetData(new int[] {0, 0});
@@ -134,12 +137,13 @@ namespace Code.CubeMarching.Rendering
                     _computeShader.DispatchIndirect(triangulationKernel, _trianglePositionCountBuffer, 4);
                     meshVertexBuffer.Dispose();
                 }
+            }
 
+
+            if (clusterParameters.needsIndexBufferUpdate)
+            {
                 var meshIndexBuffer = mesh.GetIndexBuffer();
-
-
                 _chunksToTriangulize.SetData(cSubChunkWithTrianglesIndices.AsNativeArray());
-
 
                 var indexBufferKernel = _computeShader.FindKernel("BuildIndexBuffer");
                 _computeShader.SetBuffer(indexBufferKernel, "_TerrainChunkBasePosition", _chunksToTriangulize);
@@ -151,9 +155,10 @@ namespace Code.CubeMarching.Rendering
                 _computeShader.Dispatch(indexBufferKernel, cSubChunkWithTrianglesIndices.Length, 1, 1);
 
                 meshIndexBuffer.Dispose();
-
-                AsyncReadbackUtility.AddCallbackIfNeeded(cluster.ClusterIndex, _triangleCountPerSubChunk, frameTimeStamp);
             }
+
+            AsyncReadbackUtility.AddCallbackIfNeeded(cluster.ClusterIndex, _triangleCountPerSubChunk, frameTimeStamp, clusterParameters.lastVertexBufferChangeTimestamp);
+
 
             mesh.SetSubMeshes(new[] {new SubMeshDescriptor(0, clusterParameters.vertexCount)}, MeshGeneratorBuilder.MeshUpdateFlagsNone);
 

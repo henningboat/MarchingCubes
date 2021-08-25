@@ -59,10 +59,23 @@ namespace Code.CubeMarching.AsyncReadbackSystem
             }
         }
 
-        private static Dictionary<int, ReadbackData> _readbacks = new Dictionary<int, ReadbackData>();
+        private static Dictionary<int, ReadbackData> _readbacks = new();
+        
+        /// <summary>
+        /// stores the information when a clusters data was last requested. We can use this to prevent requesting data for chunks that don't have data yet
+        /// </summary>
+        private static Dictionary<int, int> _readbackTimestamps = new();
+        
 
-        public static void AddCallbackIfNeeded(int clusterIndex, ComputeBuffer computeBuffer, int frameTimestamp)
+        public static void AddCallbackIfNeeded(int clusterIndex, ComputeBuffer computeBuffer, int frameTimeStamp, int lastVertexBufferChangeTimestamp)
         {
+            if (_readbackTimestamps.ContainsKey(clusterIndex) && _readbackTimestamps[clusterIndex] >= lastVertexBufferChangeTimestamp)
+            {
+                return;
+            }
+
+            _readbackTimestamps[clusterIndex] = lastVertexBufferChangeTimestamp;
+            
             if (!_readbacks.ContainsKey(clusterIndex))
             {
                 _readbacks[clusterIndex] = new ReadbackData(clusterIndex);
@@ -73,7 +86,7 @@ namespace Code.CubeMarching.AsyncReadbackSystem
                         _readbacks.Remove(clusterIndex);
                     }
 
-                    _readbacks[clusterIndex].SetData(frameTimestamp, request);
+                    _readbacks[clusterIndex].SetData(frameTimeStamp, request);
                 });
             }
         }

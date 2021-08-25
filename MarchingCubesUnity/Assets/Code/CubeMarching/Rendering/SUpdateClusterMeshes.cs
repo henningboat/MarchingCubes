@@ -90,6 +90,8 @@ namespace Code.CubeMarching.Rendering
                     ref CClusterParameters clusterParameters, in CClusterPosition clusterPosition,
                     in DynamicBuffer<CClusterChildListElement> chunkEntities) =>
                 {
+                    clusterParameters.needsIndexBufferUpdate = false;
+                    
                     triangulationInstructions.Clear();
                     subChunkWithTriangles.Clear();
 
@@ -128,6 +130,7 @@ namespace Code.CubeMarching.Rendering
                                 if (dynamicData.DistanceFieldChunkData.InstructionChangeFrameCount <= vertexCountReadbackTimesStamp)
                                 {
                                     vertexCountPerSubChunk[subChunkIndex] = new CVertexCountPerSubCluster() {vertexCount = vertexCountData[subChunkIndex]};
+                                    clusterParameters.needsIndexBufferUpdate = true;
                                 }
                             }
 
@@ -140,8 +143,10 @@ namespace Code.CubeMarching.Rendering
                                 {
                                     triangulationInstructions.Add(new CTriangulationInstruction(positionOfChunkWS + subChunkOffset, 0));
                                     vertexCountPerSubChunk[subChunkIndex] = new CVertexCountPerSubCluster() {vertexCount = Constants.maxVertsPerCluster};
+                                    
+                                    clusterParameters.needsIndexBufferUpdate = true;
                                 }
-
+ 
                                 totalVertexCount += vertexCountPerSubChunk[subChunkIndex].vertexCount;
                             }
                         }
@@ -195,8 +200,9 @@ namespace Code.CubeMarching.Rendering
 
     public struct CClusterParameters : IComponentData
     {
-        public bool needsRefresh;
+        public bool needsIndexBufferUpdate;
         public BitArray512 WriteMask;
         public int vertexCount;
+        public int lastVertexBufferChangeTimestamp;
     }
 }
