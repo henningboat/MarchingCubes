@@ -1,4 +1,5 @@
-﻿using Code.CubeMarching.TerrainChunkEntitySystem;
+﻿using Code.CubeMarching.Rendering;
+using Code.CubeMarching.TerrainChunkEntitySystem;
 using Unity.Entities;
 using Unity.Jobs;
 using Unity.Mathematics;
@@ -16,7 +17,7 @@ namespace Code.CubeMarching.StateHashing
             _getClusterPosition = systemBase.GetComponentDataFromEntity<CClusterPosition>();
         }
 
-        public void Execute(ref DistanceFieldChunkData chunk, in CTerrainEntityChunkPosition chunkPosition, in ClusterChild clusterChild, int frameCount)
+        public void Execute(ref DistanceFieldChunkData chunk, in CTerrainEntityChunkPosition chunkPosition, in CClusterParameters clusterParameters, in ClusterChild clusterChild, int frameCount)
         {
             uint hash = 0;
             var instructions = _getTerrainInstructions[clusterChild.ClusterEntity];
@@ -24,7 +25,7 @@ namespace Code.CubeMarching.StateHashing
 
             var indexInCluster = chunkPosition.indexInCluster;
             
-            if(clusterPosition.WriteMask[indexInCluster])
+            if(clusterParameters.WriteMask[indexInCluster])
             {
                 foreach (var terrainInstruction in instructions)
                 {

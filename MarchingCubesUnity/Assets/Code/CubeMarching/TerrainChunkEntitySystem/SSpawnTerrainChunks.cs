@@ -114,7 +114,8 @@ namespace Code.CubeMarching.TerrainChunkEntitySystem
                 typeof(CTriangulationInstruction),
                 typeof(CSubChunkWithTrianglesIndex),
                 typeof(CClusterChildListElement),
-                typeof(CVertexCountPerSubCluster));
+                typeof(CVertexCountPerSubCluster),
+                typeof(CClusterParameters));
             
             //spawn data holder            
             var entity = EntityManager.CreateEntity(typeof(TerrainChunkDataBuffer), typeof(TotalClusterCounts), typeof(TerrainChunkIndexMap));
@@ -182,8 +183,6 @@ namespace Code.CubeMarching.TerrainChunkEntitySystem
 
         public int ClusterIndex;
         public int3 PositionGS;
-        public BitArray512 WriteMask;
-        public int totalVertexCount;
 
         #endregion
     }

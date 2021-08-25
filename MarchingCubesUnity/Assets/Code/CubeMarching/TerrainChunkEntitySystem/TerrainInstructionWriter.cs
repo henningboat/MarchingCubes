@@ -65,7 +65,7 @@ namespace Code.CubeMarching.TerrainChunkEntitySystem
 
         #region Public methods
 
-        public void Execute(DynamicBuffer<TerrainInstruction> terrainInstructions, ref CClusterPosition clusterPosition, bool includeLastFrameResult)
+        public void Execute(DynamicBuffer<TerrainInstruction> terrainInstructions, ref CClusterParameters clusterParameters, in CClusterPosition clusterPosition,bool includeLastFrameResult)
         {
             terrainInstructions.Clear();
             if (includeLastFrameResult)
@@ -79,7 +79,7 @@ namespace Code.CubeMarching.TerrainChunkEntitySystem
             coverageHandler->ComputeMasksAndWriteToParents(this);
             coverageHandler->WriteInstructionsToChunk(terrainInstructions);
 
-            clusterPosition.WriteMask = coverageHandler->TotalWriteMask;
+            clusterParameters.WriteMask = coverageHandler->TotalWriteMask;
 
             coverageHandler->Dispose(this);
 

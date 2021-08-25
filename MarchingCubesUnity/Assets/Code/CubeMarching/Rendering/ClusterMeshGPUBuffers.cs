@@ -50,7 +50,7 @@ namespace Code.CubeMarching.Rendering
         public void UpdateWithSurfaceData(ComputeBuffer globalTerrainBuffer, ComputeBuffer globalTerrainIndexMap,
             DynamicBuffer<CTriangulationInstruction> triangulationInstructions,
             DynamicBuffer<CSubChunkWithTrianglesIndex> cSubChunkWithTrianglesIndices,
-            int3 clusterCounts, int materialIDFilter, Mesh mesh, CClusterPosition cluster, int frameTimeStamp)
+            int3 clusterCounts, int materialIDFilter, Mesh mesh, CClusterPosition cluster, int frameTimeStamp,CClusterParameters clusterParameters)
         {
             var chunkCounts = 8 * clusterCounts;
 
@@ -152,12 +152,10 @@ namespace Code.CubeMarching.Rendering
 
                 meshIndexBuffer.Dispose();
 
-                Debug.Log(cluster.totalVertexCount);
-
                 AsyncReadbackUtility.AddCallbackIfNeeded(cluster.ClusterIndex, _triangleCountPerSubChunk, frameTimeStamp);
             }
 
-            mesh.SetSubMeshes(new[] {new SubMeshDescriptor(0, cluster.totalVertexCount)}, MeshGeneratorBuilder.MeshUpdateFlagsNone);
+            mesh.SetSubMeshes(new[] {new SubMeshDescriptor(0, clusterParameters.vertexCount)}, MeshGeneratorBuilder.MeshUpdateFlagsNone);
 
             _isWaitingForReadback = true;
         }

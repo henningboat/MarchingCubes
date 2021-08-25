@@ -1,6 +1,7 @@
 using System;
 using System.Runtime.CompilerServices;
 using Code.CubeMarching.Authoring;
+using Code.CubeMarching.Rendering;
 using Code.CubeMarching.TerrainChunkSystem;
 using Code.CubeMarching.Utils;
 using Code.SIMDMath;
@@ -12,16 +13,16 @@ namespace Code.CubeMarching.TerrainChunkEntitySystem
 {
     public static class DistanceFieldResolver
     {
-        public static void CalculateDistanceFieldForChunk(DynamicBuffer<TerrainChunkDataBuffer> terrainChunkBuffer, ref DistanceFieldChunkData distanceField, CTerrainEntityChunkPosition chunk,
-            BufferFromEntity<TerrainInstruction> getTerrainInstructionBuffer, Entity clusterEntity, CClusterPosition cluster, int backgroundDataIndex, bool ignoreBackgroundData)
+        public static void CalculateDistanceFieldForChunk(DynamicBuffer<TerrainChunkDataBuffer> terrainChunkBuffer, ref DistanceFieldChunkData distanceField, CTerrainEntityChunkPosition chunkPosition,
+            BufferFromEntity<TerrainInstruction> getTerrainInstructionBuffer, Entity clusterEntity, int backgroundDataIndex, bool ignoreBackgroundData, CClusterParameters clusterParameters)
         {
             TerrainChunkData terrainChunk = default;
             var existingData = terrainChunkBuffer[backgroundDataIndex].Value;
 
-            if (cluster.WriteMask[chunk.indexInCluster])
+            if (clusterParameters.WriteMask[chunkPosition.indexInCluster])
             { 
                 //todo make the masks work again to reduce amount of computations
-                 var positionGS = chunk.positionGS;
+                 var positionGS = chunkPosition.positionGS;
                 
                  var positionsToCheck = new NativeArray<PackedFloat3>(2, Allocator.Temp);
                  for (var i = 0; i < 2; i++)
@@ -30,7 +31,7 @@ namespace Code.CubeMarching.TerrainChunkEntitySystem
                      positionsToCheck[i] = new float3(positionGS.x, positionGS.y, positionGS.z) * SSpawnTerrainChunks.TerrainChunkLength + offsetInChunk;
                  }
                 
-                 var iterator = new TerrainInstructionIterator(positionsToCheck, getTerrainInstructionBuffer[clusterEntity], chunk.indexInCluster, existingData);
+                 var iterator = new TerrainInstructionIterator(positionsToCheck, getTerrainInstructionBuffer[clusterEntity], chunkPosition.indexInCluster, existingData);
                 
                  iterator.CalculateTerrainData();
                 
@@ -53,9 +54,9 @@ namespace Code.CubeMarching.TerrainChunkEntitySystem
 
             if (distanceField.InnerDataMask != 0)
             {
-                CreatePositionsArray(distanceField, chunk, out var positions);
+                CreatePositionsArray(distanceField, chunkPosition, out var positions);
 
-                var iterator = new TerrainInstructionIterator(positions, getTerrainInstructionBuffer[clusterEntity], chunk.indexInCluster, existingData);
+                var iterator = new TerrainInstructionIterator(positions, getTerrainInstructionBuffer[clusterEntity], chunkPosition.indexInCluster, existingData);
                 iterator.CalculateTerrainData();
 
                 terrainChunk = CopyResultsBackToBuffer(distanceField, terrainChunk, iterator);

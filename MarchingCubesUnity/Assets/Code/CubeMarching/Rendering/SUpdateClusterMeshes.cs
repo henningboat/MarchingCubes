@@ -16,7 +16,7 @@ using Code.CubeMarching.TerrainChunkSystem;
 
 namespace Code.CubeMarching.Rendering
 {
-    public struct CTriangulationInstruction:IBufferElementData
+    public struct CTriangulationInstruction : IBufferElementData
     {
         public readonly int3 ChunkPositionGS;
         public readonly int SubChunkIndex;
@@ -27,11 +27,11 @@ namespace Code.CubeMarching.Rendering
             SubChunkIndex = subChunkIndex;
         }
     }
-    
-    
 
-    public struct CSubChunkWithTrianglesIndex:IBufferElementData
-    {  public readonly int3 ChunkPositionGS;
+
+    public struct CSubChunkWithTrianglesIndex : IBufferElementData
+    {
+        public readonly int3 ChunkPositionGS;
         public readonly int SubChunkIndex;
 
         public CSubChunkWithTrianglesIndex(int3 chunkPositionGs, int subChunkIndex)
@@ -41,7 +41,7 @@ namespace Code.CubeMarching.Rendering
         }
     }
 
-    public struct CVertexCountPerSubCluster:IBufferElementData
+    public struct CVertexCountPerSubCluster : IBufferElementData
     {
         public int vertexCount;
     }
@@ -52,7 +52,7 @@ namespace Code.CubeMarching.Rendering
     public class SUpdateClusterMeshes : SystemBase
     {
         private int previousFrameClusterCount = -1;
-        
+
         private ComputeBuffer _distanceFieldComputeBuffer;
         private ComputeBuffer _indexMapComputeBuffer;
 
@@ -62,7 +62,7 @@ namespace Code.CubeMarching.Rendering
             var clusterEntities = clusterEntityQuery.ToEntityArray(Allocator.TempJob);
             var clusterCount = clusterEntities.Length;
 
-          
+
             previousFrameClusterCount = clusterCount;
 
             var getChunkPosition = GetComponentDataFromEntity<CTerrainEntityChunkPosition>(true);
@@ -70,34 +70,34 @@ namespace Code.CubeMarching.Rendering
 
             var gpuReadbackDatas = AsyncReadbackUtility.GetDataReadbacks();
 
-            NativeArray<int> gpuReadbackDataClusterIndex = new NativeArray<int>(gpuReadbackDatas.Count,Allocator.TempJob);
-            NativeArray<int> gpuReadbackDataFrameTimestamp = new NativeArray<int>(gpuReadbackDatas.Count,Allocator.TempJob);
-            NativeArray<int> gpuReadbackDataVertexCount = new NativeArray<int>(gpuReadbackDatas.Count * Constants.SubChunksInCluster,Allocator.TempJob);
+            var gpuReadbackDataClusterIndex = new NativeArray<int>(gpuReadbackDatas.Count, Allocator.TempJob);
+            var gpuReadbackDataFrameTimestamp = new NativeArray<int>(gpuReadbackDatas.Count, Allocator.TempJob);
+            var gpuReadbackDataVertexCount = new NativeArray<int>(gpuReadbackDatas.Count * Constants.SubChunksInCluster, Allocator.TempJob);
 
-            for (int i = 0; i < gpuReadbackDatas.Count; i++)
+            for (var i = 0; i < gpuReadbackDatas.Count; i++)
             {
                 gpuReadbackDataClusterIndex[i] = gpuReadbackDatas[i].clusterIndex;
                 gpuReadbackDataFrameTimestamp[i] = gpuReadbackDatas[i].frameTimestamp;
                 new NativeSlice<int>(gpuReadbackDataVertexCount, Constants.SubChunksInCluster * i, Constants.SubChunksInCluster).CopyFrom(new NativeSlice<int>(gpuReadbackDatas[i].vertexCounts));
             }
 
-            int frameCount = GetSingleton<CFrameCount>().Value;
+            var frameCount = GetSingleton<CFrameCount>().Value;
 
             var getCVertexCountPerSubCluster = GetBufferFromEntity<CVertexCountPerSubCluster>();
 
             Dependency = Entities.ForEach((Entity entity, DynamicBuffer<CTriangulationInstruction> triangulationInstructions,
-                    DynamicBuffer<CSubChunkWithTrianglesIndex> subChunkWithTriangles, 
-                    ref CClusterPosition clusterPosition, 
+                    DynamicBuffer<CSubChunkWithTrianglesIndex> subChunkWithTriangles,
+                    ref CClusterParameters clusterParameters, in CClusterPosition clusterPosition,
                     in DynamicBuffer<CClusterChildListElement> chunkEntities) =>
                 {
                     triangulationInstructions.Clear();
                     subChunkWithTriangles.Clear();
 
                     NativeSlice<int> vertexCountData = default;
-                    bool hasVertexCountReadback = false;
-                    int vertexCountReadbackTimesStamp = 0;
-                    
-                    for (int i = 0; i < gpuReadbackDataClusterIndex.Length; i++)
+                    var hasVertexCountReadback = false;
+                    var vertexCountReadbackTimesStamp = 0;
+
+                    for (var i = 0; i < gpuReadbackDataClusterIndex.Length; i++)
                     {
                         if (gpuReadbackDataClusterIndex[i] == clusterPosition.ClusterIndex)
                         {
@@ -108,20 +108,20 @@ namespace Code.CubeMarching.Rendering
                         }
                     }
 
-                    int totalVertexCount = 0;
+                    var totalVertexCount = 0;
 
                     var vertexCountPerSubChunk = getCVertexCountPerSubCluster[entity];
 
-                    for (int chunkIndex = 0; chunkIndex < chunkEntities.Length; chunkIndex++)
+                    for (var chunkIndex = 0; chunkIndex < chunkEntities.Length; chunkIndex++)
                     {
-                        int3 positionOfChunkWS = getChunkPosition[chunkEntities[chunkIndex].Entity].positionGS * 8;
+                        var positionOfChunkWS = getChunkPosition[chunkEntities[chunkIndex].Entity].positionGS * 8;
                         var dynamicData = getDynamicData[chunkEntities[chunkIndex].Entity];
 
                         var currentHash = dynamicData.DistanceFieldChunkData.CurrentGeometryInstructionsHash;
 
-                        for (int i = 0; i < 8; i++)
+                        for (var i = 0; i < 8; i++)
                         {
-                            int subChunkIndex = chunkIndex * 8 + i;
+                            var subChunkIndex = chunkIndex * 8 + i;
 
                             if (hasVertexCountReadback)
                             {
@@ -130,10 +130,10 @@ namespace Code.CubeMarching.Rendering
                                     vertexCountPerSubChunk[subChunkIndex] = new CVertexCountPerSubCluster() {vertexCount = vertexCountData[subChunkIndex]};
                                 }
                             }
-                            
+
                             if (dynamicData.DistanceFieldChunkData.InnerDataMask.GetBit(i))
                             {
-                                int3 subChunkOffset = TerrainChunkEntitySystem.Utils.IndexToPositionWS(i, 2) * 4;
+                                var subChunkOffset = TerrainChunkEntitySystem.Utils.IndexToPositionWS(i, 2) * 4;
                                 subChunkWithTriangles.Add(new CSubChunkWithTrianglesIndex(positionOfChunkWS + subChunkOffset, 0));
 
                                 if (dynamicData.DistanceFieldChunkData.InstructionsChangedSinceLastFrame)
@@ -147,51 +147,56 @@ namespace Code.CubeMarching.Rendering
                         }
                     }
 
-                    clusterPosition.totalVertexCount = totalVertexCount;
+                    clusterParameters.vertexCount = totalVertexCount;
                 })
-                .WithBurst().WithReadOnly(getChunkPosition).WithReadOnly(getDynamicData).
-                WithReadOnly(gpuReadbackDataClusterIndex).
-                WithReadOnly(gpuReadbackDataFrameTimestamp).
-                WithReadOnly(gpuReadbackDataVertexCount).
-                WithNativeDisableParallelForRestriction(getCVertexCountPerSubCluster).WithName("CalculateTriangulationIndices").ScheduleParallel(Dependency);
-            
+                .WithBurst().WithReadOnly(getChunkPosition).WithReadOnly(getDynamicData).WithReadOnly(gpuReadbackDataClusterIndex).WithReadOnly(gpuReadbackDataFrameTimestamp)
+                .WithReadOnly(gpuReadbackDataVertexCount).WithNativeDisableParallelForRestriction(getCVertexCountPerSubCluster).WithName("CalculateTriangulationIndices").ScheduleParallel(Dependency);
+
             gpuReadbackDataClusterIndex.Dispose(Dependency);
-             gpuReadbackDataFrameTimestamp.Dispose(Dependency);
-             gpuReadbackDataVertexCount.Dispose(Dependency);
-             
+            gpuReadbackDataFrameTimestamp.Dispose(Dependency);
+            gpuReadbackDataVertexCount.Dispose(Dependency);
+
             foreach (var gpuReadbackData in gpuReadbackDatas)
             {
                 gpuReadbackData.Dispose(Dependency);
             }
-            
+
             Dependency.Complete();
 
             _distanceFieldComputeBuffer?.Dispose();
             _indexMapComputeBuffer?.Dispose();
- 
+
 
             var terrainChunkDataBuffer = this.GetSingletonBuffer<TerrainChunkDataBuffer>().AsNativeArray().Reinterpret<TerrainChunkData>();
             _distanceFieldComputeBuffer = new ComputeBuffer(terrainChunkDataBuffer.Length * TerrainChunkData.PackedCapacity, 4 * 4 * 2);
             _distanceFieldComputeBuffer.SetData(terrainChunkDataBuffer);
-    
-    
+
+
             var indexMap = this.GetSingletonBuffer<TerrainChunkIndexMap>().Reinterpret<int>();
-    
+
             _indexMapComputeBuffer = new ComputeBuffer(indexMap.Length, 4);
             _indexMapComputeBuffer.SetData(indexMap.AsNativeArray());
-    
+
             var clusterMeshRendererEntities = GetEntityQuery(typeof(CClusterMesh)).ToEntityArray(Allocator.TempJob);
 
             var clusterCounts = GetSingleton<TotalClusterCounts>();
 
             Entities.ForEach((CClusterMesh clusterMesh, ClusterMeshGPUBuffers gpuBuffers, DynamicBuffer<CTriangulationInstruction> triangulationInstructions,
-                DynamicBuffer<CSubChunkWithTrianglesIndex> subChunkWithTriangles, CClusterPosition clusterPosition) =>
+                DynamicBuffer<CSubChunkWithTrianglesIndex> subChunkWithTriangles, CClusterPosition clusterPosition, CClusterParameters clusterParameters) =>
             {
-                gpuBuffers.UpdateWithSurfaceData(_distanceFieldComputeBuffer, _indexMapComputeBuffer, triangulationInstructions, subChunkWithTriangles, clusterCounts.Value, 0, clusterMesh.mesh, clusterPosition, frameCount);
+                gpuBuffers.UpdateWithSurfaceData(_distanceFieldComputeBuffer, _indexMapComputeBuffer, triangulationInstructions, subChunkWithTriangles, clusterCounts.Value, 0, clusterMesh.mesh,
+                    clusterPosition, frameCount, clusterParameters);
             }).WithoutBurst().Run();
 
             clusterMeshRendererEntities.Dispose(Dependency);
             clusterEntities.Dispose(Dependency);
         }
+    }
+
+    public struct CClusterParameters : IComponentData
+    {
+        public bool needsRefresh;
+        public BitArray512 WriteMask;
+        public int vertexCount;
     }
 }
