@@ -82,7 +82,7 @@ namespace Code.CubeMarching.TerrainChunkEntitySystem
                         }
                         else
                         {
-                            existingData = 0;
+                            existingData = 0; 
                         }
                     }
 

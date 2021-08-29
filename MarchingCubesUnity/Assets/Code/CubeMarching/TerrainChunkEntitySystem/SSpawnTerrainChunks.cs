@@ -334,7 +334,7 @@ namespace Code.CubeMarching.TerrainChunkEntitySystem
                     hash.AddToHash(Combiner.CalculateHash());
                     break;
                 case TerrainInstructionType.Transformation:
-                    throw new NotImplementedException();
+                    hash.AddToHash(TerrainTransformation.CalculateHash());
                     break;
                 case TerrainInstructionType.None:
                 case TerrainInstructionType.CopyOriginal:

@@ -18,6 +18,13 @@ namespace Code.CubeMarching.GeometryComponents
         public float3 PositionOffset;
         public bool3 Axis;
 
+        public uint CalculateHash()
+        {
+            var hash = math.hash(Axis);
+            hash.AddToHash(math.hash(PositionOffset));
+            return hash;
+        }
+
         public PackedFloat3 TransformPosition(PackedFloat3 positionWS)
         {
             if (Axis[0])
@@ -81,6 +88,24 @@ namespace Code.CubeMarching.GeometryComponents
                         break;
                     case TerrainTransformationType.Transform:
                         return ((CTerrainModifierTransformation*) ptr)->TransformPosition(positionOS);
+                        break;
+                    default:
+                        throw new ArgumentOutOfRangeException();
+                }
+            }
+        }
+
+        public uint CalculateHash()
+        {
+            unsafe
+            {
+                var ptr = UnsafeUtility.AddressOf(ref TerrainModifierDataA);
+                switch (TerrainTransformationType)
+                {
+                    case TerrainTransformationType.Mirror:
+                        return ((CTerrainTransformationMirror*) ptr)->CalculateHash();
+                    case TerrainTransformationType.Transform:
+                        return ((CTerrainModifierTransformation*) ptr)->CalculateHash();
                         break;
                     default:
                         throw new ArgumentOutOfRangeException();

@@ -191,7 +191,7 @@ namespace Code.CubeMarching.TerrainChunkEntitySystem
                 coverageHandler->RegisterFirstChild(this, 0,
                     new TerrainInstruction
                     {
-                        CombinerDepth = combinerDepth, Combiner = default, CoverageMask = default, DependencyIndex = default, TerrainShape = default,
+                        CombinerDepth = combinerDepth, Combiner = default, CoverageMask = BitArray512.AllBitsTrue, DependencyIndex = default, TerrainShape = default,
                         TerrainTransformation = getGenericTerrainTransformation[entity], TerrainInstructionType = TerrainInstructionType.Transformation
                     }, false, true, coverageHandler);
             }
