@@ -59,11 +59,11 @@ namespace TheKiwiCoder {
             
             if (node.OutputPortCapacity.HasValue)
             {
-                input = new NodePort(Direction.Output, node.OutputPortCapacity.Value);
+                output = new NodePort(Direction.Output, node.OutputPortCapacity.Value);
 
-                input.portName = "";
-                input.style.flexDirection = FlexDirection.ColumnReverse;
-                outputContainer.Add(input);
+                output.portName = "";
+                output.style.flexDirection = FlexDirection.ColumnReverse;
+                outputContainer.Add(output);
             }
         }
 

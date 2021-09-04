@@ -193,15 +193,15 @@ namespace Code.CubeMarching.Rendering
                     clusterPosition, frameCount, clusterParameters);
             }).WithoutBurst().Run();
 
-            Entities.ForEach((DynamicBuffer<TerrainInstruction> instructions) =>
-            {
-                string s = "";
-                foreach (TerrainInstruction instruction in instructions)
-                {
-                    s += instruction.Hash + "\n";
-                }
-                Debug.Log(s);
-            }).Run();
+            // Entities.ForEach((DynamicBuffer<TerrainInstruction> instructions) =>
+            // {
+            //     string s = "";
+            //     foreach (TerrainInstruction instruction in instructions)
+            //     {
+            //         s += instruction.Hash + "\n";
+            //     }
+            //     Debug.Log(s);
+            // }).Run();
             
             clusterMeshRendererEntities.Dispose(Dependency);
             clusterEntities.Dispose(Dependency);

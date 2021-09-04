@@ -7,8 +7,6 @@ namespace TheKiwiCoder
 {
     public class RootNode : GeometryNode
     {
-        public GeometryNode child;
-
         public override Port.Capacity? InputPortCapacity => Port.Capacity.Single;
     }
 }

@@ -60,14 +60,14 @@ namespace Code.CubeMarching.TerrainChunkEntitySystem
                 //Calculate Distance Fields
                 var getTerrainInstructionBuffer = GetBufferFromEntity<TerrainInstruction>(true);
 
-                Dependency = Entities.ForEach((ref CTerrainChunkDynamicData distanceField, in CTerrainChunkStaticData staticDistanceField, in CTerrainEntityChunkPosition chunkPosition,
+                Dependency = Entities.ForEach((ref CTerrainChunkDynamicData dynamicDistanceField, in CTerrainChunkStaticData staticDistanceField, in CTerrainEntityChunkPosition chunkPosition,
                     in ClusterChild clusterChild) =>
                 {
                     var clusterParameters = getClusterParameters[clusterChild.ClusterEntity];
-                    hasher.Execute(ref distanceField.DistanceFieldChunkData, chunkPosition, clusterParameters, clusterChild, frameCount);
+                    hasher.Execute(ref dynamicDistanceField.DistanceFieldChunkData, chunkPosition, clusterParameters, clusterChild, frameCount);
 
-                    if (!distanceField.DistanceFieldChunkData.InstructionsChangedSinceLastFrame)
-                        return;
+                      if (!dynamicDistanceField.DistanceFieldChunkData.InstructionsChangedSinceLastFrame && !staticDistanceField.DistanceFieldChunkData.InstructionsChangedSinceLastFrame)
+                          return;
 
                     int existingData;
                     if (staticDistanceField.DistanceFieldChunkData.HasData)
@@ -86,7 +86,7 @@ namespace Code.CubeMarching.TerrainChunkEntitySystem
                         }
                     }
 
-                    DistanceFieldResolver.CalculateDistanceFieldForChunk(terrainChunkBuffer, ref distanceField.DistanceFieldChunkData, chunkPosition, getTerrainInstructionBuffer,
+                    DistanceFieldResolver.CalculateDistanceFieldForChunk(terrainChunkBuffer, ref dynamicDistanceField.DistanceFieldChunkData, chunkPosition, getTerrainInstructionBuffer,
                         clusterChild.ClusterEntity, existingData, true, clusterParameters);
                 }).WithNativeDisableParallelForRestriction(terrainChunkBuffer).WithReadOnly(getTerrainInstructionBuffer).WithReadOnly(getClusterParameters).WithBurst().ScheduleParallel(Dependency);
             }
