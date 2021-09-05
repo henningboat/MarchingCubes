@@ -1,10 +1,9 @@
-using System.Collections;
 using System.Collections.Generic;
 using UnityEditor;
 using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 
-namespace TheKiwiCoder
+namespace Code.CubeMarching.GeometryGraph.Runtime
 {
     public class OutputNode : GeometryNode
     {

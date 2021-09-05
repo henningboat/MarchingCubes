@@ -15,7 +15,7 @@ namespace Code.CubeMarching.GeometryComponents
 
         public uint CalculateHash()
         {
-            uint hash = math.asuint(BlendFactor);
+            var hash = math.asuint(BlendFactor);
             hash.AddToHash((uint) Operation);
             return hash;
         }

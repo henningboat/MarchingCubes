@@ -3,18 +3,18 @@ using UnityEditor;
 using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 
-namespace TheKiwiCoder
+namespace Code.CubeMarching.GeometryGraph.Runtime
 {
     public abstract class ShapeNode : GeometryNode
     {
-        [SerializeField] private GeometryNodePort _geometryOutput;
-        
+        [HideInInspector] [SerializeField] private GeometryNodePort _geometryOutput;
+
         public override List<GeometryNodePortDescription> GetPortInfo()
         {
-            SerializedObject serializedObject = new SerializedObject(this);
-            return new()
+            var serializedObject = new SerializedObject(this);
+            return new List<GeometryNodePortDescription>()
             {
-                new GeometryNodePortDescription(serializedObject,nameof(_geometryOutput), "", Direction.Output, Port.Capacity.Multi),
+                new GeometryNodePortDescription(serializedObject, nameof(_geometryOutput), "", Direction.Output, Port.Capacity.Multi)
             };
         }
     }

@@ -1,37 +1,39 @@
-using System;
-using System.Collections;
 using System.Collections.Generic;
-using UnityEngine;
-#if UNITY_EDITOR
 using UnityEditor;
+using UnityEngine;
+
+#if UNITY_EDITOR
+
 #endif
 
 
-namespace TheKiwiCoder {
+namespace Code.CubeMarching.GeometryGraph.Runtime
+{
     [CreateAssetMenu()]
-    public class BehaviourTree : ScriptableObject {
+    public class BehaviourTree : ScriptableObject
+    {
         public GeometryNode rootNode;
-        public List<GeometryNode> nodes = new List<GeometryNode>();
-        public Blackboard blackboard = new Blackboard();
+        public List<GeometryNode> nodes = new();
+        public Blackboard blackboard = new();
 
 
         #region Editor Compatibility
+
 #if UNITY_EDITOR
 
-        public GeometryNode CreateNode(System.Type type) {
-            GeometryNode node = ScriptableObject.CreateInstance(type) as GeometryNode;
+        public GeometryNode CreateNode(System.Type type)
+        {
+            var node = CreateInstance(type) as GeometryNode;
             node.name = type.Name;
             node.guid = GUID.Generate().ToString();
 
-            node.GetPortInfo().ForEach((portInfo =>
-            {
-                portInfo.InitializeGUID();
-            }));
-            
+            node.GetPortInfo().ForEach(portInfo => { portInfo.InitializeGUID(); });
+
             Undo.RecordObject(this, "Behaviour Tree (CreateNode)");
             nodes.Add(node);
 
-            if (!Application.isPlaying) {
+            if (!Application.isPlaying)
+            {
                 AssetDatabase.AddObjectToAsset(node, this);
             }
 
@@ -41,7 +43,8 @@ namespace TheKiwiCoder {
             return node;
         }
 
-        public void DeleteNode(GeometryNode node) {
+        public void DeleteNode(GeometryNode node)
+        {
             Undo.RecordObject(this, "Behaviour Tree (DeleteNode)");
             nodes.Remove(node);
 
@@ -52,6 +55,7 @@ namespace TheKiwiCoder {
         }
 
 #endif
+
         #endregion Editor Compatibility
     }
 }

@@ -1,11 +1,10 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using UnityEditor;
 using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 
-namespace TheKiwiCoder
+namespace Code.CubeMarching.GeometryGraph.Runtime
 {
     public abstract class GeometryNode : ScriptableObject
     {
@@ -85,7 +84,7 @@ namespace TheKiwiCoder
             }
             else
             {
-                for (int i = 0; i < arrayProperty.arraySize; i++)
+                for (var i = 0; i < arrayProperty.arraySize; i++)
                 {
                     if (arrayProperty.GetArrayElementAtIndex(i).stringValue == portDescriptionGUID)
                     {
@@ -94,7 +93,7 @@ namespace TheKiwiCoder
                     }
                 }
             }
-            
+
             SerializedObject.ApplyModifiedProperties();
         }
     }

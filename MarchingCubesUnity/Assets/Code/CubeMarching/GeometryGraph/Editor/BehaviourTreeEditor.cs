@@ -1,63 +1,71 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using Code.CubeMarching.GeometryGraph.Runtime;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.UIElements;
 using UnityEditor.UIElements;
 using UnityEditor.Callbacks;
 
-namespace TheKiwiCoder {
+namespace TheKiwiCoder
+{
+    public class BehaviourTreeEditor : EditorWindow
+    {
+        private BehaviourTreeView treeView;
+        private BehaviourTree tree;
+        private InspectorView inspectorView;
+        private IMGUIContainer blackboardView;
+        private ToolbarMenu toolbarMenu;
+        private TextField treeNameField;
+        private TextField locationPathField;
+        private Button createNewTreeButton;
+        private VisualElement overlay;
+        private BehaviourTreeSettings settings;
 
-    public class BehaviourTreeEditor : EditorWindow {
-
-        BehaviourTreeView treeView;
-        BehaviourTree tree;
-        InspectorView inspectorView;
-        IMGUIContainer blackboardView;
-        ToolbarMenu toolbarMenu;
-        TextField treeNameField;
-        TextField locationPathField;
-        Button createNewTreeButton;
-        VisualElement overlay;
-        BehaviourTreeSettings settings;
-
-        SerializedObject treeObject;
-        SerializedProperty blackboardProperty;
+        private SerializedObject treeObject;
+        private SerializedProperty blackboardProperty;
 
         [MenuItem("TheKiwiCoder/BehaviourTreeEditor ...")]
-        public static void OpenWindow() {
-            BehaviourTreeEditor wnd = GetWindow<BehaviourTreeEditor>();
+        public static void OpenWindow()
+        {
+            var wnd = GetWindow<BehaviourTreeEditor>();
             wnd.titleContent = new GUIContent("BehaviourTreeEditor");
             wnd.minSize = new Vector2(800, 600);
         }
 
         [OnOpenAsset]
-        public static bool OnOpenAsset(int instanceId, int line) {
-            if (Selection.activeObject is BehaviourTree) {
+        public static bool OnOpenAsset(int instanceId, int line)
+        {
+            if (Selection.activeObject is BehaviourTree)
+            {
                 OpenWindow();
                 return true;
             }
+
             return false;
         }
 
-        List<T> LoadAssets<T>() where T : UnityEngine.Object {
-            string[] assetIds = AssetDatabase.FindAssets($"t:{typeof(T).Name}");
-            List<T> assets = new List<T>();
-            foreach (var assetId in assetIds) {
-                string path = AssetDatabase.GUIDToAssetPath(assetId);
-                T asset = AssetDatabase.LoadAssetAtPath<T>(path);
+        private List<T> LoadAssets<T>() where T : UnityEngine.Object
+        {
+            var assetIds = AssetDatabase.FindAssets($"t:{typeof(T).Name}");
+            var assets = new List<T>();
+            foreach (var assetId in assetIds)
+            {
+                var path = AssetDatabase.GUIDToAssetPath(assetId);
+                var asset = AssetDatabase.LoadAssetAtPath<T>(path);
                 assets.Add(asset);
             }
+
             return assets;
         }
 
-        public void CreateGUI() {
-
+        public void CreateGUI()
+        {
             settings = BehaviourTreeSettings.GetOrCreateSettings();
 
             // Each editor window contains a root VisualElement object
-            VisualElement root = rootVisualElement;
+            var root = rootVisualElement;
 
             // Import UXML
             var visualTree = settings.behaviourTreeXml;
@@ -77,8 +85,10 @@ namespace TheKiwiCoder {
 
             // Blackboard view
             blackboardView = root.Q<IMGUIContainer>();
-            blackboardView.onGUIHandler = () => {
-                if (treeObject != null && treeObject.targetObject != null) {
+            blackboardView.onGUIHandler = () =>
+            {
+                if (treeObject != null && treeObject.targetObject != null)
+                {
                     treeObject.Update();
                     EditorGUILayout.PropertyField(blackboardProperty);
                     treeObject.ApplyModifiedProperties();
@@ -88,11 +98,7 @@ namespace TheKiwiCoder {
             // Toolbar assets menu
             toolbarMenu = root.Q<ToolbarMenu>();
             var behaviourTrees = LoadAssets<BehaviourTree>();
-            behaviourTrees.ForEach(tree => {
-                toolbarMenu.menu.AppendAction($"{tree.name}", (a) => {
-                    Selection.activeObject = tree;
-                });
-            });
+            behaviourTrees.ForEach(tree => { toolbarMenu.menu.AppendAction($"{tree.name}", (a) => { Selection.activeObject = tree; }); });
             toolbarMenu.menu.AppendSeparator();
             toolbarMenu.menu.AppendAction("New Tree...", (a) => CreateNewTree("NewBehaviourTree"));
 
@@ -103,24 +109,31 @@ namespace TheKiwiCoder {
             createNewTreeButton = root.Q<Button>("CreateButton");
             createNewTreeButton.clicked += () => CreateNewTree(treeNameField.value);
 
-            if (tree == null) {
+            if (tree == null)
+            {
                 OnSelectionChange();
-            } else {
+            }
+            else
+            {
                 SelectTree(tree);
             }
         }
 
-        private void OnEnable() {
+        private void OnEnable()
+        {
             EditorApplication.playModeStateChanged -= OnPlayModeStateChanged;
             EditorApplication.playModeStateChanged += OnPlayModeStateChanged;
         }
 
-        private void OnDisable() {
+        private void OnDisable()
+        {
             EditorApplication.playModeStateChanged -= OnPlayModeStateChanged;
         }
 
-        private void OnPlayModeStateChanged(PlayModeStateChange obj) {
-            switch (obj) {
+        private void OnPlayModeStateChanged(PlayModeStateChange obj)
+        {
+            switch (obj)
+            {
                 case PlayModeStateChange.EnteredEditMode:
                     OnSelectionChange();
                     break;
@@ -134,54 +147,62 @@ namespace TheKiwiCoder {
             }
         }
 
-        private void OnSelectionChange() {
-            EditorApplication.delayCall += () => {
-                BehaviourTree tree = Selection.activeObject as BehaviourTree;
+        private void OnSelectionChange()
+        {
+            EditorApplication.delayCall += () =>
+            {
+                var tree = Selection.activeObject as BehaviourTree;
 
                 SelectTree(tree);
             };
         }
 
-        void SelectTree(BehaviourTree newTree) {
-
-            if (treeView == null) {
+        private void SelectTree(BehaviourTree newTree)
+        {
+            if (treeView == null)
+            {
                 return;
             }
 
-            if (!newTree) {
+            if (!newTree)
+            {
                 return;
             }
 
-            this.tree = newTree;
+            tree = newTree;
 
             overlay.style.visibility = Visibility.Hidden;
 
-            if (Application.isPlaying) {
+            if (Application.isPlaying)
+            {
                 treeView.PopulateView(tree);
-            } else {
+            }
+            else
+            {
                 treeView.PopulateView(tree);
             }
 
-            
+
             treeObject = new SerializedObject(tree);
             blackboardProperty = treeObject.FindProperty("blackboard");
 
-            EditorApplication.delayCall += () => {
-                treeView.FrameAll();
-            };
+            EditorApplication.delayCall += () => { treeView.FrameAll(); };
         }
 
-        void OnNodeSelectionChanged(NodeView node) {
+        private void OnNodeSelectionChanged(NodeView node)
+        {
             inspectorView.UpdateSelection(node);
         }
 
-        private void OnInspectorUpdate() {
+        private void OnInspectorUpdate()
+        {
             treeView?.UpdateNodeStates();
         }
 
-        void CreateNewTree(string assetName) {
-            string path = System.IO.Path.Combine(locationPathField.value, $"{assetName}.asset");
-            BehaviourTree tree = ScriptableObject.CreateInstance<BehaviourTree>();
+        private void CreateNewTree(string assetName)
+        {
+            var path = System.IO.Path.Combine(locationPathField.value, $"{assetName}.asset");
+            var tree = CreateInstance<BehaviourTree>();
             tree.name = treeNameField.ToString();
             AssetDatabase.CreateAsset(tree, path);
             AssetDatabase.SaveAssets();
