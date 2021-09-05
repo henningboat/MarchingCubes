@@ -33,29 +33,35 @@ namespace TheKiwiCoder
             _inputs.Remove(child);
         }
 
-        public virtual List<GeometryNodePortDescription> GetPortInfo() => new();
+        public virtual List<GeometryNodePortDescription> GetPortInfo()
+        {
+            return new();
+        }
     }
 
-    public  class GeometryNodePortDescription
+    public class GeometryNodePortDescription
     {
-        private SerializedProperty Target;
+        public SerializedProperty Target;
         public readonly string PorpertyName;
         public readonly Direction Direction;
         public Port.Capacity Capacity;
+        public string DisplayName;
 
-        public GeometryNodePortDescription(SerializedObject serializedObject,string porpertyName, Direction direction, Port.Capacity capacity)
+        public GeometryNodePortDescription(SerializedObject serializedObject, string porpertyName, string displayName, Direction direction, Port.Capacity capacity)
         {
+            DisplayName = displayName;
             PorpertyName = porpertyName;
             Direction = direction;
             Capacity = capacity;
             Target = serializedObject.FindProperty(porpertyName);
         }
     }
-    
+
     [Serializable]
     public class GeometryNodePort
     {
-        private List<GeometryNodePort> _connection;
-        public List<GeometryNodePort> Connection => _connection;
+        [SerializeField] private string _guid;
+        [SerializeField] private List<string> _connection;
+        public List<string> Connection => _connection;
     }
 }

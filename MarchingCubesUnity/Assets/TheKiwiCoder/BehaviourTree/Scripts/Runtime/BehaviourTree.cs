@@ -23,6 +23,11 @@ namespace TheKiwiCoder {
             node.name = type.Name;
             node.guid = GUID.Generate().ToString();
 
+            node.GetPortInfo().ForEach((portInfo =>
+            {
+                portInfo.Target.FindPropertyRelative("_guid").stringValue = GUID.Generate().ToString();
+            }));
+            
             Undo.RecordObject(this, "Behaviour Tree (CreateNode)");
             nodes.Add(node);
 

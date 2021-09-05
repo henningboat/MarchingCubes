@@ -13,12 +13,12 @@ namespace TheKiwiCoder
 
         public override List<GeometryNodePortDescription> GetPortInfo()
         {
-            SerializedObject serializedObject = new SerializedObject(this);
+            var serializedObject = new SerializedObject(this);
             return new List<GeometryNodePortDescription>()
             {
-                new GeometryNodePortDescription(serializedObject, nameof(_firstGeometryPort), Direction.Input, Port.Capacity.Single),
-                new GeometryNodePortDescription(serializedObject, nameof(_otherGeometryPort), Direction.Input, Port.Capacity.Multi),
-                new GeometryNodePortDescription(serializedObject, nameof(_outputPort), Direction.Output, Port.Capacity.Multi),
+                new(serializedObject, nameof(_firstGeometryPort), "first", Direction.Input, Port.Capacity.Single),
+                new(serializedObject, nameof(_otherGeometryPort), "other", Direction.Input, Port.Capacity.Multi),
+                new(serializedObject, nameof(_outputPort), "", Direction.Output, Port.Capacity.Multi)
             };
         }
     }

@@ -15,7 +15,7 @@ namespace TheKiwiCoder
             SerializedObject serializedObject = new SerializedObject(this);
             return new()
             {
-                new GeometryNodePortDescription(serializedObject, nameof(_geometryOutput), Direction.Output, Port.Capacity.Multi),
+                new GeometryNodePortDescription(serializedObject,nameof(_geometryOutput), "", Direction.Output, Port.Capacity.Multi),
             };
         }
     }

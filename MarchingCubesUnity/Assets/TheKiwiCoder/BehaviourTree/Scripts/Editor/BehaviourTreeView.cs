@@ -43,7 +43,8 @@ namespace TheKiwiCoder {
             AssetDatabase.SaveAssets();
         }
 
-        public NodeView FindNodeView(GeometryNode node) {
+        public NodeView FindNodeView(GeometryNode node)
+        {
             return GetNodeByGuid(node.guid) as NodeView;
         }
 
@@ -62,16 +63,19 @@ namespace TheKiwiCoder {
 
             // Creates node view
             tree.nodes.ForEach(n => CreateNodeView(n));
-
+            
             // Create edges
             tree.nodes.ForEach(receiverNode => {
                 var inputNodes = BehaviourTree.GetInputs(receiverNode);
                 inputNodes.ForEach(inputNode => {
-                    NodeView receiverNodeView = FindNodeView(receiverNode);
-                    NodeView inputView = FindNodeView(inputNode);
-
-                    Edge edge = receiverNodeView.input.ConnectTo(inputView.output);
-                    AddElement(edge);
+                    foreach (var portDescription in inputNode.GetPortInfo())
+                    {
+                        NodeView receiverNodeView = FindNodeView(receiverNode);
+                        NodeView inputView = FindNodeView(inputNode);
+            
+                        Edge edge = receiverNodeView.input.ConnectTo(inputView.output);
+                        AddElement(edge);
+                    }
                 });
             });
         }

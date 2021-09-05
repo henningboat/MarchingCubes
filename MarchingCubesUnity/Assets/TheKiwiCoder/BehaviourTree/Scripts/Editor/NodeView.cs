@@ -23,7 +23,7 @@ namespace TheKiwiCoder {
 
             style.left = node.position.x;
             style.top = node.position.y;
-
+            
             CreatePorts();
             SetupClasses();
             SetupDataBinding();
@@ -47,8 +47,8 @@ namespace TheKiwiCoder {
             foreach (var portInfo in node.GetPortInfo())
             {
                 var port = new NodePort(portInfo.Direction, portInfo.Capacity);
-                port.portName = ObjectNames.NicifyVariableName(portInfo.PorpertyName);
-
+                port.portName = portInfo.DisplayName;
+                
                 switch (portInfo.Direction)
                 {
                     case Direction.Input:
