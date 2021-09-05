@@ -7,35 +7,39 @@ using UnityEditor.UIElements;
 using UnityEditor.Experimental.GraphView;
 using UnityEditor;
 
-namespace TheKiwiCoder {
-
-    public class NodeView : UnityEditor.Experimental.GraphView.Node {
+namespace TheKiwiCoder
+{
+    public class NodeView : Node
+    {
         public Action<NodeView> OnNodeSelected;
         public GeometryNode node;
         public Port input;
         public Port output;
 
-        public NodeView(GeometryNode node) : base(AssetDatabase.GetAssetPath(BehaviourTreeSettings.GetOrCreateSettings().nodeXml)) {
+        public NodeView(GeometryNode node) : base(AssetDatabase.GetAssetPath(BehaviourTreeSettings.GetOrCreateSettings().nodeXml))
+        {
             this.node = node;
             this.node.name = node.GetType().Name;
-            this.title = node.name.Replace("(Clone)", "").Replace("Node", "");
-            this.viewDataKey = node.guid;
+            title = node.name.Replace("(Clone)", "").Replace("Node", "");
+            viewDataKey = node.guid;
 
             style.left = node.position.x;
             style.top = node.position.y;
-            
+
             CreatePorts();
             SetupClasses();
             SetupDataBinding();
         }
 
-        private void SetupDataBinding() {
-            Label descriptionLabel = this.Q<Label>("description");
+        private void SetupDataBinding()
+        {
+            var descriptionLabel = this.Q<Label>("description");
             descriptionLabel.bindingPath = "description";
             descriptionLabel.Bind(new SerializedObject(node));
         }
 
-        private void SetupClasses() {
+        private void SetupClasses()
+        {
             //todo add something
             // if (node is RootNode) {
             //     AddToClassList("root");
@@ -46,9 +50,11 @@ namespace TheKiwiCoder {
         {
             foreach (var portInfo in node.GetPortInfo())
             {
-                var port = new NodePort(portInfo.Direction, portInfo.Capacity);
+                var port = new NodePort(portInfo);
                 port.portName = portInfo.DisplayName;
-                
+
+                port.viewDataKey = portInfo.GUID;
+
                 switch (portInfo.Direction)
                 {
                     case Direction.Input:
@@ -62,11 +68,11 @@ namespace TheKiwiCoder {
                     default:
                         throw new ArgumentOutOfRangeException();
                 }
-
             }
         }
 
-        public override void SetPosition(Rect newPos) {
+        public override void SetPosition(Rect newPos)
+        {
             base.SetPosition(newPos);
             Undo.RecordObject(node, "Behaviour Tree (Set Position");
             node.position.x = newPos.xMin;
@@ -74,28 +80,24 @@ namespace TheKiwiCoder {
             EditorUtility.SetDirty(node);
         }
 
-        public override void OnSelected() {
+        public override void OnSelected()
+        {
             base.OnSelected();
-            if (OnNodeSelected != null) {
+            if (OnNodeSelected != null)
+            {
                 OnNodeSelected.Invoke(this);
             }
         }
 
-        public void SortChildren() {
-            //todo
-            // if (node is CompositeNode composite) {
-            //     composite.children.Sort(SortByHorizontalPosition);
-            // }
-        }
-
-        private int SortByHorizontalPosition(GeometryNode left, GeometryNode right) {
+        private int SortByHorizontalPosition(GeometryNode left, GeometryNode right)
+        {
             return left.position.x < right.position.x ? -1 : 1;
         }
 
-        public void UpdateState() 
+        public void UpdateState()
         {
             //todo find out how this actually works
-            
+
             // RemoveFromClassList("running");
             // RemoveFromClassList("failure");
             // RemoveFromClassList("success");

@@ -7,6 +7,7 @@ using UnityEngine.UIElements;
 namespace TheKiwiCoder {
 
     public class NodePort : Port {
+        public GeometryNodePortDescription PortDescription { get; private set; }
 
         // GITHUB:UnityCsReference-master\UnityCsReference-master\Modules\GraphViewEditor\Elements\Port.cs
         private class DefaultEdgeConnectorListener : IEdgeConnectorListener {
@@ -55,7 +56,8 @@ namespace TheKiwiCoder {
             }
         }
 
-        public NodePort(Direction direction, Capacity capacity) : base(Orientation.Horizontal, direction, capacity, typeof(bool)) {
+        public NodePort(GeometryNodePortDescription portDescription) : base(Orientation.Horizontal, portDescription.Direction, portDescription.Capacity, typeof(bool)) {
+            PortDescription = portDescription;
             var connectorListener = new DefaultEdgeConnectorListener();
             m_EdgeConnector = new EdgeConnector<Edge>(connectorListener);
             this.AddManipulator(m_EdgeConnector);

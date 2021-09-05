@@ -56,7 +56,7 @@ namespace TheKiwiCoder {
             graphViewChanged += OnGraphViewChanged;
 
             if (tree.rootNode == null) {
-                tree.rootNode = tree.CreateNode(typeof(RootNode)) as RootNode;
+                tree.rootNode = tree.CreateNode(typeof(OutputNode)) as OutputNode;
                 EditorUtility.SetDirty(tree);
                 AssetDatabase.SaveAssets();
             }
@@ -65,16 +65,22 @@ namespace TheKiwiCoder {
             tree.nodes.ForEach(n => CreateNodeView(n));
             
             // Create edges
-            tree.nodes.ForEach(receiverNode => {
-                var inputNodes = BehaviourTree.GetInputs(receiverNode);
-                inputNodes.ForEach(inputNode => {
-                    foreach (var portDescription in inputNode.GetPortInfo())
+            tree.nodes.ForEach(node =>
+            {
+                var inputs = node.GetPortInfo().Where(description => description.Direction == Direction.Input).ToList();
+                
+                inputs.ForEach(inputNode =>
+                {
+                    inputNode.GetGUIDAndConnections(out string selfGUID, out string[] connectionGUIDs);
+
+                    foreach (var connectionPortGUIDs in connectionGUIDs)
                     {
-                        NodeView receiverNodeView = FindNodeView(receiverNode);
-                        NodeView inputView = FindNodeView(inputNode);
-            
-                        Edge edge = receiverNodeView.input.ConnectTo(inputView.output);
-                        AddElement(edge);
+                        var portByGuid = GetPortByGuid(connectionPortGUIDs);
+                        if (portByGuid != null)
+                        {
+                            var edge = GetPortByGuid(selfGUID).ConnectTo(portByGuid);
+                            AddElement(edge);
+                        }
                     }
                 });
             });
@@ -96,25 +102,24 @@ namespace TheKiwiCoder {
 
                     Edge edge = elem as Edge;
                     if (edge != null) {
-                        NodeView receiverView = edge.output.node as NodeView;
-                        NodeView childView = edge.input.node as NodeView;
-                        tree.RemoveChild(receiverView.node, childView.node);
+                        NodePort inputPort = GetPortByGuid(edge.input.viewDataKey) as NodePort;
+                        NodePort outputPort = GetPortByGuid(edge.output.viewDataKey) as NodePort;
+
+                        outputPort.PortDescription.RemoveInput(inputPort.PortDescription.GUID);
                     }
                 });
             }
 
-            if (graphViewChange.edgesToCreate != null) {
-                graphViewChange.edgesToCreate.ForEach(edge => {
-                    NodeView inputNode = edge.output.node as NodeView;
-                    NodeView receiverNode = edge.input.node as NodeView;
-                    tree.AddChild(receiverNode.node, inputNode.node);
+            if (graphViewChange.edgesToCreate != null)
+            {
+                graphViewChange.edgesToCreate.ForEach(edge =>
+                {
+                    NodePort inputPort = GetPortByGuid(edge.input.viewDataKey) as NodePort;
+                    NodePort outputPort = GetPortByGuid(edge.output.viewDataKey) as NodePort;
+                    
+                    inputPort.PortDescription.AddInput(outputPort.PortDescription.GUID);
                 });
             }
-
-            nodes.ForEach((n) => {
-                NodeView view = n as NodeView;
-                view.SortChildren();
-            });
 
             return graphViewChange;
         }

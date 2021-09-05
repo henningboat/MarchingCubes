@@ -9,7 +9,6 @@ namespace TheKiwiCoder
     {
         [SerializeField] private GeometryNodePort _geometryOutput;
         
-        public override Port.Capacity? OutputPortCapacity => Port.Capacity.Multi;
         public override List<GeometryNodePortDescription> GetPortInfo()
         {
             SerializedObject serializedObject = new SerializedObject(this);

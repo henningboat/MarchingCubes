@@ -25,7 +25,7 @@ namespace TheKiwiCoder {
 
             node.GetPortInfo().ForEach((portInfo =>
             {
-                portInfo.Target.FindPropertyRelative("_guid").stringValue = GUID.Generate().ToString();
+                portInfo.InitializeGUID();
             }));
             
             Undo.RecordObject(this, "Behaviour Tree (CreateNode)");
@@ -51,21 +51,7 @@ namespace TheKiwiCoder {
             AssetDatabase.SaveAssets();
         }
 
-        public void AddChild(GeometryNode parent, GeometryNode child)
-        {
-            parent.AddInputNode(child);
-        }
-
-        public void RemoveChild(GeometryNode parent, GeometryNode child)
-        {
-            child.RemoveInputNode(child);
-        }
 #endif
         #endregion Editor Compatibility
-
-        public static List<GeometryNode> GetInputs(GeometryNode node)
-        {
-            return node.Inputs;
-        }
     }
 }
