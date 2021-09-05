@@ -55,11 +55,11 @@ namespace TheKiwiCoder {
             }
         }
 
-        public NodePort(Direction direction, Capacity capacity) : base(Orientation.Vertical, direction, capacity, typeof(bool)) {
+        public NodePort(Direction direction, Capacity capacity) : base(Orientation.Horizontal, direction, capacity, typeof(bool)) {
             var connectorListener = new DefaultEdgeConnectorListener();
             m_EdgeConnector = new EdgeConnector<Edge>(connectorListener);
             this.AddManipulator(m_EdgeConnector);
-            style.width = 100;
+            //style.width=100;
         }
 
         public override bool ContainsPoint(Vector2 localPoint) {

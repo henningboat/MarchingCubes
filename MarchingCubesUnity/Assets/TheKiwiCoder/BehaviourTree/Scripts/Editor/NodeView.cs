@@ -24,8 +24,7 @@ namespace TheKiwiCoder {
             style.left = node.position.x;
             style.top = node.position.y;
 
-            CreateInputPorts();
-            CreateOutputPorts();
+            CreatePorts();
             SetupClasses();
             SetupDataBinding();
         }
@@ -38,32 +37,32 @@ namespace TheKiwiCoder {
 
         private void SetupClasses() {
             //todo add something
-            if (node is RootNode) {
-                AddToClassList("root");
-            }
+            // if (node is RootNode) {
+            //     AddToClassList("root");
+            // }
         }
 
-        private void CreateInputPorts()
+        private void CreatePorts()
         {
-            if (node.InputPortCapacity.HasValue)
+            foreach (var portInfo in node.GetPortInfo())
             {
-                input = new NodePort(Direction.Input, node.InputPortCapacity.Value);
+                var port = new NodePort(portInfo.Direction, portInfo.Capacity);
+                port.portName = ObjectNames.NicifyVariableName(portInfo.PorpertyName);
 
-                input.portName = "";
-                input.style.flexDirection = FlexDirection.Column;
-                inputContainer.Add(input);
-            }
-        }
+                switch (portInfo.Direction)
+                {
+                    case Direction.Input:
+                        port.style.flexDirection = FlexDirection.Row;
+                        inputContainer.Add(port);
+                        break;
+                    case Direction.Output:
+                        port.style.flexDirection = FlexDirection.RowReverse;
+                        outputContainer.Add(port);
+                        break;
+                    default:
+                        throw new ArgumentOutOfRangeException();
+                }
 
-        private void CreateOutputPorts() {
-            
-            if (node.OutputPortCapacity.HasValue)
-            {
-                output = new NodePort(Direction.Output, node.OutputPortCapacity.Value);
-
-                output.portName = "";
-                output.style.flexDirection = FlexDirection.ColumnReverse;
-                outputContainer.Add(output);
             }
         }
 

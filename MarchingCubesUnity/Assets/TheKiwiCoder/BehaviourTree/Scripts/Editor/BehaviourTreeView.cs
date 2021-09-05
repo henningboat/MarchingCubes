@@ -163,12 +163,6 @@ namespace TheKiwiCoder {
             EditorGUIUtility.PingObject(obj);
         }
 
-        void CreateNewScript(ScriptTemplate template) {
-            SelectFolder($"{settings.newNodeBasePath}/{template.subFolder}");
-            var templatePath = AssetDatabase.GetAssetPath(template.templateFile);
-            ProjectWindowUtil.CreateScriptAssetFromTemplateFile(templatePath, template.defaultFileName);
-        }
-
         void CreateNode(System.Type type, Vector2 position) {
             GeometryNode node = tree.CreateNode(type);
             node.position = position;
