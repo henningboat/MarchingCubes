@@ -55,7 +55,7 @@ MonoBehaviour:
   position: {x: 201.60016, y: -0.00006508827}
   blackboard:
     moveToPosition: {x: 0, y: 0, z: 0}
-  _outputPort:
+  _inputPort:
     _guid: fa9d656a33d103e489b284e31321bfca
     _connections:
     - 5ea6d3a697382ab4da13fb45652f3125
