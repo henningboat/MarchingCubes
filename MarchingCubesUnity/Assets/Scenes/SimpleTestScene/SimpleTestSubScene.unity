@@ -123,7 +123,7 @@ NavMeshSettings:
     debug:
       m_Flags: 0
   m_NavMeshData: {fileID: 0}
---- !u!1 &1289090519
+--- !u!1 &967916151
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -131,8 +131,8 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 1289090521}
-  - component: {fileID: 1289090520}
+  - component: {fileID: 967916153}
+  - component: {fileID: 967916152}
   m_Layer: 0
   m_Name: GameObject
   m_TagString: Untagged
@@ -140,33 +140,29 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &1289090520
+--- !u!114 &967916152
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1289090519}
+  m_GameObject: {fileID: 967916151}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 0d168e2e0c2997b46a12a0aa414c6bea, type: 3}
+  m_Script: {fileID: 11500000, guid: 5e2f3a33a3eb405a95e3ac8b6fff95b2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _material:
-    MaterialID: 0
-    Flags: 0
-    Padding0: 0
-    Padding1: 0
---- !u!4 &1289090521
+  _tree: {fileID: 11400000, guid: 0b4083e0a8f907d4a9979445841e8fa9, type: 2}
+--- !u!4 &967916153
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1289090519}
+  m_GameObject: {fileID: 967916151}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 45.6, y: 0, z: 23.7}
-  m_LocalScale: {x: 17.3476, y: 17.3476, z: 17.3476}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}

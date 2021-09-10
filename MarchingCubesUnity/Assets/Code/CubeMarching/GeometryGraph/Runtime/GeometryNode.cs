@@ -16,6 +16,8 @@ namespace Code.CubeMarching.GeometryGraph.Runtime
         {
             return new();
         }
+
+        public abstract NodePort GetOutputPort();
     }
 
     public class GeometryNodePortDescription
@@ -105,5 +107,15 @@ namespace Code.CubeMarching.GeometryGraph.Runtime
         [SerializeField] private List<string> _connections;
         public List<string> Connections => _connections;
         public string Guid => _guid;
+
+        public GeometryNode GetFirstConnection(GeometryTree geometryTree)
+        {
+            if (_connections.Count == 0)
+            {
+                throw new ArgumentOutOfRangeException("_connections.Count == 0");
+            }
+
+            return geometryTree.GetNodeByOutputPortGUID(_connections[0]);
+        }
     }
 }

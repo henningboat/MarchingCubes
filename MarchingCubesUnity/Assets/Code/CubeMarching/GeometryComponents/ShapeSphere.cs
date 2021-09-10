@@ -1,5 +1,7 @@
-﻿using System.Runtime.InteropServices;
+﻿using System;
+using System.Runtime.InteropServices;
 using Code.CubeMarching.Authoring;
+using Code.CubeMarching.GeometryGraph.Runtime;
 using Code.CubeMarching.Rendering;
 using Code.SIMDMath;
 using JetBrains.Annotations;
@@ -38,6 +40,7 @@ namespace Code.CubeMarching.GeometryComponents
     }
 
     [StructLayout(LayoutKind.Explicit, Size = 4 * 16)]
+    [Serializable]
     public struct CShapeSphere : IComponentData, ITerrainModifierShape
     {
         public bool Equals(CShapeSphere other)

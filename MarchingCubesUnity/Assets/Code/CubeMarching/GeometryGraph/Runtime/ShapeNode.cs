@@ -5,17 +5,23 @@ using UnityEngine;
 
 namespace Code.CubeMarching.GeometryGraph.Runtime
 {
-    public abstract class ShapeNode : GeometryNode
+    public abstract class ShapeNode<T> : GeometryNode, IShapeNode where T : ITerrainModifierShape
     {
         [HideInInspector] [SerializeField] private GeometryNodePort _geometryOutput;
+        [SerializeField] private T _shape;
+
 
         public override List<GeometryNodePortDescription> GetPortInfo()
         {
             var serializedObject = new SerializedObject(this);
             return new List<GeometryNodePortDescription>()
             {
-                new GeometryNodePortDescription(serializedObject, nameof(_geometryOutput), "", Direction.Output, Port.Capacity.Multi)
+                new(serializedObject, nameof(_geometryOutput), "", Direction.Output, Port.Capacity.Multi)
             };
         }
+    }
+
+    public interface IShapeNode
+    {
     }
 }

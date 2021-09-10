@@ -1,4 +1,6 @@
 using System.Collections.Generic;
+using System.Linq;
+using Unity.Entities;
 using UnityEditor;
 using UnityEngine;
 
@@ -10,7 +12,7 @@ using UnityEngine;
 namespace Code.CubeMarching.GeometryGraph.Runtime
 {
     [CreateAssetMenu()]
-    public class BehaviourTree : ScriptableObject
+    public class GeometryTree : ScriptableObject
     {
         public GeometryNode rootNode;
         public List<GeometryNode> nodes = new();
@@ -57,5 +59,15 @@ namespace Code.CubeMarching.GeometryGraph.Runtime
 #endif
 
         #endregion Editor Compatibility
+
+        public OutputNode GetRoot()
+        {
+            return nodes.FirstOrDefault(node => node is OutputNode) as OutputNode;
+        }
+
+        public GeometryNode GetNodeByOutputPortGUID(string guid)
+        {
+            return nodes.FirstOrDefault(node => node.GetOutputPort().viewDataKey == guid);
+        }
     }
 }

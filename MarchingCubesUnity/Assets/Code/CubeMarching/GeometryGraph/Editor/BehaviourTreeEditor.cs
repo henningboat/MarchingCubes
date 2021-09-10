@@ -13,7 +13,7 @@ namespace TheKiwiCoder
     public class BehaviourTreeEditor : EditorWindow
     {
         private BehaviourTreeView treeView;
-        private BehaviourTree tree;
+        private GeometryTree tree;
         private InspectorView inspectorView;
         private IMGUIContainer blackboardView;
         private ToolbarMenu toolbarMenu;
@@ -37,7 +37,7 @@ namespace TheKiwiCoder
         [OnOpenAsset]
         public static bool OnOpenAsset(int instanceId, int line)
         {
-            if (Selection.activeObject is BehaviourTree)
+            if (Selection.activeObject is GeometryTree)
             {
                 OpenWindow();
                 return true;
@@ -97,7 +97,7 @@ namespace TheKiwiCoder
 
             // Toolbar assets menu
             toolbarMenu = root.Q<ToolbarMenu>();
-            var behaviourTrees = LoadAssets<BehaviourTree>();
+            var behaviourTrees = LoadAssets<GeometryTree>();
             behaviourTrees.ForEach(tree => { toolbarMenu.menu.AppendAction($"{tree.name}", (a) => { Selection.activeObject = tree; }); });
             toolbarMenu.menu.AppendSeparator();
             toolbarMenu.menu.AppendAction("New Tree...", (a) => CreateNewTree("NewBehaviourTree"));
@@ -151,13 +151,13 @@ namespace TheKiwiCoder
         {
             EditorApplication.delayCall += () =>
             {
-                var tree = Selection.activeObject as BehaviourTree;
+                var tree = Selection.activeObject as GeometryTree;
 
                 SelectTree(tree);
             };
         }
 
-        private void SelectTree(BehaviourTree newTree)
+        private void SelectTree(GeometryTree newTree)
         {
             if (treeView == null)
             {
@@ -202,7 +202,7 @@ namespace TheKiwiCoder
         private void CreateNewTree(string assetName)
         {
             var path = System.IO.Path.Combine(locationPathField.value, $"{assetName}.asset");
-            var tree = CreateInstance<BehaviourTree>();
+            var tree = CreateInstance<GeometryTree>();
             tree.name = treeNameField.ToString();
             AssetDatabase.CreateAsset(tree, path);
             AssetDatabase.SaveAssets();

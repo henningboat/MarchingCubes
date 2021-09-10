@@ -18,7 +18,7 @@ namespace TheKiwiCoder
         {
         }
 
-        private BehaviourTree tree;
+        private GeometryTree tree;
         private BehaviourTreeSettings settings;
 
         public struct ScriptTemplate
@@ -57,7 +57,7 @@ namespace TheKiwiCoder
             return GetNodeByGuid(node.guid) as NodeView;
         }
 
-        internal void PopulateView(BehaviourTree tree)
+        internal void PopulateView(GeometryTree tree)
         {
             this.tree = tree;
 
@@ -154,7 +154,7 @@ namespace TheKiwiCoder
             var nodePosition = this.ChangeCoordinatesTo(contentViewContainer, evt.localMousePosition);
             {
                 {
-                    var types = TypeCache.GetTypesDerivedFrom<ShapeNode>();
+                    var types = TypeCache.GetTypesDerivedFrom<IShapeNode>();
                     foreach (var type in types)
                     {
                         evt.menu.AppendAction($"[Shape]/{type.Name}", (a) => CreateNode(type, nodePosition));

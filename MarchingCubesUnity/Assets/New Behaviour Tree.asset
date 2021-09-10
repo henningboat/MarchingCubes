@@ -1,0 +1,61 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &-5025172060401381338
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 53416ca5759e4b71864394e0c474c03a, type: 3}
+  m_Name: SphereNode
+  m_EditorClassIdentifier: 
+  guid: 485e5246244e4dd4ea7632b2f581ae85
+  position: {x: -163, y: -15}
+  blackboard:
+    moveToPosition: {x: 0, y: 0, z: 0}
+  _geometryOutput:
+    _guid: 5ea6d3a697382ab4da13fb45652f3125
+    _connections: []
+  _shape:
+    radius: 10
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2d285eb63c2cdd74180de7cfceaa96ad, type: 3}
+  m_Name: New Behaviour Tree
+  m_EditorClassIdentifier: 
+  rootNode: {fileID: 6558032550537002825}
+  nodes:
+  - {fileID: 6558032550537002825}
+  - {fileID: -5025172060401381338}
+  blackboard:
+    moveToPosition: {x: 0, y: 0, z: 0}
+--- !u!114 &6558032550537002825
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 163c147d123e4a945b688eddc64e3ea5, type: 3}
+  m_Name: OutputNode
+  m_EditorClassIdentifier: 
+  guid: 5e9aee14ec1425c4182ce69cc883a556
+  position: {x: 201.60016, y: -0.00006508827}
+  blackboard:
+    moveToPosition: {x: 0, y: 0, z: 0}
+  _outputPort:
+    _guid: fa9d656a33d103e489b284e31321bfca
+    _connections:
+    - 5ea6d3a697382ab4da13fb45652f3125
