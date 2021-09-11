@@ -16,7 +16,7 @@ namespace UnityEditor.GraphToolsFoundation.Overdrive.Samples.MathBook
         public float Evaluate()
         {
             var inputPorts = this.GetInputPorts();
-            var port = inputPorts.FirstOrDefault(model => model.UniqueName == "secondPort");
+            var port = inputPorts.FirstOrDefault(model => model.UniqueName == "in");
 
             return port.GetValue();
         }
@@ -25,8 +25,11 @@ namespace UnityEditor.GraphToolsFoundation.Overdrive.Samples.MathBook
 
         protected override void OnDefineNode()
         {
-            DataIn0 = this.AddDataInputPort<float>("in");
-            DataIn0 = this.AddDataInputPort<float>("secondPort");
+            DataIn0 = this.AddDataInputPort<DistanceFieldValue>("in");
         }
+    }
+
+    public enum DistanceFieldValue
+    {
     }
 }

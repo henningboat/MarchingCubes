@@ -8,9 +8,9 @@ using UnityEngine.GraphToolsFoundation.Overdrive;
 
 namespace UnityEditor.GraphToolsFoundation.Overdrive.Samples.MathBook
 {
-    class MathBookStencil : Stencil, ISearcherDatabaseProvider
+    internal class MathBookStencil : Stencil, ISearcherDatabaseProvider
     {
-        List<SearcherDatabaseBase> m_Databases = new List<SearcherDatabaseBase>();
+        private List<SearcherDatabaseBase> m_Databases = new();
 
         public override string ToolName => GraphName;
 
@@ -26,14 +26,16 @@ namespace UnityEditor.GraphToolsFoundation.Overdrive.Samples.MathBook
             var operators = new[]
                 {
                     (typeof(MathAdditionOperator), "Addition"),
-                    (typeof(MathResult), "Result")
+                    (typeof(MathResult), "Result"),
+                    (typeof(SphereShapeNode), "Sphere"),
+                    (typeof(AdditionGeometryCombinerNode),"Add")
                 }
                 .Select(MakeSearcherItem);
             var operatorsItem = new SearcherItem("Operators", "", operators.ToList());
 
             var functions = new[]
                 {
-                    (typeof(CosFunction), "Cos"),
+                    (typeof(CosFunction), "Cos")
                 }
                 .Select(MakeSearcherItem);
 
@@ -49,7 +51,7 @@ namespace UnityEditor.GraphToolsFoundation.Overdrive.Samples.MathBook
 
             var constantsItem = new SearcherItem("Values", "", constants);
 
-            var items = new List<SearcherItem> { operatorsItem, functionsItem, constantsItem };
+            var items = new List<SearcherItem> {operatorsItem, functionsItem, constantsItem};
 
             var searcherDatabase = new SearcherDatabase(items);
             m_Databases.Add(searcherDatabase);
@@ -70,7 +72,8 @@ namespace UnityEditor.GraphToolsFoundation.Overdrive.Samples.MathBook
             return m_Databases;
         }
 
-        List<SearcherDatabaseBase> m_EmptyList = new List<SearcherDatabaseBase>();
+        private List<SearcherDatabaseBase> m_EmptyList = new();
+
         List<SearcherDatabaseBase> ISearcherDatabaseProvider.GetVariableTypesSearcherDatabases()
         {
             return m_EmptyList;
@@ -108,6 +111,17 @@ namespace UnityEditor.GraphToolsFoundation.Overdrive.Samples.MathBook
                     finalName = newItemName + i++;
 
                 commandDispatcher.Dispatch(new CreateGraphVariableDeclarationCommand(finalName, true, TypeHandle.Float, typeof(MathBookVariableDeclarationModel)));
+            });
+
+            menu.AddItem(new GUIContent("Create Vector3"), false, () =>
+            {
+                const string newItemName = "variable";
+                var finalName = newItemName;
+                var i = 0;
+                while (commandDispatcher.State.WindowState.GraphModel.VariableDeclarations.Any(v => v.Title == finalName))
+                    finalName = newItemName + i++;
+
+                commandDispatcher.Dispatch(new CreateGraphVariableDeclarationCommand(finalName, true, TypeHandle.Vector3, typeof(MathBookVariableDeclarationModel)));
             });
         }
     }
