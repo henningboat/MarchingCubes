@@ -20,7 +20,7 @@ namespace Code.CubeMarching.TerrainChunkEntitySystem
 
         #region Private Fields
 
-        private readonly NativeArray<TerrainInstruction>.ReadOnly _combinerInstructions;
+        private readonly NativeArray<GeometryInstruction>.ReadOnly _combinerInstructions;
         private readonly NativeArray<PackedFloat3>.ReadOnly _postionsWS;
         private readonly int _combinerStackSize;
         private readonly int _indexInsideChunk;
@@ -37,7 +37,7 @@ namespace Code.CubeMarching.TerrainChunkEntitySystem
 
         #region Constructors
 
-        public TerrainInstructionIterator(NativeArray<PackedFloat3> positions, DynamicBuffer<TerrainInstruction> combinerInstructions, int indexInsideChunk, TerrainChunkData existingData)
+        public TerrainInstructionIterator(NativeArray<PackedFloat3> positions, DynamicBuffer<GeometryInstruction> combinerInstructions, int indexInsideChunk, TerrainChunkData existingData)
         {
             _combinerInstructions = combinerInstructions.AsNativeArray().AsReadOnly();
             //todo cache this between pre-pass and actual pass

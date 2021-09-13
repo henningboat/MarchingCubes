@@ -14,7 +14,7 @@ namespace Code.CubeMarching.TerrainChunkEntitySystem
     public static class DistanceFieldResolver
     {
         public static void CalculateDistanceFieldForChunk(DynamicBuffer<TerrainChunkDataBuffer> terrainChunkBuffer, ref DistanceFieldChunkData distanceField, CTerrainEntityChunkPosition chunkPosition,
-            BufferFromEntity<TerrainInstruction> getTerrainInstructionBuffer, Entity clusterEntity, int backgroundDataIndex, bool ignoreBackgroundData, CClusterParameters clusterParameters)
+            BufferFromEntity<GeometryInstruction> getTerrainInstructionBuffer, Entity clusterEntity, int backgroundDataIndex, bool ignoreBackgroundData, CClusterParameters clusterParameters)
         {
             TerrainChunkData terrainChunk = default;
             var existingData = terrainChunkBuffer[backgroundDataIndex].Value;

@@ -1,0 +1,121 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8a1b94d54a0718749ac226aeb8ef53fc, type: 3}
+  m_Name: CoolGraph
+  m_EditorClassIdentifier: 
+  m_GraphModel:
+    rid: 7969678398074126350
+  references:
+    version: 2
+    RefIds:
+    - rid: 7969678398074126350
+      type: {class: MathBook, ns: UnityEditor.GraphToolsFoundation.Overdrive.Samples.MathBook, asm: CubeMarching}
+      data:
+        m_AssetModel: {fileID: 11400000}
+        m_GraphNodeModels:
+        - rid: 7969678398074126351
+        - rid: 7969678398074126353
+        m_EdgeModels: []
+        m_BadgeModels: []
+        m_GraphEdgeModels:
+        - rid: 7969678398074126356
+        m_PolymorphicEdgeModels: []
+        m_StickyNoteModels: []
+        m_GraphStickyNoteModels: []
+        m_PlacematModels: []
+        m_GraphPlacematModels: []
+        m_GraphVariableModels: []
+        m_GraphPortalModels: []
+        m_Name: 
+        m_StencilTypeName: UnityEditor.GraphToolsFoundation.Overdrive.Samples.MathBook.MathBookStencil,
+          CubeMarching, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
+    - rid: 7969678398074126351
+      type: {class: MathResult, ns: UnityEditor.GraphToolsFoundation.Overdrive.Samples.MathBook, asm: CubeMarching}
+      data:
+        m_Guid:
+          m_Value0: 9522655472640186371
+          m_Value1: 8043743833731425018
+        m_AssetModel: {fileID: 11400000}
+        m_Color: {r: 0, g: 0, b: 0, a: 0}
+        m_HasUserColor: 0
+        m_Version: 1
+        m_Position: {x: -143, y: -82}
+        m_Title: 
+        m_InputConstantsById:
+          m_KeyList:
+          - in
+          m_ValueList:
+          - rid: 7969678398074126352
+        m_State: 0
+        m_Collapsed: 0
+    - rid: 7969678398074126352
+      type: {class: EnumConstant, ns: UnityEditor.GraphToolsFoundation.Overdrive.BasicModel, asm: Unity.GraphTools.Foundation.Overdrive.Model}
+      data:
+        m_Value:
+          m_EnumType:
+            Identification: UnityEditor.GraphToolsFoundation.Overdrive.Samples.MathBook.DistanceFieldValue,
+              CubeMarching, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
+          m_Value: 0
+    - rid: 7969678398074126353
+      type: {class: SphereShapeNode, ns: UnityEditor.GraphToolsFoundation.Overdrive.Samples.MathBook, asm: CubeMarching}
+      data:
+        m_Guid:
+          m_Value0: 14931633290659969194
+          m_Value1: 14427741089327113444
+        m_AssetModel: {fileID: 11400000}
+        m_Color: {r: 0, g: 0, b: 0, a: 0}
+        m_HasUserColor: 0
+        m_Version: 1
+        m_Position: {x: -715, y: -280}
+        m_Title: 
+        m_InputConstantsById:
+          m_KeyList:
+          - PositionIn
+          - RadiusIn
+          m_ValueList:
+          - rid: 7969678398074126354
+          - rid: 7969678398074126355
+        m_State: 0
+        m_Collapsed: 0
+    - rid: 7969678398074126354
+      type: {class: Vector3Constant, ns: UnityEditor.GraphToolsFoundation.Overdrive.BasicModel, asm: Unity.GraphTools.Foundation.Overdrive.Model}
+      data:
+        m_Value: {x: 0, y: 0, z: 0}
+    - rid: 7969678398074126355
+      type: {class: FloatConstant, ns: UnityEditor.GraphToolsFoundation.Overdrive.BasicModel, asm: Unity.GraphTools.Foundation.Overdrive.Model}
+      data:
+        m_Value: 8
+    - rid: 7969678398074126356
+      type: {class: EdgeModel, ns: UnityEditor.GraphToolsFoundation.Overdrive.BasicModel, asm: Unity.GraphTools.Foundation.Overdrive.Model}
+      data:
+        m_Guid:
+          m_Value0: 13526366394561745326
+          m_Value1: 15678952542236272510
+        m_AssetModel: {fileID: 11400000}
+        m_Color: {r: 0, g: 0, b: 0, a: 0}
+        m_HasUserColor: 0
+        m_Version: 1
+        m_FromPortReference:
+          m_NodeModelGuid:
+            m_Value0: 14931633290659969194
+            m_Value1: 14427741089327113444
+          m_GraphAssetModel: {fileID: 11400000}
+          m_UniqueId: GeometryOut
+        m_ToPortReference:
+          m_NodeModelGuid:
+            m_Value0: 9522655472640186371
+            m_Value1: 8043743833731425018
+          m_GraphAssetModel: {fileID: 11400000}
+          m_UniqueId: in
+        m_EdgeControlPoints: []
+        m_EditMode: 0
+        m_EdgeLabel: 

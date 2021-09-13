@@ -110,7 +110,7 @@ namespace Code.CubeMarching.TerrainChunkEntitySystem
 
             _clusterArchetype = EntityManager.CreateArchetype(
                 typeof(CClusterPosition),
-                typeof(TerrainInstruction),
+                typeof(GeometryInstruction),
                 typeof(CTriangulationInstruction),
                 typeof(CSubChunkWithTrianglesIndex),
                 typeof(CClusterChildListElement),
@@ -305,7 +305,7 @@ namespace Code.CubeMarching.TerrainChunkEntitySystem
         #endregion
     }
 
-    public struct TerrainInstruction : IBufferElementData
+    public struct GeometryInstruction : IBufferElementData
     {
         #region Public Fields
 

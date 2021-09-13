@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Runtime.InteropServices;
 using Code.CubeMarching.Authoring;
-using Code.CubeMarching.GeometryGraph.Runtime;
 using Code.CubeMarching.Rendering;
 using Code.SIMDMath;
 using JetBrains.Annotations;

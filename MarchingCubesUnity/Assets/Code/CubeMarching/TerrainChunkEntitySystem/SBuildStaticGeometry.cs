@@ -26,13 +26,13 @@ namespace Code.CubeMarching.TerrainChunkEntitySystem
             {
                 //Write Instructions
                 var writeJob = new TerrainInstructionWriter(this, GetSingletonEntity<CStaticTerrainCombiner>());
-                Dependency = Entities.ForEach((ref DynamicBuffer<TerrainInstruction> terrainInstructions, ref CClusterParameters clusterParameters, in CClusterPosition clusterPosition) =>
+                Dependency = Entities.ForEach((ref DynamicBuffer<GeometryInstruction> terrainInstructions, ref CClusterParameters clusterParameters, in CClusterPosition clusterPosition) =>
                 {
                     writeJob.Execute(terrainInstructions, ref clusterParameters, clusterPosition, isPlaying);
                 }).WithName("WriteStaticTerrainInstructions").WithBurst().Schedule(Dependency);
 
                 //Calculate Distance Fields
-                var getTerrainInstructionBuffer = GetBufferFromEntity<TerrainInstruction>(true);
+                var getTerrainInstructionBuffer = GetBufferFromEntity<GeometryInstruction>(true);
 
                 Dependency = Entities.ForEach((ref CTerrainChunkStaticData distanceField, in ClusterChild clusterChild, in CTerrainEntityChunkPosition chunkPosition) =>
                 {
@@ -52,13 +52,13 @@ namespace Code.CubeMarching.TerrainChunkEntitySystem
             {
                 //Write Instructions
                 var writeJob = new TerrainInstructionWriter(this, GetSingletonEntity<CMainTerrainCombiner>());
-                Dependency = Entities.ForEach((ref DynamicBuffer<TerrainInstruction> terrainInstructions, ref CClusterParameters clusterParameters, in CClusterPosition clusterPosition) =>
+                Dependency = Entities.ForEach((ref DynamicBuffer<GeometryInstruction> terrainInstructions, ref CClusterParameters clusterParameters, in CClusterPosition clusterPosition) =>
                 {
                     writeJob.Execute(terrainInstructions, ref clusterParameters, clusterPosition, true);
                 }).WithName("WriteDynamicTerrainInstructions").WithBurst().Schedule(Dependency);
 
                 //Calculate Distance Fields
-                var getTerrainInstructionBuffer = GetBufferFromEntity<TerrainInstruction>(true);
+                var getTerrainInstructionBuffer = GetBufferFromEntity<GeometryInstruction>(true);
 
                 Dependency = Entities.ForEach((ref CTerrainChunkDynamicData dynamicDistanceField, in CTerrainChunkStaticData staticDistanceField, in CTerrainEntityChunkPosition chunkPosition,
                     in ClusterChild clusterChild) =>

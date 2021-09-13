@@ -8,12 +8,12 @@ namespace Code.CubeMarching.StateHashing
 {
     public struct GeometryInstructionsHasher
     {
-        private readonly BufferFromEntity<TerrainInstruction> _getTerrainInstructions;
+        private readonly BufferFromEntity<GeometryInstruction> _getTerrainInstructions;
         private readonly ComponentDataFromEntity<CClusterPosition> _getClusterPosition;
 
         public GeometryInstructionsHasher(SystemBase systemBase)
         {
-            _getTerrainInstructions = systemBase.GetBufferFromEntity<TerrainInstruction>(true);
+            _getTerrainInstructions = systemBase.GetBufferFromEntity<GeometryInstruction>(true);
             _getClusterPosition = systemBase.GetComponentDataFromEntity<CClusterPosition>();
         }
 

@@ -65,12 +65,12 @@ namespace Code.CubeMarching.TerrainChunkEntitySystem
 
         #region Public methods
 
-        public void Execute(DynamicBuffer<TerrainInstruction> terrainInstructions, ref CClusterParameters clusterParameters, in CClusterPosition clusterPosition,bool includeLastFrameResult)
+        public void Execute(DynamicBuffer<GeometryInstruction> terrainInstructions, ref CClusterParameters clusterParameters, in CClusterPosition clusterPosition,bool includeLastFrameResult)
         {
             terrainInstructions.Clear();
             if (includeLastFrameResult)
             {
-                terrainInstructions.Add(new TerrainInstruction {TerrainInstructionType = TerrainInstructionType.CopyOriginal, CoverageMask = BitArray512.AllBitsTrue});
+                terrainInstructions.Add(new GeometryInstruction {TerrainInstructionType = TerrainInstructionType.CopyOriginal, CoverageMask = BitArray512.AllBitsTrue});
             }
 
             var combinerDepth = 0;
@@ -101,7 +101,7 @@ namespace Code.CubeMarching.TerrainChunkEntitySystem
         private void WriteTerrainCombiner(CGeometryCombiner combiner, int combinerDepth, TerrainGridCoverageHandler* ownCoverageHandler,
             TerrainGridCoverageHandler* parentCoverageHandler, int childIndex)
         {
-            var instruction = new TerrainInstruction
+            var instruction = new GeometryInstruction
             {
                 DependencyIndex = combinerDepth + 1,
                 CombinerDepth = combinerDepth,
@@ -133,7 +133,7 @@ namespace Code.CubeMarching.TerrainChunkEntitySystem
             boundsMinPositionGS = math.clamp(boundsMinPositionGS, 0, 8);
             boundsSizeGS = math.clamp(boundsSizeGS, 0, 8 - boundsMinPositionGS);
 
-            var instructionToRegister = new TerrainInstruction
+            var instructionToRegister = new GeometryInstruction
             {
                 DependencyIndex = indexInShapeMap,
                 CombinerDepth = combinerDepth,
@@ -151,7 +151,7 @@ namespace Code.CubeMarching.TerrainChunkEntitySystem
         private void WriteTransformationInstruction(int combinerDepth,
             TerrainGridCoverageHandler* coverageHandler, int childIndex, int indexInTransformationMap, CGenericTerrainTransformation transfomation, bool injectAsFirstChild)
         {
-            var instructionToRegister = new TerrainInstruction
+            var instructionToRegister = new GeometryInstruction
             {
                 DependencyIndex = indexInTransformationMap,
                 CombinerDepth = combinerDepth,
@@ -189,7 +189,7 @@ namespace Code.CubeMarching.TerrainChunkEntitySystem
             if (getGenericTerrainTransformation.HasComponent(entity))
             {
                 coverageHandler->RegisterFirstChild(this, 0,
-                    new TerrainInstruction
+                    new GeometryInstruction
                     {
                         CombinerDepth = combinerDepth, Combiner = default, CoverageMask = BitArray512.AllBitsTrue, DependencyIndex = default, TerrainShape = default,
                         TerrainTransformation = getGenericTerrainTransformation[entity], TerrainInstructionType = TerrainInstructionType.Transformation
@@ -307,14 +307,14 @@ namespace Code.CubeMarching.TerrainChunkEntitySystem
                 _children[childIndex].CoverageMask = coverageMask;
             }
 
-            public void RegisterChild(TerrainInstructionWriter job, int childIndex, TerrainInstruction instructionToRegister, bool isCombiner, bool isTransformation,
+            public void RegisterChild(TerrainInstructionWriter job, int childIndex, GeometryInstruction instructionToRegister, bool isCombiner, bool isTransformation,
                 TerrainGridCoverageHandler* childCombiner)
             {
                 _children[childIndex] = new Child {CoverageMask = default, InstructionReference = new TerrainInstructionReference(instructionToRegister, isCombiner, isTransformation, childCombiner)};
             }
 
             //used by GeometryProxy to inject a Transformation to be applied before the children are written to the cluster
-            public void RegisterFirstChild(TerrainInstructionWriter job, int childIndex, TerrainInstruction instructionToRegister, bool isCombiner, bool isTransformation,
+            public void RegisterFirstChild(TerrainInstructionWriter job, int childIndex, GeometryInstruction instructionToRegister, bool isCombiner, bool isTransformation,
                 TerrainGridCoverageHandler* childCombiner)
             {
                 _firstChild = new Child {CoverageMask = default, InstructionReference = new TerrainInstructionReference(instructionToRegister, isCombiner, isTransformation, childCombiner)};
@@ -364,16 +364,16 @@ namespace Code.CubeMarching.TerrainChunkEntitySystem
                 }
             }
 
-            public void WriteInstructionsToChunk(DynamicBuffer<TerrainInstruction> clusterBuffer)
+            public void WriteInstructionsToChunk(DynamicBuffer<GeometryInstruction> clusterBuffer)
             {
-                if (_firstChild.InstructionReference.TerrainInstruction.TerrainInstructionType != TerrainInstructionType.None)
+                if (_firstChild.InstructionReference.GeometryInstruction.TerrainInstructionType != TerrainInstructionType.None)
                 {
-                    if (_firstChild.InstructionReference.TerrainInstruction.TerrainInstructionType != TerrainInstructionType.Transformation)
+                    if (_firstChild.InstructionReference.GeometryInstruction.TerrainInstructionType != TerrainInstructionType.Transformation)
                     {
                         throw new Exception("_firstChild is only used as a workaround to inject a transformation when using geometry proxy. it can only be used for transformations");
                     }
 
-                    clusterBuffer.Add(_firstChild.InstructionReference.TerrainInstruction);
+                    clusterBuffer.Add(_firstChild.InstructionReference.GeometryInstruction);
                 }
 
                 for (var childIndex = 0; childIndex < ChildCount; childIndex++)
@@ -387,7 +387,7 @@ namespace Code.CubeMarching.TerrainChunkEntitySystem
                         registeredChild.ChildCombinerCoverageHandler->WriteInstructionsToChunk(clusterBuffer);
                     }
 
-                    var instructionToWrite = registeredChild.TerrainInstruction;
+                    var instructionToWrite = registeredChild.GeometryInstruction;
                     instructionToWrite.CoverageMask = childWriteMask & TotalWriteMask;
                     clusterBuffer.Add(instructionToWrite);
                 }
@@ -443,15 +443,15 @@ namespace Code.CubeMarching.TerrainChunkEntitySystem
             public readonly TerrainGridCoverageHandler* ChildCombinerCoverageHandler;
             public readonly bool IsTerrainCombiner;
             public readonly bool IsTransformation;
-            public readonly TerrainInstruction TerrainInstruction;
+            public readonly GeometryInstruction GeometryInstruction;
 
             #endregion
 
             #region Constructors
 
-            public TerrainInstructionReference(TerrainInstruction terrainInstruction, bool isTerrainCombiner, bool isTransformation, TerrainGridCoverageHandler* childCombinerCoverageHandler)
+            public TerrainInstructionReference(GeometryInstruction geometryInstruction, bool isTerrainCombiner, bool isTransformation, TerrainGridCoverageHandler* childCombinerCoverageHandler)
             {
-                TerrainInstruction = terrainInstruction;
+                GeometryInstruction = geometryInstruction;
                 IsTerrainCombiner = isTerrainCombiner;
                 ChildCombinerCoverageHandler = childCombinerCoverageHandler;
                 IsTransformation = isTransformation;
