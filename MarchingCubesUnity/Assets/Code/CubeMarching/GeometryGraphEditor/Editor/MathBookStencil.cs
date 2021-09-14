@@ -28,6 +28,7 @@ namespace UnityEditor.GraphToolsFoundation.Overdrive.Samples.MathBook
                     (typeof(MathAdditionOperator), "Addition"),
                     (typeof(MathResult), "Result"),
                     (typeof(SphereShapeNode), "Sphere"),
+                    (typeof(TorusShapeNode), "Torus"),
                     (typeof(AdditionGeometryCombinerNode),"Add")
                 }
                 .Select(MakeSearcherItem);

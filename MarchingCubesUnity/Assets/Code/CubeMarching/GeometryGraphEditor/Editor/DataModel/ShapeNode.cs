@@ -2,13 +2,19 @@
 using System.Diagnostics.SymbolStore;
 using Code.CubeMarching;
 using Code.CubeMarching.Authoring;
+using Code.CubeMarching.GeometryComponents;
+using Code.CubeMarching.TerrainChunkEntitySystem;
+using Code.CubeMarching.Utils;
+using Unity.Collections.LowLevel.Unsafe;
+using Unity.Mathematics;
+using Unity.Transforms;
 using UnityEditor.GraphToolsFoundation.Overdrive.BasicModel;
 using UnityEngine;
 
 namespace UnityEditor.GraphToolsFoundation.Overdrive.Samples.MathBook
 {
     [Serializable]
-    public class ShapeNode : NodeModel
+    public abstract class ShapeNode<T>  : NodeModel,IShapeNode where T: struct, ITerrainModifierShape
     {
         public IPortModel GeometryOut { get; set; }
         public IPortModel PositionIn { get; set; }
@@ -20,26 +26,46 @@ namespace UnityEditor.GraphToolsFoundation.Overdrive.Samples.MathBook
             GeometryOut = this.AddDataOutputPort<DistanceFieldValue>(nameof(GeometryOut));
             PositionIn = this.AddDataInputPort<Vector3>(nameof(PositionIn));
         }
+
+        public void WriteGeometryInstruction(ref GeometryInstruction instruction)
+        {
+            
+        }
+
+        protected abstract TerrainModifierType GetShapeType();
+        protected abstract T GetShape();
+
+        public unsafe GeometryInstruction GetTerrainInstruction()
+        {
+            T shape = GetShape();
+            
+            CGenericTerrainModifier genericComponentData = default;
+            genericComponentData.TerrainModifierType = GetShapeType();
+
+            var ptr = UnsafeUtility.AddressOf(ref genericComponentData.TerrainModifierDataA);
+            UnsafeUtility.CopyStructureToPtr(ref shape, ptr);
+
+            var position = PositionIn.GetValue3();
+            
+            return new GeometryInstruction()
+            {
+                CombinerDepth = 0,
+                CoverageMask = BitArray512.AllBitsTrue,
+                DependencyIndex = 0,
+                Combiner = default,
+                TerrainShape = new GeometryShapeTranslationTuple() {Translation = new CGeometryTransformation(position), TerrainMaterial = default, TerrainModifier = genericComponentData},
+                TerrainTransformation = default,
+                WorldToLocal = new WorldToLocal() {Value = float4x4.identity},
+                TerrainInstructionType = TerrainInstructionType.Shape
+            };
+        }
     }
 
-
-    public class SphereShapeNode : ShapeNode
+    public interface IShapeNode
     {
-        public override string Title
-        {
-            get => "Sphere";
-            set { }
-        }
-
-        public IPortModel RadiusIn { get; set; }
-
-        protected override void OnDefineNode()
-        {
-            base.OnDefineNode();
-
-            RadiusIn = this.AddDataInputPort<float>(nameof(RadiusIn), defaultValue:  8);
-        }
+        GeometryInstruction GetTerrainInstruction();
     }
+
 
     public abstract class GeometryCombinerNode : NodeModel
     {

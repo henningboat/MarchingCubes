@@ -44,7 +44,7 @@ namespace Code.CubeMarching.Authoring
             entityManager.AddComponent<CTerrainMaterial>(entity);
             entityManager.AddComponent<Translation>(entity);
             entityManager.AddComponent<CTerrainModifierBounds>(entity);
-            entityManager.AddComponent<CTerrainModifierTransformation>(entity);
+            entityManager.AddComponent<CGeometryTransformation>(entity);
             entityManager.AddComponent<WorldToLocal>(entity);
             if (transform.parent == null || transform.parent.GetComponent<TerrainCombiner>() == null)
             {
@@ -58,7 +58,7 @@ namespace Code.CubeMarching.Authoring
 
             entityManager.SetComponentData(entity, genericComponentData);
             entityManager.SetComponentData(entity, new Translation {Value = transform.position});
-            entityManager.SetComponentData(entity, CTerrainModifierTransformation.GetFromTransform(transform));
+            entityManager.SetComponentData(entity, CGeometryTransformation.GetFromTransform(transform));
 
             var terrainMaterial = new PackedTerrainMaterial(_material);
             entityManager.SetComponentData(entity, new CTerrainMaterial {Material = terrainMaterial});

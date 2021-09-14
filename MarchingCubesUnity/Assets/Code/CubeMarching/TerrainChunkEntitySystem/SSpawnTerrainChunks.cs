@@ -12,7 +12,7 @@ using Unity.Rendering;
 using Unity.Transforms;
 using UnityEngine;
 using UnityEngine.Rendering;
-using CGenericTerrainModifier = Code.CubeMarching.Authoring.CGenericTerrainModifier;
+using CGenericGeometryShape = Code.CubeMarching.Authoring.CGenericTerrainModifier;
 
 namespace Code.CubeMarching.TerrainChunkEntitySystem
 {
@@ -196,7 +196,7 @@ namespace Code.CubeMarching.TerrainChunkEntitySystem
 
         protected override void OnUpdate()
         {
-            Entities.ForEach((ref CTerrainModifierBounds bounds, in CGenericTerrainModifier terrainModifier, in Translation translation) =>
+            Entities.ForEach((ref CTerrainModifierBounds bounds, in CGenericGeometryShape terrainModifier, in Translation translation) =>
             {
                 bounds.Bounds = terrainModifier.CalculateBounds(translation);
             }).WithBurst().ScheduleParallel();
@@ -210,8 +210,8 @@ namespace Code.CubeMarching.TerrainChunkEntitySystem
         #region Public Fields
 
         public CTerrainMaterial TerrainMaterial;
-        public CGenericTerrainModifier TerrainModifier;
-        public CTerrainModifierTransformation Translation;
+        public CGenericGeometryShape TerrainModifier;
+        public CGeometryTransformation Translation;
 
         #endregion
 

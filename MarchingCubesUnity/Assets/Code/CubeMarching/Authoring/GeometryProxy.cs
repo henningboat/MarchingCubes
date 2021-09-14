@@ -41,7 +41,7 @@ namespace Code.CubeMarching.Authoring
                 dstManager.AddComponent<Static>(entity);
             }
 
-            var componentData = CTerrainModifierTransformation.GetFromTransform(transform);
+            var componentData = CGeometryTransformation.GetFromTransform(transform);
 
             CGenericTerrainTransformation genericComponentData = default;
             genericComponentData.TerrainTransformationType = componentData.TerrainTransformationType;

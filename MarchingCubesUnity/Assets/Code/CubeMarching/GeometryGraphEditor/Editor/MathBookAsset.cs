@@ -1,5 +1,7 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
+using Code.CubeMarching.TerrainChunkEntitySystem;
 using UnityEditor.Callbacks;
 using UnityEditor.GraphToolsFoundation.Overdrive.BasicModel;
 using UnityEngine;
@@ -41,6 +43,14 @@ namespace UnityEditor.GraphToolsFoundation.Overdrive.Samples.MathBook
             }
 
             return false;
+        }
+
+        public List<GeometryInstruction> GetInstructions()
+        {
+            List<GeometryInstruction> results = new List<GeometryInstruction>();
+            var resultsNode = GraphModel.NodeModels.FirstOrDefault(model => model is MathResult) as MathResult;
+            resultsNode.AddInstructions(results);
+            return results;
         }
     }
 }

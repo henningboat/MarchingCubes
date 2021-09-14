@@ -37,6 +37,7 @@ namespace Code.CubeMarching.StateHashing
             }
 
             var hashChanged = chunk.CurrentGeometryInstructionsHash != hash;
+            hashChanged = true;
             chunk.InstructionsChangedSinceLastFrame = hashChanged;
             if (hashChanged)
             {

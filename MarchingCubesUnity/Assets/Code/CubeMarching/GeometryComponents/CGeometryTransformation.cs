@@ -87,7 +87,7 @@ namespace Code.CubeMarching.GeometryComponents
                         return ((CTerrainTransformationMirror*) ptr)->TransformPosition(positionOS);
                         break;
                     case TerrainTransformationType.Transform:
-                        return ((CTerrainModifierTransformation*) ptr)->TransformPosition(positionOS);
+                        return ((CGeometryTransformation*) ptr)->TransformPosition(positionOS);
                         break;
                     default:
                         throw new ArgumentOutOfRangeException();
@@ -105,7 +105,7 @@ namespace Code.CubeMarching.GeometryComponents
                     case TerrainTransformationType.Mirror:
                         return ((CTerrainTransformationMirror*) ptr)->CalculateHash();
                     case TerrainTransformationType.Transform:
-                        return ((CTerrainModifierTransformation*) ptr)->CalculateHash();
+                        return ((CGeometryTransformation*) ptr)->CalculateHash();
                         break;
                     default:
                         throw new ArgumentOutOfRangeException();
@@ -121,7 +121,7 @@ namespace Code.CubeMarching.GeometryComponents
         Transform
     }
 
-    public struct CTerrainModifierTransformation : IComponentData, ITerrainTransformation
+    public struct CGeometryTransformation : IComponentData, ITerrainTransformation
     {
         public TerrainModifierTransformationType Type;
         public float3 objectOrigin;
@@ -158,21 +158,21 @@ namespace Code.CubeMarching.GeometryComponents
             return c0 * b.x + c1 * b.y + c2 * b.z;
         }
 
-        public CTerrainModifierTransformation(float3 positionWS)
+        public CGeometryTransformation(float3 positionWS)
         {
             Type = TerrainModifierTransformationType.TransformationOnly;
             objectOrigin = positionWS;
             inverseRotationScaleMatrix = default;
         }
 
-        public CTerrainModifierTransformation(float3 positionWS, float uniformScale)
+        public CGeometryTransformation(float3 positionWS, float uniformScale)
         {
             Type = TerrainModifierTransformationType.TransformationAndUniformScale;
             objectOrigin = positionWS;
             inverseRotationScaleMatrix = 1f / uniformScale;
         }
 
-        public CTerrainModifierTransformation(float3 positionWS, quaternion rotation)
+        public CGeometryTransformation(float3 positionWS, quaternion rotation)
         {
             Type = TerrainModifierTransformationType.TransformationRotationAndScale;
             objectOrigin = positionWS;
@@ -181,7 +181,7 @@ namespace Code.CubeMarching.GeometryComponents
             inverseRotationScaleMatrix = new float3x3(inverseRotation);
         }
 
-        public CTerrainModifierTransformation(float3 positionWS, quaternion rotation, float3 scale)
+        public CGeometryTransformation(float3 positionWS, quaternion rotation, float3 scale)
         {
             Type = TerrainModifierTransformationType.TransformationAndUniformScale;
             objectOrigin = positionWS;
@@ -192,7 +192,7 @@ namespace Code.CubeMarching.GeometryComponents
             inverseRotationScaleMatrix = math.mul(rotationMatrix, float3x3.Scale(inverseScale));
         }
 
-        public static CTerrainModifierTransformation GetFromTransform(Transform transform)
+        public static CGeometryTransformation GetFromTransform(Transform transform)
         {
             //todo check for floating point precision issues
             var hasTransformation = transform.position != Vector3.zero;
@@ -200,7 +200,7 @@ namespace Code.CubeMarching.GeometryComponents
             var hasScale = transform.lossyScale == Vector3.one;
             var hasNonUniformScale = hasScale && Math.Abs(transform.lossyScale.x - transform.lossyScale.y) < math.EPSILON && Math.Abs(transform.lossyScale.x - transform.lossyScale.z) < math.EPSILON;
 
-            return new CTerrainModifierTransformation(transform.position, transform.rotation);
+            return new CGeometryTransformation(transform.position, transform.rotation);
         }
 
         public uint CalculateHash()

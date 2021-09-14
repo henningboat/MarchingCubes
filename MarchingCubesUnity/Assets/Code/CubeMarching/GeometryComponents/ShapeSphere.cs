@@ -33,12 +33,6 @@ namespace Code.CubeMarching.GeometryComponents
     }
 
     [StructLayout(LayoutKind.Explicit, Size = 4 * 16)]
-    [UsedImplicitly]
-    public struct CGenericTerrainModifier : IComponentData
-    {
-    }
-
-    [StructLayout(LayoutKind.Explicit, Size = 4 * 16)]
     [Serializable]
     public struct CShapeSphere : IComponentData, ITerrainModifierShape
     {
