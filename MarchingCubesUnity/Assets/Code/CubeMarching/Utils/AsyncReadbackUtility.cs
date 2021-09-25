@@ -2,12 +2,11 @@
 using System.Linq;
 using Code.CubeMarching.Rendering;
 using Unity.Collections;
-using Unity.Entities;
 using Unity.Jobs;
 using UnityEngine;
 using UnityEngine.Rendering;
 
-namespace Code.CubeMarching.AsyncReadbackSystem
+namespace Code.CubeMarching.Utils
 {
     //todo use native arrays
 

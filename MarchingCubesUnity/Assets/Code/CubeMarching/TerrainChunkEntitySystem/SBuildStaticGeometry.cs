@@ -1,5 +1,6 @@
 ﻿using Code.CubeMarching.Authoring;
 using Code.CubeMarching.GeometryGraph;
+using Code.CubeMarching.GeometryGraph.Runtime;
 using Code.CubeMarching.Rendering;
 using Code.CubeMarching.StateHashing;
 using Unity.Entities;

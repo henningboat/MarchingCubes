@@ -1,6 +1,6 @@
 ﻿using Unity.Entities;
 
-namespace Code.CubeMarching
+namespace Code.CubeMarching.GeometryComponents
 {
     public enum CombinerOperation : byte
     {

@@ -1,4 +1,5 @@
 ﻿using System;
+using Code.CubeMarching.GeometryComponents;
 using Code.CubeMarching.TerrainChunkSystem;
 using Code.SIMDMath;
 using Unity.Collections;

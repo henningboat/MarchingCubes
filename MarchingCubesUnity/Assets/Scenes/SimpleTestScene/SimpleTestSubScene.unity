@@ -152,7 +152,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: bdb1bb517572a114f8f8a18b1b83b325, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _geometryGraph: {fileID: 11400000, guid: 2b980a3239e27364fac687ce3dd22964, type: 2}
+  _geometryGraph: {fileID: 11400000, guid: 1866e113e25338a47a463f6f87d4dd04, type: 2}
 --- !u!4 &622982913
 Transform:
   m_ObjectHideFlags: 0

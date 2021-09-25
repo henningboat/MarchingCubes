@@ -11,21 +11,6 @@ using UnityEngine;
 
 namespace Code.CubeMarching.GeometryComponents
 {
-    public class ShapeTorus : GeometryContentAuthoringComponentBase<CShapeTorus>
-    {
-        [SerializeField] private float _thickness = 4;
-
-        protected override CShapeTorus GetShape()
-        {
-            throw new NotImplementedException();
-            // return new()
-            // {
-            //     radius = transform.lossyScale.x,
-            //     thickness = _thickness
-            // };
-        }
-    }
-
     [StructLayout(LayoutKind.Explicit, Size = 4 * 16)]
     public struct CShapeTorus : IComponentData, ITerrainModifierShape
     {

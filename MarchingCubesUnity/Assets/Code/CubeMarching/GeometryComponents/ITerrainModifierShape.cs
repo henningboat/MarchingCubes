@@ -1,11 +1,10 @@
-﻿using Code.CubeMarching.GeometryComponents;
-using Code.CubeMarching.Rendering;
+﻿using Code.CubeMarching.Rendering;
 using Code.SIMDMath;
 using JetBrains.Annotations;
 using Unity.Collections;
 using Unity.Transforms;
 
-namespace Code.CubeMarching
+namespace Code.CubeMarching.GeometryComponents
 {
     public interface ITerrainModifierShape
     {

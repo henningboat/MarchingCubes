@@ -12,38 +12,6 @@ using static Code.SIMDMath.SimdMath;
 
 namespace Code.CubeMarching.GeometryComponents
 {
-    public class ShapeBoundingBox : GeometryContentAuthoringComponentBase<CShapeBoundingBox>
-    {
-        #region Serialize Fields
-
-        [SerializeField] private float _boundsWidth = 1;
-
-        #endregion
-
-        #region Unity methods
-
-        private void OnDrawGizmos()
-        {
-            Gizmos.DrawWireCube(transform.position, transform.lossyScale);
-        }
-
-        #endregion
-
-        #region Public methods
-
-        protected override CShapeBoundingBox GetShape()
-        {
-            throw new NotImplementedException();
-            // return new()
-            // {
-            //     extends = transform.lossyScale / 2f,
-            //     boundWidth = _boundsWidth
-            // };
-        }
-
-        #endregion
-    }
-
     [StructLayout(LayoutKind.Explicit, Size = 4 * 16)]
     public struct CShapeBoundingBox : IComponentData, ITerrainModifierShape
     {

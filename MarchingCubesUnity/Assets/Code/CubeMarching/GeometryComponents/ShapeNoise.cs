@@ -11,24 +11,6 @@ using UnityEngine;
 
 namespace Code.CubeMarching.GeometryComponents
 {
-    public class ShapeNoise : GeometryContentAuthoringComponentBase<CShapeNoise>
-    {
-        [SerializeField] private float _strength;
-        [SerializeField] private float _valueOffse;
-
-        protected override CShapeNoise GetShape()
-        {
-            throw new NotImplementedException();
-            // return new()
-            // {
-            //     offset = transform.position,
-            //     scale = new float3(1f) / transform.lossyScale,
-            //     strength = _strength,
-            //     valueOffset = _valueOffse
-            // };
-        }
-    }
-
     [StructLayout(LayoutKind.Explicit, Size = 4 * 16)]
     public struct CShapeNoise : IComponentData, ITerrainModifierShape
     {
