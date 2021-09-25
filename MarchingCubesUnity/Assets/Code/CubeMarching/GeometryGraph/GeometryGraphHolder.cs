@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Code.CubeMarching.GeometryComponents;
 using Code.CubeMarching.TerrainChunkEntitySystem;
 using Code.CubeMarching.Utils;
@@ -12,7 +13,8 @@ using CGenericTerrainModifier = Code.CubeMarching.Authoring.CGenericTerrainModif
 
 namespace Code.CubeMarching.GeometryGraph
 {
-    [ExecuteInEditMode,ExecuteAlways]
+    [ExecuteInEditMode]
+    [ExecuteAlways]
     public class GeometryGraphTestSystem : SystemBase
     {
         protected override void OnUpdate()
@@ -30,14 +32,14 @@ namespace Code.CubeMarching.GeometryGraph
                 {
                     Debug.Log("no instructions");
                 }
-            } ).Run();
+            }).Run();
         }
     }
-    
-    public class GeometryGraphHolder : MonoBehaviour,IConvertGameObjectToEntity
+
+    public class GeometryGraphHolder : MonoBehaviour, IConvertGameObjectToEntity
     {
         [SerializeField] private MathBookAsset _geometryGraph;
-        
+
         public MathBookAsset Graph => _geometryGraph;
 
         public void Convert(Entity entity, EntityManager dstManager, GameObjectConversionSystem conversionSystem)
@@ -49,29 +51,27 @@ namespace Code.CubeMarching.GeometryGraph
                     return;
                 }
 
+                var resolvedGraph = _geometryGraph.ResolveGraph();
+
                 using var blobBuilder = new BlobBuilder(Allocator.Temp);
 
                 ref var root = ref blobBuilder.ConstructRoot<GeometryGraphBlob>();
 
-
-                var componentData = new CShapeSphere() {radius = 8};
-
-
-                CGenericTerrainModifier genericComponentData = default;
-                genericComponentData.TerrainModifierType = componentData.Type;
-
-                var ptr = UnsafeUtility.AddressOf(ref genericComponentData.TerrainModifierDataA);
-                UnsafeUtility.CopyStructureToPtr(ref componentData, ptr);
-
-                var instructions = _geometryGraph.GetInstructions();
-
-                var instructionsBlobArray = blobBuilder.Allocate(ref root.instructions, instructions.Count);
-
-                for (int i = 0; i < instructions.Count; i++)
+                
+                var instructionsBlobArray = blobBuilder.Allocate(ref root.instructions, resolvedGraph.InstructionBuffer.Count);
+                
+                for (int i = 0; i < resolvedGraph.InstructionBuffer.Count; i++)
                 {
-                    instructionsBlobArray[i] = instructions[i];
+                    instructionsBlobArray[i] = resolvedGraph.InstructionBuffer[i];
                 }
-            
+
+                var valueBufferBlobArray = blobBuilder.Allocate(ref root.valueBuffer, resolvedGraph.PropertyValueBuffer.Count);
+                
+                for (int i = 0; i < resolvedGraph.PropertyValueBuffer.Count; i++)
+                {
+                    valueBufferBlobArray[i] = resolvedGraph.PropertyValueBuffer[i];
+                }
+
                 dstManager.AddComponentData(entity, new CGeometryGraphInstance()
                 {
                     graph = blobBuilder.CreateBlobAssetReference<GeometryGraphBlob>(Allocator.Persistent)
@@ -79,7 +79,8 @@ namespace Code.CubeMarching.GeometryGraph
             }
         }
     }
-    
+
+
     [UpdateInGroup(typeof(GameObjectDeclareReferencedObjectsGroup))]
     public class GeometryGraphConversionSystem : GameObjectConversionSystem
     {
@@ -103,5 +104,6 @@ namespace Code.CubeMarching.GeometryGraph
     public struct GeometryGraphBlob
     {
         public BlobArray<GeometryInstruction> instructions;
+        public BlobArray<float> valueBuffer;
     }
 }

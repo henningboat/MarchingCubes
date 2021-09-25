@@ -2,19 +2,20 @@
 using Code.CubeMarching.Rendering;
 using Code.SIMDMath;
 using JetBrains.Annotations;
+using Unity.Collections;
 using Unity.Transforms;
 
 namespace Code.CubeMarching
 {
     public interface ITerrainModifierShape
     {
-        TerrainModifierType Type { get; }
+        ShapeType Type { get; }
 
         [UsedImplicitly]
-        PackedFloat GetSurfaceDistance(PackedFloat3 positionOS);
+        PackedFloat GetSurfaceDistance(PackedFloat3 positionOS, NativeArray<float> valueBuffer);
 
         [UsedImplicitly]
-        TerrainBounds CalculateBounds(Translation translation);
+        TerrainBounds CalculateBounds(Translation translation, NativeArray<float> valueBuffer);
 
         uint CalculateHash();
     }

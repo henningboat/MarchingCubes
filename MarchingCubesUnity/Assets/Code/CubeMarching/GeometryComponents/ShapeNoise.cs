@@ -1,7 +1,9 @@
-﻿using System.Runtime.InteropServices;
+﻿using System;
+using System.Runtime.InteropServices;
 using Code.CubeMarching.Authoring;
 using Code.CubeMarching.Rendering;
 using Code.SIMDMath;
+using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
 using Unity.Transforms;
@@ -16,41 +18,44 @@ namespace Code.CubeMarching.GeometryComponents
 
         protected override CShapeNoise GetShape()
         {
-            return new()
-            {
-                offset = transform.position,
-                scale = new float3(1f) / transform.lossyScale,
-                strength = _strength,
-                valueOffset = _valueOffse
-            };
+            throw new NotImplementedException();
+            // return new()
+            // {
+            //     offset = transform.position,
+            //     scale = new float3(1f) / transform.lossyScale,
+            //     strength = _strength,
+            //     valueOffset = _valueOffse
+            // };
         }
     }
 
     [StructLayout(LayoutKind.Explicit, Size = 4 * 16)]
     public struct CShapeNoise : IComponentData, ITerrainModifierShape
     {
-        [FieldOffset(0)] public float strength;
-        [FieldOffset(4)] public float valueOffset;
-        [FieldOffset(8)] public float3 offset;
-        [FieldOffset(20)] public float3 scale;
+        [FieldOffset(0)] public FloatValue strength;
+        [FieldOffset(4)] public FloatValue valueOffset;
+        [FieldOffset(8)] public Float3Value offset;
+        [FieldOffset(12)] public Float3Value scale;
 
-        public PackedFloat GetSurfaceDistance(PackedFloat3 positionWS)
+        public PackedFloat GetSurfaceDistance(PackedFloat3 positionWS, NativeArray<float> valueBuffer)
         {
-            var positionOS = scale * (positionWS - offset);
-            return (cnoise4(positionOS) + valueOffset) * strength;
+            var offsetValue = offset.Resolve(valueBuffer);
+
+            var positionOS = scale.Resolve(valueBuffer) * (positionWS - offsetValue);
+            return (cnoise4(positionOS) + valueOffset.Resolve(valueBuffer)) * strength.Resolve(valueBuffer);
         }
 
-        public TerrainBounds CalculateBounds(Translation translation)
+        public TerrainBounds CalculateBounds(Translation translation, NativeArray<float> valueBuffer)
         {
             return new() {min = int.MinValue, max = int.MaxValue};
         }
 
         public uint CalculateHash()
         {
-            return math.hash(new float4x2(new float4(strength, offset), new float4(valueOffset, scale)));
+            return math.hash(new float4(strength.Index, valueOffset.Index, offset.Index, scale.Index));
         }
 
-        public TerrainModifierType Type => TerrainModifierType.Noise;
+        public ShapeType Type => ShapeType.Noise;
 
         private PackedFloat cnoise4(PackedFloat3 input)
         {

@@ -1,6 +1,6 @@
 ﻿namespace Code.CubeMarching.GeometryComponents
 {
-    public enum TerrainModifierType : byte
+    public enum ShapeType : byte
     {
         Sphere,
         BoundingBox,

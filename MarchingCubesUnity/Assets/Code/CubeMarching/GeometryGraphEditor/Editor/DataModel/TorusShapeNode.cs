@@ -1,4 +1,6 @@
-﻿using Code.CubeMarching.GeometryComponents;
+﻿using System;
+using System.Collections.Generic;
+using Code.CubeMarching.GeometryComponents;
 
 namespace UnityEditor.GraphToolsFoundation.Overdrive.Samples.MathBook
 {
@@ -17,18 +19,18 @@ namespace UnityEditor.GraphToolsFoundation.Overdrive.Samples.MathBook
         {
             base.OnDefineNode();
 
-            RadiusIn = this.AddDataInputPort<float>(nameof(RadiusIn), defaultValue:  8);
-            Thickness = this.AddDataInputPort<float>(nameof(Thickness), defaultValue:  3);
+            RadiusIn = this.AddDataInputPort<float>(nameof(RadiusIn), defaultValue: 8);
+            Thickness = this.AddDataInputPort<float>(nameof(Thickness), defaultValue: 3);
         }
 
-        protected override TerrainModifierType GetShapeType()
+        protected override ShapeType GetShapeType()
         {
-            return TerrainModifierType.Torus;
+            return ShapeType.Torus;
         }
 
-        protected override CShapeTorus GetShape()
+        public override List<GeometryGraphProperty> GetProperties()
         {
-            return new() {radius = RadiusIn.GetValue(), thickness = Thickness.GetValue()};
+            return new() {RadiusIn.ResolvePropertyInput(GeometryPropertyType.Float), Thickness.ResolvePropertyInput(GeometryPropertyType.Float)};
         }
     }
 }

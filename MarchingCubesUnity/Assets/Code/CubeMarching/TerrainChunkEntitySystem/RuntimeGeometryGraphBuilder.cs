@@ -16,21 +16,33 @@ namespace Code.CubeMarching.TerrainChunkEntitySystem
             _getGeometryGraphInstanceFromEntity = system.GetComponentDataFromEntity<CGeometryGraphInstance>();
         }
 
-        public void Execute(DynamicBuffer<GeometryInstruction> geometryInstructions, ref CClusterParameters clusterParameters, in CClusterPosition clusterPosition, bool isPlaying)
+        public void Execute(DynamicBuffer<GeometryInstruction> geometryInstructions, ref CClusterParameters clusterParameters, in CClusterPosition clusterPosition, bool isPlaying,
+            DynamicBuffer<CValueBufferEntry> valueBuffer)
         {
-            clusterParameters.WriteMask=BitArray512.AllBitsTrue;
+            clusterParameters.WriteMask = BitArray512.AllBitsTrue;
             geometryInstructions.Clear();
+            valueBuffer.Clear();
 
             if (_getGeometryGraphInstanceFromEntity[_graphEntity].graph.IsCreated == false)
             {
                 return;
             }
-            
-            ref GeometryGraphBlob geometryGraphBlob =ref _getGeometryGraphInstanceFromEntity[_graphEntity].graph.Value;
-            for (int i = 0; i < geometryGraphBlob.instructions.Length; i++)
+
+            ref var geometryGraphBlob = ref _getGeometryGraphInstanceFromEntity[_graphEntity].graph.Value;
+            for (var i = 0; i < geometryGraphBlob.instructions.Length; i++)
             {
                 geometryInstructions.Add(geometryGraphBlob.instructions[i]);
             }
+
+            for (var i = 0; i < geometryGraphBlob.valueBuffer.Length; i++)
+            {
+                valueBuffer.Add(new CValueBufferEntry() {Value = geometryGraphBlob.valueBuffer[i]});
+            }
         }
+    }
+
+    public struct CValueBufferEntry : IBufferElementData
+    {
+        public float Value;
     }
 }

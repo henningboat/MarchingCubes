@@ -8,6 +8,7 @@ using Code.SIMDMath;
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
 using Unity.Entities;
+using Unity.Mathematics;
 using Unity.Transforms;
 using UnityEngine;
 
@@ -35,9 +36,9 @@ namespace Code.CubeMarching.Authoring
             var componentData = GetShape();
 
             CGenericTerrainModifier genericComponentData = default;
-            genericComponentData.TerrainModifierType = componentData.Type;
+            genericComponentData.ShapeType = componentData.Type;
 
-            var ptr = UnsafeUtility.AddressOf(ref genericComponentData.TerrainModifierDataA);
+            var ptr = UnsafeUtility.AddressOf(ref genericComponentData.PropertyIndexesA);
             UnsafeUtility.CopyStructureToPtr(ref componentData, ptr);
 
             entityManager.AddComponent<CGenericTerrainModifier>(entity);
@@ -78,34 +79,34 @@ namespace Code.CubeMarching.Authoring
     {
         #region Public Fields
 
-        public Bytes16 TerrainModifierDataA;
-        public Bytes16 TerrainModifierDataB;
-        public Bytes16 TerrainModifierDataC;
-        public Bytes16 TerrainModifierDataD;
-        public TerrainModifierType TerrainModifierType;
+        public int4 PropertyIndexesA;
+        public int4 PropertyIndexesB;
+        public int4 PropertyIndexesC;
+        public int4 PropertyIndexesD;
+        public ShapeType ShapeType;
 
         #endregion
 
         #region Public methods
 
-        public PackedFloat GetSurfaceDistance(PackedFloat3 positionOS)
+        public PackedFloat GetSurfaceDistance(PackedFloat3 positionOS, NativeArray<float> valueBuffer)
         {
             unsafe
             {
-                var ptr = UnsafeUtility.AddressOf(ref TerrainModifierDataA);
-                switch (TerrainModifierType)
+                var ptr = UnsafeUtility.AddressOf(ref PropertyIndexesA);
+                switch (ShapeType)
                 {
-                    case TerrainModifierType.Sphere:
-                        return ((CShapeSphere*) ptr)->GetSurfaceDistance(positionOS);
+                    case ShapeType.Sphere:
+                        return ((CShapeSphere*) ptr)->GetSurfaceDistance(positionOS, valueBuffer);
                         break;
-                    case TerrainModifierType.BoundingBox:
-                        return ((CShapeBoundingBox*) ptr)->GetSurfaceDistance(positionOS);
+                    case ShapeType.BoundingBox:
+                        return ((CShapeBoundingBox*) ptr)->GetSurfaceDistance(positionOS, valueBuffer);
                         break;
-                    case TerrainModifierType.Torus:
-                        return ((CShapeTorus*) ptr)->GetSurfaceDistance(positionOS);
+                    case ShapeType.Torus:
+                        return ((CShapeTorus*) ptr)->GetSurfaceDistance(positionOS, valueBuffer);
                         break;
-                    case TerrainModifierType.Noise:
-                        return ((CShapeNoise*) ptr)->GetSurfaceDistance(positionOS);
+                    case ShapeType.Noise:
+                        return ((CShapeNoise*) ptr)->GetSurfaceDistance(positionOS, valueBuffer);
                         break;
                     default:
                         throw new ArgumentOutOfRangeException();
@@ -113,24 +114,24 @@ namespace Code.CubeMarching.Authoring
             }
         }
 
-        public TerrainBounds CalculateBounds(Translation translation)
+        public TerrainBounds CalculateBounds(Translation translation, NativeArray<float> valueBuffer)
         {
             unsafe
             {
-                var ptr = UnsafeUtility.AddressOf(ref TerrainModifierDataA);
-                switch (TerrainModifierType)
+                var ptr = UnsafeUtility.AddressOf(ref PropertyIndexesA);
+                switch (ShapeType)
                 {
-                    case TerrainModifierType.Sphere:
-                        return ((CShapeSphere*) ptr)->CalculateBounds(translation);
+                    case ShapeType.Sphere:
+                        return ((CShapeSphere*) ptr)->CalculateBounds(translation, valueBuffer);
                         break;
-                    case TerrainModifierType.BoundingBox:
-                        return ((CShapeBoundingBox*) ptr)->CalculateBounds(translation);
+                    case ShapeType.BoundingBox:
+                        return ((CShapeBoundingBox*) ptr)->CalculateBounds(translation, valueBuffer);
                         break;
-                    case TerrainModifierType.Torus:
-                        return ((CShapeTorus*) ptr)->CalculateBounds(translation);
+                    case ShapeType.Torus:
+                        return ((CShapeTorus*) ptr)->CalculateBounds(translation, valueBuffer);
                         break;
-                    case TerrainModifierType.Noise:
-                        return ((CShapeNoise*) ptr)->CalculateBounds(translation);
+                    case ShapeType.Noise:
+                        return ((CShapeNoise*) ptr)->CalculateBounds(translation, valueBuffer);
                         break;
                     default:
                         throw new ArgumentOutOfRangeException();
@@ -140,19 +141,19 @@ namespace Code.CubeMarching.Authoring
 
         public unsafe uint CalculateHash()
         {
-            var ptr = UnsafeUtility.AddressOf(ref TerrainModifierDataA);
-            switch (TerrainModifierType)
+            var ptr = UnsafeUtility.AddressOf(ref PropertyIndexesA);
+            switch (ShapeType)
             {
-                case TerrainModifierType.Sphere:
+                case ShapeType.Sphere:
                     return ((CShapeSphere*) ptr)->CalculateHash();
                     break;
-                case TerrainModifierType.BoundingBox:
+                case ShapeType.BoundingBox:
                     return ((CShapeBoundingBox*) ptr)->CalculateHash();
                     break;
-                case TerrainModifierType.Torus:
+                case ShapeType.Torus:
                     return ((CShapeTorus*) ptr)->CalculateHash();
                     break;
-                case TerrainModifierType.Noise:
+                case ShapeType.Noise:
                     return ((CShapeNoise*) ptr)->CalculateHash();
                     break;
                 default:

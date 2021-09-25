@@ -1,7 +1,9 @@
-﻿using System.Runtime.InteropServices;
+﻿using System;
+using System.Runtime.InteropServices;
 using Code.CubeMarching.Authoring;
 using Code.CubeMarching.Rendering;
 using Code.SIMDMath;
+using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
 using Unity.Transforms;
@@ -31,11 +33,12 @@ namespace Code.CubeMarching.GeometryComponents
 
         protected override CShapeBoundingBox GetShape()
         {
-            return new()
-            {
-                extends = transform.lossyScale / 2f,
-                boundWidth = _boundsWidth
-            };
+            throw new NotImplementedException();
+            // return new()
+            // {
+            //     extends = transform.lossyScale / 2f,
+            //     boundWidth = _boundsWidth
+            // };
         }
 
         #endregion
@@ -62,22 +65,22 @@ namespace Code.CubeMarching.GeometryComponents
 
         #region Public Fields
 
-        [FieldOffset(0)] public float boundWidth;
-        [FieldOffset(4)] public float3 extends;
+        [FieldOffset(0)] public FloatValue boundWidth;
+        [FieldOffset(4)] public Float3Value extends;
 
         #endregion
 
         #region ITerrainModifierShape Members
 
-        public PackedFloat GetSurfaceDistance(PackedFloat3 positionOS)
+        public PackedFloat GetSurfaceDistance(PackedFloat3 positionOS, NativeArray<float> valueBuffer)
         {
-            return ComputeBoundingBoxDistance(positionOS, extends, new PackedFloat(boundWidth, boundWidth, boundWidth, boundWidth));
+            return ComputeBoundingBoxDistance(positionOS, extends.Resolve(valueBuffer), boundWidth.Resolve(valueBuffer));
         }
 
-        public TerrainBounds CalculateBounds(Translation translation)
+        public TerrainBounds CalculateBounds(Translation translation, NativeArray<float> valueBuffer)
         {
             var center = (int3) math.round(translation.Value);
-            var boundsExtends = (int3) math.ceil(extends);
+            var boundsExtends = (int3) math.ceil(extends.Resolve(valueBuffer));
             return new TerrainBounds
             {
                 min = center - 1 - boundsExtends, max = center + boundsExtends
@@ -86,10 +89,10 @@ namespace Code.CubeMarching.GeometryComponents
 
         public uint CalculateHash()
         {
-            return math.hash(new float4(extends, boundWidth));
+            return math.hash(new float2(extends.Index, boundWidth.Index));
         }
 
-        public TerrainModifierType Type => TerrainModifierType.BoundingBox;
+        public ShapeType Type => ShapeType.BoundingBox;
 
         #endregion
     }

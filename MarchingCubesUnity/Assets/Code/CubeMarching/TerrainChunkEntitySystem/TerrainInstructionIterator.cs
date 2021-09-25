@@ -7,10 +7,10 @@ using static Unity.Mathematics.math;
 
 namespace Code.CubeMarching.TerrainChunkEntitySystem
 {
-	/// <summary>
-	///     Calculates the TerrainData for a NativeArray world space positions
-	/// </summary>
-	public struct TerrainInstructionIterator
+    /// <summary>
+    ///     Calculates the TerrainData for a NativeArray world space positions
+    /// </summary>
+    public struct TerrainInstructionIterator
     {
         #region Public Fields
 
@@ -33,12 +33,16 @@ namespace Code.CubeMarching.TerrainChunkEntitySystem
         /// </summary>
         private TerrainChunkData _originalTerrainData;
 
+        private NativeArray<float> _valueBuffer;
+
         #endregion
 
         #region Constructors
 
-        public TerrainInstructionIterator(NativeArray<PackedFloat3> positions, DynamicBuffer<GeometryInstruction> combinerInstructions, int indexInsideChunk, TerrainChunkData existingData)
+        public TerrainInstructionIterator(NativeArray<PackedFloat3> positions, DynamicBuffer<GeometryInstruction> combinerInstructions, int indexInsideChunk, TerrainChunkData existingData,
+            NativeArray<float> valueBuffer)
         {
+            _valueBuffer = valueBuffer;
             _combinerInstructions = combinerInstructions.AsNativeArray().AsReadOnly();
             //todo cache this between pre-pass and actual pass
             _combinerStackSize = 0;
@@ -177,7 +181,7 @@ namespace Code.CubeMarching.TerrainChunkEntitySystem
 
                         var positionOS = shape.Translation.TransformPosition(_postionStack[_postionsWS.Length * combinerInstruction.CombinerDepth + i]);
 
-                        var surfaceDistance = shape.TerrainModifier.GetSurfaceDistance(positionOS);
+                        var surfaceDistance = shape.TerrainModifier.GetSurfaceDistance(positionOS, _valueBuffer);
                         terrainData = new PackedTerrainData(surfaceDistance, shape.TerrainMaterial.Material);
                         break;
                     case TerrainInstructionType.Combiner:

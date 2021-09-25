@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using UnityEditor.GraphToolsFoundation.Overdrive.BasicModel;
 using UnityEditor.GraphToolsFoundation.Searcher;
 using UnityEngine;
@@ -23,25 +24,13 @@ namespace UnityEditor.GraphToolsFoundation.Overdrive.Samples.MathBook
                 return new GraphNodeModelSearcherItem(GraphModel, null, data => data.CreateNode(tuple.t), tuple.name);
             }
 
-            var operators = new[]
-                {
-                    (typeof(MathAdditionOperator), "Addition"),
-                    (typeof(MathResult), "Result"),
-                    (typeof(SphereShapeNode), "Sphere"),
-                    (typeof(TorusShapeNode), "Torus"),
-                    (typeof(AdditionGeometryCombinerNode),"Add")
-                }
-                .Select(MakeSearcherItem);
-            var operatorsItem = new SearcherItem("Operators", "", operators.ToList());
-
-            var functions = new[]
-                {
-                    (typeof(CosFunction), "Cos")
-                }
-                .Select(MakeSearcherItem);
-
-            var functionsItem = new SearcherItem("Functions", "", functions.ToList());
-
+            var shapes = TypeCache.GetTypesDerivedFrom(typeof(ShapeNode<>)).Where(type => !type.IsAbstract).Select(typeInfo => MakeSearcherItem((typeInfo, typeInfo.Name))).ToList();
+            var shapeItems = new SearcherItem("Combiners", "", shapes.ToList());
+            
+            var combiners = TypeCache.GetTypesDerivedFrom(typeof(GeometryCombinerNode)).Where(type => !type.IsAbstract).Select(typeInfo => MakeSearcherItem((typeInfo, typeInfo.Name))).ToList();
+            var combinerItems = new SearcherItem("Combiners", "", combiners.ToList());
+            
+            
             var constants = new List<SearcherItem>
             {
                 new GraphNodeModelSearcherItem(GraphModel, null,
@@ -52,10 +41,15 @@ namespace UnityEditor.GraphToolsFoundation.Overdrive.Samples.MathBook
 
             var constantsItem = new SearcherItem("Values", "", constants);
 
-            var items = new List<SearcherItem> {operatorsItem, functionsItem, constantsItem};
+            var items = new List<SearcherItem> {combinerItems, shapeItems, constantsItem};
 
             var searcherDatabase = new SearcherDatabase(items);
             m_Databases.Add(searcherDatabase);
+        }
+
+        public override IToolbarProvider GetToolbarProvider()
+        {
+            return new GeometryGraphToolbarProvider();
         }
 
         public override void OnGraphProcessingStarted(IGraphModel graphModel)
@@ -129,6 +123,14 @@ namespace UnityEditor.GraphToolsFoundation.Overdrive.Samples.MathBook
 
                 commandDispatcher.Dispatch(new CreateGraphVariableDeclarationCommand(finalName, true, TypeHandle.Vector3, typeof(MathBookVariableDeclarationModel)));
             });
+        }
+    }
+
+    internal class GeometryGraphToolbarProvider : IToolbarProvider
+    {
+        public bool ShowButton(string buttonName)
+        {
+            return true;
         }
     }
 }

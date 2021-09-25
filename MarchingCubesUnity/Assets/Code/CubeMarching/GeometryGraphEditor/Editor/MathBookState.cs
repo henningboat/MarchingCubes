@@ -16,9 +16,32 @@ namespace UnityEditor.GraphToolsFoundation.Overdrive.Samples.MathBook
             base.RegisterCommandHandlers(dispatcher);
 
             if (!(dispatcher is CommandDispatcher commandDispatcher))
+            {
                 return;
+            }
 
             commandDispatcher.RegisterCommandHandler<SetNumberOfInputPortCommand>(SetNumberOfInputPortCommand.DefaultCommandHandler);
+            commandDispatcher.RegisterCommandPreDispatchCallback(command =>
+            {
+                if (command is not MoveElementsCommand)
+                {
+                    ScheduleSaveAsset();
+                }
+            });
+        }
+
+        private static bool sNeedsSaveAsset;
+
+        private void ScheduleSaveAsset()
+        {
+            sNeedsSaveAsset = true;
+            EditorApplication.delayCall += () =>
+            {
+                if (sNeedsSaveAsset)
+                {
+                    sNeedsSaveAsset = false;
+                }
+            };
         }
     }
 }

@@ -4,6 +4,7 @@ using Code.CubeMarching.Authoring;
 using Code.CubeMarching.Rendering;
 using Code.SIMDMath;
 using JetBrains.Annotations;
+using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
 using Unity.Transforms;
@@ -27,8 +28,9 @@ namespace Code.CubeMarching.GeometryComponents
 
         protected override CShapeSphere GetShape()
         {
-            var radius = transform.lossyScale.x;
-            return new CShapeSphere {radius = radius};
+            throw new NotImplementedException();
+            // var radius = transform.lossyScale.x;
+            // return new CShapeSphere {radius = radius};
         }
     }
 
@@ -53,29 +55,57 @@ namespace Code.CubeMarching.GeometryComponents
 
         #region ActualData
 
-        [FieldOffset(0)] public float radius;
+        [FieldOffset(0)] public FloatValue radius;
 
         #endregion
 
-        public PackedFloat GetSurfaceDistance(PackedFloat3 positionOS)
+        public PackedFloat GetSurfaceDistance(PackedFloat3 positionOS, NativeArray<float> valueBuffer)
         {
-            return length(positionOS) - radius;
+            var radiusValue = radius.Resolve(valueBuffer);
+            return length(positionOS) - radiusValue;
         }
 
-        public TerrainBounds CalculateBounds(Translation translation)
+        public TerrainBounds CalculateBounds(Translation translation, NativeArray<float> valueBuffer)
         {
+            var radiusValue = radius.Resolve(valueBuffer);
             var center = translation.Value;
             return new TerrainBounds
             {
-                min = center - radius, max = center + radius
+                min = center - radiusValue, max = center + radiusValue
             };
         }
 
         public uint CalculateHash()
         {
-            return math.asuint(radius);
+            return math.asuint(radius.Index);
         }
 
-        public TerrainModifierType Type => TerrainModifierType.Sphere;
+        public ShapeType Type => ShapeType.Sphere;
+    }
+
+    public interface IValueReference
+    {
+        int GetDimensions();
+    }
+
+    public struct FloatValue
+    {
+        public int Index;
+
+        public float Resolve(NativeArray<float> valueBuffer)
+        {
+            return valueBuffer[Index];
+        }
+    }
+
+    public struct Float3Value
+    {
+        public int Index;
+
+        public float3 Resolve(NativeArray<float> valueBuffer)
+        {
+            //todo probably better to handle this with pointer magic
+            return new(valueBuffer[Index], valueBuffer[Index + 1], valueBuffer[Index] + 2);
+        }
     }
 }

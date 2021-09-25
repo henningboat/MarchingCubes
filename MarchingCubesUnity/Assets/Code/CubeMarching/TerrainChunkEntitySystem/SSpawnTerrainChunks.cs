@@ -41,28 +41,28 @@ namespace Code.CubeMarching.TerrainChunkEntitySystem
         {
             //spawn cluster
             var clusterEntity = EntityManager.CreateEntity(_clusterArchetype);
-            EntityManager.SetComponentData(clusterEntity, new CClusterPosition {PositionGS = clusterPositionGS,ClusterIndex = clusterIndex});
+            EntityManager.SetComponentData(clusterEntity, new CClusterPosition {PositionGS = clusterPositionGS, ClusterIndex = clusterIndex});
             var clusterMesh = MeshGeneratorBuilder.GenerateClusterMesh();
             EntityManager.AddSharedComponentData(clusterEntity, clusterMesh);
             EntityManager.SetName(clusterEntity, "Cluster " + clusterPositionGS);
             EntityManager.AddSharedComponentData(clusterEntity, ClusterMeshGPUBuffers.CreateGPUData());
 
             var vertexCountPerSubChunk = EntityManager.GetBuffer<CVertexCountPerSubCluster>(clusterEntity);
-            for (int i = 0; i <Constants.SubChunksInCluster; i++)
+            for (var i = 0; i < Constants.SubChunksInCluster; i++)
             {
                 vertexCountPerSubChunk.Add(default);
             }
-            
+
             //spawn terrain renderer
             var renderMeshDescriptor = new RenderMeshDescription(clusterMesh.mesh, Resources.Load<Material>("DefaultMaterial"), ShadowCastingMode.On, true);
 
-            var rendererEntity = EntityManager.CreateEntity(typeof(ClusterChild),typeof(Translation));
+            var rendererEntity = EntityManager.CreateEntity(typeof(ClusterChild), typeof(Translation));
             EntityManager.SetName(rendererEntity, "Cluster " + clusterPositionGS + " RenderMesh");
             RenderMeshUtility.AddComponents(rendererEntity, EntityManager, renderMeshDescriptor);
             EntityManager.SetComponentData(rendererEntity, new Translation() {Value = clusterPositionGS * 8});
 
-            NativeArray<CClusterChildListElement> chunkList = new NativeArray<CClusterChildListElement>(512, Allocator.Temp);
-            
+            var chunkList = new NativeArray<CClusterChildListElement>(512, Allocator.Temp);
+
             //spawn chunks for the cluster
             var createdChunks = EntityManager.CreateEntity(_chunkArchtype, 512, Allocator.Temp);
             for (var i = 0; i < createdChunks.Length; i++)
@@ -99,7 +99,7 @@ namespace Code.CubeMarching.TerrainChunkEntitySystem
         #region Protected methods
 
         protected override void OnCreate()
-        {  
+        {
             base.OnCreate();
             _chunkArchtype = EntityManager.CreateArchetype(
                 typeof(CTerrainEntityChunkPosition),
@@ -111,24 +111,25 @@ namespace Code.CubeMarching.TerrainChunkEntitySystem
             _clusterArchetype = EntityManager.CreateArchetype(
                 typeof(CClusterPosition),
                 typeof(GeometryInstruction),
+                typeof(CValueBufferEntry),
                 typeof(CTriangulationInstruction),
                 typeof(CSubChunkWithTrianglesIndex),
                 typeof(CClusterChildListElement),
                 typeof(CVertexCountPerSubCluster),
                 typeof(CClusterParameters));
-            
+
             //spawn data holder            
             var entity = EntityManager.CreateEntity(typeof(TerrainChunkDataBuffer), typeof(TotalClusterCounts), typeof(TerrainChunkIndexMap));
             var totalClustersCount = new TotalClusterCounts() {Value = new int3(1, 1, 1)};
             EntityManager.SetComponentData(entity, totalClustersCount);
             var terrainChunkIndexMaps = this.GetSingletonBuffer<TerrainChunkIndexMap>();
             terrainChunkIndexMaps.ResizeUninitialized(totalClustersCount.Value.Volume() * 512);
-            for (int i = 0; i < terrainChunkIndexMaps.Length; i++)
+            for (var i = 0; i < terrainChunkIndexMaps.Length; i++)
             {
                 terrainChunkIndexMaps[i] = default;
             }
-            
-            int clusterIndex = 0;
+
+            var clusterIndex = 0;
 
             for (var x = 0; x < totalClustersCount.Value.x; x++)
             for (var y = 0; y < totalClustersCount.Value.y; y++)
@@ -136,13 +137,13 @@ namespace Code.CubeMarching.TerrainChunkEntitySystem
             {
                 SpawnCluster(new int3(x * 8, y * 8, z * 8), clusterIndex);
                 clusterIndex++;
-            } 
-            
+            }
+
             var buffer = EntityManager.GetBuffer<TerrainChunkDataBuffer>(entity);
             buffer.Add(new TerrainChunkDataBuffer {Value = TerrainChunkData.Outside});
             buffer.Add(new TerrainChunkDataBuffer {Value = TerrainChunkData.Inside});
 
-            
+
             Entities.ForEach((ref CTerrainChunkDynamicData distanceField) =>
             {
                 distanceField.DistanceFieldChunkData.IndexInDistanceFieldBuffer = buffer.Length;
@@ -150,7 +151,7 @@ namespace Code.CubeMarching.TerrainChunkEntitySystem
                 //better just count how much we need and resize ones
                 buffer.Add(default);
             }).Run();
-            
+
             Entities.ForEach((ref CTerrainChunkStaticData distanceField) =>
             {
                 distanceField.DistanceFieldChunkData.IndexInDistanceFieldBuffer = buffer.Length;
@@ -163,7 +164,7 @@ namespace Code.CubeMarching.TerrainChunkEntitySystem
         protected override void OnUpdate()
         {
         }
-        
+
         #endregion
     }
 
@@ -196,10 +197,10 @@ namespace Code.CubeMarching.TerrainChunkEntitySystem
 
         protected override void OnUpdate()
         {
-            Entities.ForEach((ref CTerrainModifierBounds bounds, in CGenericGeometryShape terrainModifier, in Translation translation) =>
-            {
-                bounds.Bounds = terrainModifier.CalculateBounds(translation);
-            }).WithBurst().ScheduleParallel();
+            // Entities.ForEach((ref CTerrainModifierBounds bounds, in CGenericGeometryShape terrainModifier, in Translation translation) =>
+            // {
+            //     bounds.Bounds = terrainModifier.CalculateBounds(translation);
+            // }).WithBurst().ScheduleParallel();
         }
 
         #endregion
@@ -218,7 +219,7 @@ namespace Code.CubeMarching.TerrainChunkEntitySystem
         public uint CalculateHash()
         {
             //todo add TerrainMaterial to hash ones there is a proper implementation
-            uint hash = TerrainModifier.CalculateHash();
+            var hash = TerrainModifier.CalculateHash();
             hash.AddToHash(Translation.CalculateHash());
             return hash;
         }
@@ -323,8 +324,8 @@ namespace Code.CubeMarching.TerrainChunkEntitySystem
 
         public uint CalculateHash()
         {
-            uint hash = math.hash(new uint3((uint) TerrainInstructionType, (uint) CombinerDepth, (uint) DependencyIndex));
-            
+            var hash = math.hash(new uint3((uint) TerrainInstructionType, (uint) CombinerDepth, (uint) DependencyIndex));
+
             switch (TerrainInstructionType)
             {
                 case TerrainInstructionType.Shape:
@@ -365,6 +366,7 @@ namespace Code.CubeMarching.TerrainChunkEntitySystem
 
         #endregion
     }
+
     public static class Int3Extensions
     {
         public static int Volume(this int3 vector)

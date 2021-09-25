@@ -1,7 +1,7 @@
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using Code.CubeMarching.TerrainChunkEntitySystem;
+using JetBrains.Annotations;
 using UnityEditor.Callbacks;
 using UnityEditor.GraphToolsFoundation.Overdrive.BasicModel;
 using UnityEngine;
@@ -12,7 +12,7 @@ namespace UnityEditor.GraphToolsFoundation.Overdrive.Samples.MathBook
     public class MathBookAsset : GraphAssetModel
     {
         protected override Type GraphModelType => typeof(MathBook);
-        
+
         [MenuItem("Assets/Create/Math Book")]
         public static void CreateGraph(MenuCommand menuCommand)
         {
@@ -45,12 +45,18 @@ namespace UnityEditor.GraphToolsFoundation.Overdrive.Samples.MathBook
             return false;
         }
 
-        public List<GeometryInstruction> GetInstructions()
+        public GeometryGraphResolverContext ResolveGraph()
         {
-            List<GeometryInstruction> results = new List<GeometryInstruction>();
-            var resultsNode = GraphModel.NodeModels.FirstOrDefault(model => model is MathResult) as MathResult;
-            resultsNode.AddInstructions(results);
-            return results;
+            var context = new GeometryGraphResolverContext();
+
+            var resultNode = GraphModel.NodeModels.FirstOrDefault(model => model is MathResult) as MathResult;
+
+            var rootNode = resultNode.DataIn.GetConnectedPorts().FirstOrDefault().NodeModel as IGeometryNode;
+            rootNode.Resolve(context);
+
+            context.BuildBuffers();
+
+            return context;
         }
     }
 }
