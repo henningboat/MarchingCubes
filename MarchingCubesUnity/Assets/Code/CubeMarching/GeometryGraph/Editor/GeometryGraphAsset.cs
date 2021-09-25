@@ -17,7 +17,7 @@ namespace Code.CubeMarching.GeometryGraph.Editor
         public static void CreateGraph(MenuCommand menuCommand)
         {
             const string path = "Assets";
-            var template = new GraphTemplate<MathBookStencil>(MathBookStencil.GraphName);
+            var template = new GraphTemplate<GeometryGraphStencil>(GeometryGraphStencil.GraphName);
             CommandDispatcher commandDispatcher = null;
             if (EditorWindow.HasOpenInstances<SimpleGraphViewWindow>())
             {

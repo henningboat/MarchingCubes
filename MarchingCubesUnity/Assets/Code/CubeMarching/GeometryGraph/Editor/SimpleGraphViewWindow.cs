@@ -9,10 +9,10 @@ namespace Code.CubeMarching.GeometryGraph.Editor
         [InitializeOnLoadMethod]
         static void RegisterTool()
         {
-            ShortcutHelper.RegisterDefaultShortcuts<SimpleGraphViewWindow>(MathBookStencil.GraphName);
+            ShortcutHelper.RegisterDefaultShortcuts<SimpleGraphViewWindow>(GeometryGraphStencil.GraphName);
         }
 
-        [MenuItem("GTF/Samples/MathBook Editor")]
+        [MenuItem("GTF/Samples/GeometryGraph Editor")]
         public static void ShowWindow()
         {
             GetWindow<SimpleGraphViewWindow>();
@@ -27,7 +27,7 @@ namespace Code.CubeMarching.GeometryGraph.Editor
         protected override GraphToolState CreateInitialState()
         {
             var prefs = Preferences.CreatePreferences(EditorToolName);
-            return new MathBookState(GUID, prefs);
+            return new GeometryGraphState(GUID, prefs);
         }
 
         protected override GraphView CreateGraphView()
@@ -38,7 +38,7 @@ namespace Code.CubeMarching.GeometryGraph.Editor
         protected override BlankPage CreateBlankPage()
         {
             var onboardingProviders = new List<OnboardingProvider>();
-            onboardingProviders.Add(new MathBookOnboardingProvider());
+            onboardingProviders.Add(new GeometryGraphOnboardingProvider());
 
             return new BlankPage(CommandDispatcher, onboardingProviders);
         }

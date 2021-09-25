@@ -2,7 +2,7 @@ using UnityEditor.GraphToolsFoundation.Overdrive;
 
 namespace Code.CubeMarching.GeometryGraph.Editor.GraphElements
 {
-    public class MathbookBBVarPropertyView : BlackboardVariablePropertyView
+    public class GeometryGraphBBVarPropertyView : BlackboardVariablePropertyView
     {
         protected override void BuildRows()
         {

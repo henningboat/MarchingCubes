@@ -11,7 +11,7 @@ using UnityEngine.GraphToolsFoundation.Overdrive;
 
 namespace Code.CubeMarching.GeometryGraph.Editor
 {
-    internal class MathBookStencil : Stencil, ISearcherDatabaseProvider
+    internal class GeometryGraphStencil : Stencil, ISearcherDatabaseProvider
     {
         private List<SearcherDatabaseBase> m_Databases = new();
 
@@ -19,7 +19,7 @@ namespace Code.CubeMarching.GeometryGraph.Editor
 
         public static string GraphName => "Math Book";
 
-        public MathBookStencil()
+        public GeometryGraphStencil()
         {
             SearcherItem MakeSearcherItem((Type t, string name) tuple)
             {
@@ -115,7 +115,7 @@ namespace Code.CubeMarching.GeometryGraph.Editor
                 while (commandDispatcher.State.WindowState.GraphModel.VariableDeclarations.Any(v => v.Title == finalName))
                     finalName = newItemName + i++;
 
-                commandDispatcher.Dispatch(new CreateGraphVariableDeclarationCommand(finalName, true, TypeHandle.Float, typeof(MathBookVariableDeclarationModel)));
+                commandDispatcher.Dispatch(new CreateGraphVariableDeclarationCommand(finalName, true, TypeHandle.Float, typeof(GeometryGraphVariableDeclarationModel)));
             });
 
             menu.AddItem(new GUIContent("Create Vector3"), false, () =>
@@ -126,7 +126,7 @@ namespace Code.CubeMarching.GeometryGraph.Editor
                 while (commandDispatcher.State.WindowState.GraphModel.VariableDeclarations.Any(v => v.Title == finalName))
                     finalName = newItemName + i++;
 
-                commandDispatcher.Dispatch(new CreateGraphVariableDeclarationCommand(finalName, true, TypeHandle.Vector3, typeof(MathBookVariableDeclarationModel)));
+                commandDispatcher.Dispatch(new CreateGraphVariableDeclarationCommand(finalName, true, TypeHandle.Vector3, typeof(GeometryGraphVariableDeclarationModel)));
             });
         }
     }

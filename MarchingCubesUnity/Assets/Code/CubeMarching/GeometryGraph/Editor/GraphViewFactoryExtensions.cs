@@ -22,13 +22,13 @@ namespace Code.CubeMarching.GeometryGraph.Editor
             return ui;
         }
 
-        public static IModelUI CreateMathBookVariableDeclarationModelUI(this ElementBuilder elementBuilder, CommandDispatcher commandDispatcher, MathBookVariableDeclarationModel model)
+        public static IModelUI CreateGeometryGraphVariableDeclarationModelUI(this ElementBuilder elementBuilder, CommandDispatcher commandDispatcher, GeometryGraphVariableDeclarationModel model)
         {
             IModelUI ui;
 
             if (elementBuilder.Context == BlackboardVariablePropertiesPart.blackboardVariablePropertiesPartCreationContext)
             {
-                ui = new MathbookBBVarPropertyView();
+                ui = new GeometryGraphBBVarPropertyView();
                 ui.SetupBuildAndUpdate(model, commandDispatcher, elementBuilder.View, elementBuilder.Context);
             }
             else

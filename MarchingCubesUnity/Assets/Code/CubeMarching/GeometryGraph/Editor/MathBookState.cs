@@ -6,9 +6,9 @@ using UnityEngine.GraphToolsFoundation.CommandStateObserver;
 
 namespace Code.CubeMarching.GeometryGraph.Editor
 {
-    public class MathBookState : GraphToolState
+    public class GeometryGraphState : GraphToolState
     {
-        public MathBookState(Hash128 graphViewEditorWindowGUID, Preferences preferences)
+        public GeometryGraphState(Hash128 graphViewEditorWindowGUID, Preferences preferences)
             : base(graphViewEditorWindowGUID, preferences)
         {
             this.SetInitialSearcherSize(SearcherService.Usage.k_CreateNode, new Vector2(425, 400), 2.0f);

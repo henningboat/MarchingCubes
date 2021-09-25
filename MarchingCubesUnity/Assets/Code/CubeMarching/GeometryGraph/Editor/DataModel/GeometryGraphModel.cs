@@ -10,6 +10,6 @@ namespace Code.CubeMarching.GeometryGraph.Editor.DataModel
         {
             StencilType = null;
         }
-        public override Type DefaultStencilType => typeof(MathBookStencil);
+        public override Type DefaultStencilType => typeof(GeometryGraphStencil);
     }
 }
