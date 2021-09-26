@@ -58,7 +58,7 @@ namespace Code.CubeMarching.GeometryGraph.Editor.DataModel
 
                 case IVariableNodeModel varNode:
                     return context.GetOrCreateProperty(varNode.VariableDeclarationModel.Guid,
-                        new GeometryGraphExposedVariableNode(varNode.VariableDeclarationModel.InitializationModel.ObjectValue, context, geometryPropertyType,
+                        new GeometryGraphExposedVariableNode(varNode.VariableDeclarationModel, varNode.VariableDeclarationModel.InitializationModel.ObjectValue, context, geometryPropertyType,
                             varNode.VariableDeclarationModel.GetVariableName(), "Variable Node " + varNode.Title));
 
                 case IConstantNodeModel constNode:
@@ -81,16 +81,6 @@ namespace Code.CubeMarching.GeometryGraph.Editor.DataModel
                     return context.GetOrCreateProperty(self.Guid,
                         new GeometryGraphConstantProperty(self.EmbeddedValue.ObjectValue, context, geometryPropertyType, $"Embedded Value Node{self.UniqueName} port {self.UniqueName}"));
             }
-        }
-    }
-
-    public class GeometryGraphExposedVariableNode : GeometryGraphProperty
-    {
-        public GeometryGraphExposedVariableNode(object defaultValue, GeometryGraphResolverContext context, GeometryPropertyType geometryPropertyType, string variableName,
-            string debugInformation) : base(
-            geometryPropertyType, debugInformation)
-        {
-            Value = defaultValue;
         }
     }
 }

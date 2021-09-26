@@ -13,11 +13,6 @@ namespace Code.CubeMarching.GeometryGraph.Editor.DataModel.MathNodes
             set { }
         }
 
-        public override float Evaluate()
-        {
-            return Mathf.PI;
-        }
-
         public override void ResetConnections()
         {
         }

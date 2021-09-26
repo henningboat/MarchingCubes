@@ -19,10 +19,5 @@ namespace Code.CubeMarching.GeometryGraph.Editor.DataModel.MathNodes
                 m_ParameterNames = new[] {"f"};
             }
         }
-
-        public override float Evaluate()
-        {
-            return Mathf.Cos(GetParameterValue(0));
-        }
     }
 }

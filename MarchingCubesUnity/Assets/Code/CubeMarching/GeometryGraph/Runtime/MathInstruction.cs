@@ -45,7 +45,7 @@ namespace Code.CubeMarching.GeometryGraph.Editor.Conversion
         private float CalculateFloat(INativeList<CGeometryGraphPropertyValue> instancePropertyBuffer)
         {
             var inputA = instancePropertyBuffer[InputAIndex].Value;
-            var inputB = instancePropertyBuffer[InputAIndex].Value;
+            var inputB = instancePropertyBuffer[InputBIndex].Value;
 
             switch (MathOperationType)
             {

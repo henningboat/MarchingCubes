@@ -32,9 +32,6 @@ namespace Code.CubeMarching.GeometryGraph.Editor.GraphElements
 
         private void OnPrintResult()
         {
-            var result = (m_Model as GraphResult)?.Evaluate() ?? 0.0f;
-
-            Debug.Log($"Result is {result}");
         }
 
         protected override void BuildPartUI(VisualElement container)

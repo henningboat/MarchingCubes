@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using Code.CubeMarching.GeometryComponents;
+using Code.CubeMarching.GeometryGraph.Editor.DataModel;
 using Code.CubeMarching.GeometryGraph.Editor.DataModel.GeometryNodes;
 using Code.CubeMarching.GeometryGraph.Editor.DataModel.ShapeNodes;
 using Code.CubeMarching.TerrainChunkEntitySystem;
@@ -58,6 +60,12 @@ namespace Code.CubeMarching.GeometryGraph.Editor.Conversion
             // getProperties.ForEach(property => RegisterProperty(property));
 
             _currentCombiner = default;
+        }
+
+        public GeometryGraphExposedVariableNode GetExposedVariableProperty(SerializableGUID guid)
+        {
+            return _properties.Values.Where(property => property is GeometryGraphExposedVariableNode).FirstOrDefault(property => ((GeometryGraphExposedVariableNode) property).Variable.Guid == guid) as
+                GeometryGraphExposedVariableNode;
         }
 
         public GeometryGraphProperty GetOrCreateProperty(SerializableGUID guid, GeometryGraphProperty newProperty)

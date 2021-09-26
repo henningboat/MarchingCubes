@@ -14,14 +14,6 @@ namespace Code.CubeMarching.GeometryGraph.Editor.DataModel.GeometryNodes
             set { }
         }
 
-        public float Evaluate()
-        {
-            var inputPorts = this.GetInputPorts();
-            var port = inputPorts.FirstOrDefault(model => model.UniqueName == "in");
-
-            return port.GetValue();
-        }
-
         public IPortModel DataIn { get; private set; }
 
         protected override void OnDefineNode()

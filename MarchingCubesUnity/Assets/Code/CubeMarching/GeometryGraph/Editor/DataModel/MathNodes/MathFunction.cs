@@ -10,19 +10,6 @@ namespace Code.CubeMarching.GeometryGraph.Editor.DataModel.MathNodes
     {
         [SerializeField] protected string[] m_ParameterNames = new string[0];
 
-        public float GetParameterValue(int index)
-        {
-            var port = this.GetInputPorts().Skip(index).FirstOrDefault();
-
-            if (port == null)
-            {
-                Debug.LogError("Access to unavailable port " + index);
-                return 0;
-            }
-
-            return GetValue(port);
-        }
-
         public override void ResetConnections()
         {
         }

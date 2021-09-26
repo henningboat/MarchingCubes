@@ -10,7 +10,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 8a1b94d54a0718749ac226aeb8ef53fc, type: 3}
-  m_Name: Math Book
+  m_Name: SimpleTorus
   m_EditorClassIdentifier: 
   m_GraphModel:
     rid: 7969678668147195928
@@ -26,14 +26,15 @@ MonoBehaviour:
         - rid: 7969678668147195931
         - rid: 7969678668147195938
         - rid: 7969678672342024192
-        - rid: 7969678672342024198
+        - rid: 7969678693432033295
         m_EdgeModels: []
         m_BadgeModels: []
         m_GraphEdgeModels:
         - rid: 7969678668147195935
         - rid: 7969678672342024195
-        - rid: 7969678672342024199
         - rid: 7969678693432033286
+        - rid: 7969678693432033299
+        - rid: 7969678693432033301
         m_PolymorphicEdgeModels: []
         m_StickyNoteModels: []
         m_GraphStickyNoteModels: []
@@ -82,7 +83,7 @@ MonoBehaviour:
         m_Color: {r: 0, g: 0, b: 0, a: 0}
         m_HasUserColor: 0
         m_Version: 1
-        m_Position: {x: 35.200012, y: 318.99994}
+        m_Position: {x: 55.20007, y: 313.9999}
         m_Title: 
         m_InputConstantsById:
           m_KeyList:
@@ -155,7 +156,7 @@ MonoBehaviour:
     - rid: 7969678668147195937
       type: {class: FloatConstant, ns: UnityEditor.GraphToolsFoundation.Overdrive.BasicModel, asm: Unity.GraphTools.Foundation.Overdrive.Model}
       data:
-        m_Value: 4
+        m_Value: 8
     - rid: 7969678668147195938
       type: {class: VariableNodeModel, ns: UnityEditor.GraphToolsFoundation.Overdrive.BasicModel, asm: Unity.GraphTools.Foundation.Overdrive.Model}
       data:
@@ -166,7 +167,7 @@ MonoBehaviour:
         m_Color: {r: 0, g: 0, b: 0, a: 0}
         m_HasUserColor: 0
         m_Version: 1
-        m_Position: {x: -482.2499, y: 281.34998}
+        m_Position: {x: -483.2497, y: 348.3499}
         m_Title: Radius
         m_InputConstantsById:
           m_KeyList: []
@@ -185,7 +186,7 @@ MonoBehaviour:
         m_Color: {r: 0, g: 0, b: 0, a: 0}
         m_HasUserColor: 0
         m_Version: 1
-        m_Position: {x: -287.79245, y: 320.63495}
+        m_Position: {x: -255.79222, y: 230.63489}
         m_Title: 
         m_InputConstantsById:
           m_KeyList:
@@ -204,7 +205,7 @@ MonoBehaviour:
     - rid: 7969678672342024194
       type: {class: FloatConstant, ns: UnityEditor.GraphToolsFoundation.Overdrive.BasicModel, asm: Unity.GraphTools.Foundation.Overdrive.Model}
       data:
-        m_Value: 0
+        m_Value: 3
     - rid: 7969678672342024195
       type: {class: EdgeModel, ns: UnityEditor.GraphToolsFoundation.Overdrive.BasicModel, asm: Unity.GraphTools.Foundation.Overdrive.Model}
       data:
@@ -230,50 +231,6 @@ MonoBehaviour:
         m_EdgeControlPoints: []
         m_EditMode: 0
         m_EdgeLabel: 
-    - rid: 7969678672342024198
-      type: {class: VariableNodeModel, ns: UnityEditor.GraphToolsFoundation.Overdrive.BasicModel, asm: Unity.GraphTools.Foundation.Overdrive.Model}
-      data:
-        m_Guid:
-          m_Value0: 2499932964561657635
-          m_Value1: 4163060878722838215
-        m_AssetModel: {fileID: 11400000}
-        m_Color: {r: 0, g: 0, b: 0, a: 0}
-        m_HasUserColor: 0
-        m_Version: 1
-        m_Position: {x: -481.90982, y: 395.37247}
-        m_Title: Radius
-        m_InputConstantsById:
-          m_KeyList: []
-          m_ValueList: []
-        m_State: 0
-        m_Collapsed: 0
-        m_DeclarationModel:
-          rid: 7969678668147195936
-    - rid: 7969678672342024199
-      type: {class: EdgeModel, ns: UnityEditor.GraphToolsFoundation.Overdrive.BasicModel, asm: Unity.GraphTools.Foundation.Overdrive.Model}
-      data:
-        m_Guid:
-          m_Value0: 16756380756265083426
-          m_Value1: 17381403914526649149
-        m_AssetModel: {fileID: 11400000}
-        m_Color: {r: 0, g: 0, b: 0, a: 0}
-        m_HasUserColor: 0
-        m_Version: 1
-        m_FromPortReference:
-          m_NodeModelGuid:
-            m_Value0: 2499932964561657635
-            m_Value1: 4163060878722838215
-          m_GraphAssetModel: {fileID: 11400000}
-          m_UniqueId: MainPortName
-        m_ToPortReference:
-          m_NodeModelGuid:
-            m_Value0: 16821522931389698240
-            m_Value1: 5572397318611182084
-          m_GraphAssetModel: {fileID: 11400000}
-          m_UniqueId: Term 2
-        m_EdgeControlPoints: []
-        m_EditMode: 0
-        m_EdgeLabel: 
     - rid: 7969678693432033286
       type: {class: EdgeModel, ns: UnityEditor.GraphToolsFoundation.Overdrive.BasicModel, asm: Unity.GraphTools.Foundation.Overdrive.Model}
       data:
@@ -296,6 +253,86 @@ MonoBehaviour:
             m_Value1: 10230718515213705765
           m_GraphAssetModel: {fileID: 11400000}
           m_UniqueId: RadiusIn
+        m_EdgeControlPoints: []
+        m_EditMode: 0
+        m_EdgeLabel: 
+    - rid: 7969678693432033295
+      type: {class: MathMultiplicationOperator, ns: Code.CubeMarching.GeometryGraph.Editor.DataModel.MathNodes, asm: CubeMarching}
+      data:
+        m_Guid:
+          m_Value0: 1793001664728170309
+          m_Value1: 8732143266894710360
+        m_AssetModel: {fileID: 11400000}
+        m_Color: {r: 0, g: 0, b: 0, a: 0}
+        m_HasUserColor: 0
+        m_Version: 1
+        m_Position: {x: -259.4999, y: 392.09995}
+        m_Title: 
+        m_InputConstantsById:
+          m_KeyList:
+          - Term 1
+          - Term 2
+          m_ValueList:
+          - rid: 7969678693432033296
+          - rid: 7969678693432033297
+        m_State: 0
+        m_Collapsed: 0
+        m_InputPortCount: 2
+    - rid: 7969678693432033296
+      type: {class: FloatConstant, ns: UnityEditor.GraphToolsFoundation.Overdrive.BasicModel, asm: Unity.GraphTools.Foundation.Overdrive.Model}
+      data:
+        m_Value: 0
+    - rid: 7969678693432033297
+      type: {class: FloatConstant, ns: UnityEditor.GraphToolsFoundation.Overdrive.BasicModel, asm: Unity.GraphTools.Foundation.Overdrive.Model}
+      data:
+        m_Value: 0.3
+    - rid: 7969678693432033299
+      type: {class: EdgeModel, ns: UnityEditor.GraphToolsFoundation.Overdrive.BasicModel, asm: Unity.GraphTools.Foundation.Overdrive.Model}
+      data:
+        m_Guid:
+          m_Value0: 15121151789466307560
+          m_Value1: 5140752776454605877
+        m_AssetModel: {fileID: 11400000}
+        m_Color: {r: 0, g: 0, b: 0, a: 0}
+        m_HasUserColor: 0
+        m_Version: 1
+        m_FromPortReference:
+          m_NodeModelGuid:
+            m_Value0: 5612044203162852934
+            m_Value1: 14361527272569513346
+          m_GraphAssetModel: {fileID: 11400000}
+          m_UniqueId: MainPortName
+        m_ToPortReference:
+          m_NodeModelGuid:
+            m_Value0: 1793001664728170309
+            m_Value1: 8732143266894710360
+          m_GraphAssetModel: {fileID: 11400000}
+          m_UniqueId: Term 1
+        m_EdgeControlPoints: []
+        m_EditMode: 0
+        m_EdgeLabel: 
+    - rid: 7969678693432033301
+      type: {class: EdgeModel, ns: UnityEditor.GraphToolsFoundation.Overdrive.BasicModel, asm: Unity.GraphTools.Foundation.Overdrive.Model}
+      data:
+        m_Guid:
+          m_Value0: 1030749772176006084
+          m_Value1: 566227214606125689
+        m_AssetModel: {fileID: 11400000}
+        m_Color: {r: 0, g: 0, b: 0, a: 0}
+        m_HasUserColor: 0
+        m_Version: 1
+        m_FromPortReference:
+          m_NodeModelGuid:
+            m_Value0: 1793001664728170309
+            m_Value1: 8732143266894710360
+          m_GraphAssetModel: {fileID: 11400000}
+          m_UniqueId: Output
+        m_ToPortReference:
+          m_NodeModelGuid:
+            m_Value0: 8040674711769400304
+            m_Value1: 10230718515213705765
+          m_GraphAssetModel: {fileID: 11400000}
+          m_UniqueId: Thickness
         m_EdgeControlPoints: []
         m_EditMode: 0
         m_EdgeLabel: 

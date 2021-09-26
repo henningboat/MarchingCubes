@@ -132,7 +132,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 622982913}
-  - component: {fileID: 622982912}
+  - component: {fileID: 622982914}
   m_Layer: 0
   m_Name: geometrygraph
   m_TagString: Untagged
@@ -140,7 +140,22 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &622982912
+--- !u!4 &622982913
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 622982911}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 0.5690198, y: 0.5690198, z: 0.5690198}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_RootOrder: 0
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &622982914
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -153,18 +168,18 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _geometryGraph: {fileID: 11400000, guid: 1866e113e25338a47a463f6f87d4dd04, type: 2}
---- !u!4 &622982913
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 622982911}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_RootOrder: 0
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  _overwrites:
+  - _propertyGUID:
+      m_Value0: 10364363237964666826
+      m_Value1: 8630093658896670614
+    _value:
+    - 8
+    _providerObject: {fileID: 0}
+  - _propertyGUID:
+      m_Value0: 14145681954809485537
+      m_Value1: 4153761398938074930
+    _value:
+    - 0
+    - 0
+    - 0
+    _providerObject: {fileID: 0}

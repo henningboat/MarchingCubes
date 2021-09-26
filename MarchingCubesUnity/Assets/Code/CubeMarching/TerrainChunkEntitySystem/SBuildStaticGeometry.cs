@@ -27,9 +27,11 @@ namespace Code.CubeMarching.TerrainChunkEntitySystem
             //Static geometry 
             {
                 //Write Instructions
-                var writeJob = new RuntimeGeometryGraphBuilder(this, GetSingletonEntity<CGeometryGraphInstance>());
+                var graphEntity = GetSingletonEntity<CGeometryGraphInstance>();
+
+                var writeJob = new RuntimeGeometryGraphBuilder(this, graphEntity);
                 Dependency = Entities
-                    .ForEach((Entity entity,ref DynamicBuffer<GeometryInstruction> terrainInstructions, ref CClusterParameters clusterParameters,
+                    .ForEach((Entity entity, ref DynamicBuffer<GeometryInstruction> terrainInstructions, ref CClusterParameters clusterParameters,
                         in CClusterPosition clusterPosition) =>
                     {
                         var valueBuffer = writeJob.GetPropertyValueBufferFromEntity[entity];
@@ -39,19 +41,19 @@ namespace Code.CubeMarching.TerrainChunkEntitySystem
                 var getValueBuffer = GetBufferFromEntity<CGeometryGraphPropertyValue>(true);
                 //Calculate Distance Fields
                 var getTerrainInstructionBuffer = GetBufferFromEntity<GeometryInstruction>(true);
-                
+
                 Dependency = Entities.ForEach((ref CTerrainChunkDynamicData distanceField, in ClusterChild clusterChild,
                         in CTerrainEntityChunkPosition chunkPosition) =>
                     {
                         var clusterParameters = getClusterParameters[clusterChild.ClusterEntity];
-                        var valueBuffer = getValueBuffer[clusterChild.ClusterEntity];
+                        var valueBuffer = getValueBuffer[graphEntity];
                         hasher.Execute(ref distanceField.DistanceFieldChunkData, chunkPosition, clusterParameters, clusterChild, frameCount);
-                
+
                         if (!distanceField.DistanceFieldChunkData.InstructionsChangedSinceLastFrame)
                         {
                             return;
                         }
-                
+
                         DistanceFieldResolver.CalculateDistanceFieldForChunk(terrainChunkBuffer, ref distanceField.DistanceFieldChunkData, chunkPosition, getTerrainInstructionBuffer,
                             clusterChild.ClusterEntity, distanceField.DistanceFieldChunkData.IndexInDistanceFieldBuffer, isPlaying, clusterParameters,
                             valueBuffer.AsNativeArray().Reinterpret<float>());

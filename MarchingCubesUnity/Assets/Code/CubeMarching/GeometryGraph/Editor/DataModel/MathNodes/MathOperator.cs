@@ -16,10 +16,14 @@ namespace Code.CubeMarching.GeometryGraph.Editor.DataModel.MathNodes
 
         public abstract MathOperatorType OperatorType { get; }
 
-        public List<float> Values => this.GetInputPorts().Select(portModel => portModel == null ? 0 : GetValue(portModel)).ToList();
-
         public override void ResetConnections()
         {
+        }
+
+        public override string Title
+        {
+            get => OperatorType.ToString();
+            set { }
         }
 
         public int InputPortCount
