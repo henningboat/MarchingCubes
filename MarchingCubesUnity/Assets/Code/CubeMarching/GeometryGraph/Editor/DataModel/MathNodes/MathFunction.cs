@@ -3,13 +3,12 @@ using System.Linq;
 using UnityEditor.GraphToolsFoundation.Overdrive;
 using UnityEngine;
 
-namespace Code.CubeMarching.GeometryGraph.Editor.DataModel
+namespace Code.CubeMarching.GeometryGraph.Editor.DataModel.MathNodes
 {
     [Serializable]
     public abstract class MathFunction : MathNode
     {
-        [SerializeField]
-        protected string[] m_ParameterNames = new string[0];
+        [SerializeField] protected string[] m_ParameterNames = new string[0];
 
         public float GetParameterValue(int index)
         {
@@ -36,6 +35,7 @@ namespace Code.CubeMarching.GeometryGraph.Editor.DataModel
             {
                 this.AddDataInputPort<float>(name);
             }
+
             DataOut0 = this.AddDataOutputPort<float>("out");
         }
     }

@@ -10,7 +10,7 @@ using UnityEngine;
 namespace Code.CubeMarching.TerrainChunkEntitySystem
 {
     [WorldSystemFilter(WorldSystemFilterFlags.Editor | WorldSystemFilterFlags.Default)]
-    [UpdateAfter(typeof(SCalculateSphereBounds))]
+    [UpdateAfter(typeof(SCalculateShapeBounds))]
     public class SBuildStaticGeometry : SystemBase
     {
         #region Protected methods
@@ -20,7 +20,6 @@ namespace Code.CubeMarching.TerrainChunkEntitySystem
             var terrainChunkBuffer = this.GetSingletonBuffer<TerrainChunkDataBuffer>();
             var isPlaying = Application.isPlaying && UnityEngine.Time.frameCount > 1;
             var getClusterParameters = GetComponentDataFromEntity<CClusterParameters>(true);
-            var getValueBuffer = GetBufferFromEntity<CValueBufferEntry>(true);
             var hasher = new GeometryInstructionsHasher(this);
 
             var frameCount = GetSingleton<CFrameCount>().Value;
@@ -30,30 +29,34 @@ namespace Code.CubeMarching.TerrainChunkEntitySystem
                 //Write Instructions
                 var writeJob = new RuntimeGeometryGraphBuilder(this, GetSingletonEntity<CGeometryGraphInstance>());
                 Dependency = Entities
-                    .ForEach((ref DynamicBuffer<GeometryInstruction> terrainInstructions, ref DynamicBuffer<CValueBufferEntry> valueBuffer, ref CClusterParameters clusterParameters,
+                    .ForEach((Entity entity,ref DynamicBuffer<GeometryInstruction> terrainInstructions, ref CClusterParameters clusterParameters,
                         in CClusterPosition clusterPosition) =>
                     {
+                        var valueBuffer = writeJob.GetPropertyValueBufferFromEntity[entity];
                         writeJob.Execute(terrainInstructions, ref clusterParameters, clusterPosition, isPlaying, valueBuffer);
                     }).WithName("WriteStaticTerrainInstructions").WithBurst().Schedule(Dependency);
 
+                var getValueBuffer = GetBufferFromEntity<CGeometryGraphPropertyValue>(true);
                 //Calculate Distance Fields
                 var getTerrainInstructionBuffer = GetBufferFromEntity<GeometryInstruction>(true);
-
+                
                 Dependency = Entities.ForEach((ref CTerrainChunkDynamicData distanceField, in ClusterChild clusterChild,
-                    in CTerrainEntityChunkPosition chunkPosition) =>
-                {
-                    var clusterParameters = getClusterParameters[clusterChild.ClusterEntity];
-                    var valueBuffer = getValueBuffer[clusterChild.ClusterEntity];
-                    hasher.Execute(ref distanceField.DistanceFieldChunkData, chunkPosition, clusterParameters, clusterChild, frameCount);
-
-                    if (!distanceField.DistanceFieldChunkData.InstructionsChangedSinceLastFrame)
+                        in CTerrainEntityChunkPosition chunkPosition) =>
                     {
-                        return;
-                    }
-
-                    DistanceFieldResolver.CalculateDistanceFieldForChunk(terrainChunkBuffer, ref distanceField.DistanceFieldChunkData, chunkPosition, getTerrainInstructionBuffer,
-                        clusterChild.ClusterEntity, distanceField.DistanceFieldChunkData.IndexInDistanceFieldBuffer, isPlaying, clusterParameters, valueBuffer.AsNativeArray().Reinterpret<float>());
-                }).WithNativeDisableParallelForRestriction(terrainChunkBuffer).WithReadOnly(getTerrainInstructionBuffer).WithNativeDisableParallelForRestriction(getValueBuffer).WithReadOnly(getClusterParameters).WithBurst().ScheduleParallel(Dependency);
+                        var clusterParameters = getClusterParameters[clusterChild.ClusterEntity];
+                        var valueBuffer = getValueBuffer[clusterChild.ClusterEntity];
+                        hasher.Execute(ref distanceField.DistanceFieldChunkData, chunkPosition, clusterParameters, clusterChild, frameCount);
+                
+                        if (!distanceField.DistanceFieldChunkData.InstructionsChangedSinceLastFrame)
+                        {
+                            return;
+                        }
+                
+                        DistanceFieldResolver.CalculateDistanceFieldForChunk(terrainChunkBuffer, ref distanceField.DistanceFieldChunkData, chunkPosition, getTerrainInstructionBuffer,
+                            clusterChild.ClusterEntity, distanceField.DistanceFieldChunkData.IndexInDistanceFieldBuffer, isPlaying, clusterParameters,
+                            valueBuffer.AsNativeArray().Reinterpret<float>());
+                    }).WithNativeDisableParallelForRestriction(terrainChunkBuffer).WithReadOnly(getTerrainInstructionBuffer).WithNativeDisableParallelForRestriction(getValueBuffer)
+                    .WithReadOnly(getClusterParameters).WithBurst().ScheduleParallel(Dependency);
             }
 
 //todo re-add dynamic geometry

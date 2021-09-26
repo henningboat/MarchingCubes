@@ -1,6 +1,8 @@
 using System;
 using System.Linq;
+using Code.CubeMarching.GeometryGraph.Editor.Conversion;
 using Code.CubeMarching.GeometryGraph.Editor.DataModel;
+using Code.CubeMarching.GeometryGraph.Editor.DataModel.GeometryNodes;
 using UnityEditor;
 using UnityEditor.Callbacks;
 using UnityEditor.GraphToolsFoundation.Overdrive;

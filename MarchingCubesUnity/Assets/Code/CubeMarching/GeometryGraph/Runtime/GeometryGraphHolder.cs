@@ -6,29 +6,6 @@ using UnityEngine;
 
 namespace Code.CubeMarching.GeometryGraph.Runtime
 {
-    [ExecuteInEditMode]
-    [ExecuteAlways]
-    public class GeometryGraphTestSystem : SystemBase
-    {
-        protected override void OnUpdate()
-        {
-            Entities.ForEach((CGeometryGraphInstance geometryGraphInstance) =>
-            {
-                if (geometryGraphInstance.graph.IsCreated)
-                {
-                    if (geometryGraphInstance.graph.Value.instructions.Length > 0)
-                    {
-                        Debug.Log(geometryGraphInstance.graph.Value.instructions[0].TerrainInstructionType);
-                    }
-                }
-                else
-                {
-                    Debug.Log("no instructions");
-                }
-            }).Run();
-        }
-    }
-
     public class GeometryGraphHolder : MonoBehaviour, IConvertGameObjectToEntity
     {
         [SerializeField] private GeometryGraphAsset _geometryGraph;
@@ -50,53 +27,40 @@ namespace Code.CubeMarching.GeometryGraph.Runtime
 
                 ref var root = ref blobBuilder.ConstructRoot<GeometryGraphBlob>();
 
-                
-                var instructionsBlobArray = blobBuilder.Allocate(ref root.instructions, resolvedGraph.InstructionBuffer.Count);
-                
-                for (int i = 0; i < resolvedGraph.InstructionBuffer.Count; i++)
+                var mathInstructionsBlobArray = blobBuilder.Allocate(ref root.mathInstructions, resolvedGraph.MathInstructionBuffer.Count);
+
+                for (var i = 0; i < resolvedGraph.MathInstructionBuffer.Count; i++)
                 {
-                    instructionsBlobArray[i] = resolvedGraph.InstructionBuffer[i];
+                    mathInstructionsBlobArray[i] = resolvedGraph.MathInstructionBuffer[i];
+                }
+
+                var geometryInstructionsBlobArray = blobBuilder.Allocate(ref root.geometryInstructions, resolvedGraph.GeometryInstructionBuffer.Count);
+
+                for (var i = 0; i < resolvedGraph.GeometryInstructionBuffer.Count; i++)
+                {
+                    geometryInstructionsBlobArray[i] = resolvedGraph.GeometryInstructionBuffer[i];
                 }
 
                 var valueBufferBlobArray = blobBuilder.Allocate(ref root.valueBuffer, resolvedGraph.PropertyValueBuffer.Count);
-                
-                for (int i = 0; i < resolvedGraph.PropertyValueBuffer.Count; i++)
+
+                for (var i = 0; i < resolvedGraph.PropertyValueBuffer.Count; i++)
                 {
-                    valueBufferBlobArray[i] = resolvedGraph.PropertyValueBuffer[i];
+                    valueBufferBlobArray[i] = new CGeometryGraphPropertyValue() {Value = resolvedGraph.PropertyValueBuffer[i]};
                 }
 
                 dstManager.AddComponentData(entity, new CGeometryGraphInstance()
                 {
                     graph = blobBuilder.CreateBlobAssetReference<GeometryGraphBlob>(Allocator.Persistent)
                 });
+
+                dstManager.AddBuffer<CGeometryGraphPropertyValue>(entity);
             }
         }
     }
 
 
-    [UpdateInGroup(typeof(GameObjectDeclareReferencedObjectsGroup))]
-    public class GeometryGraphConversionSystem : GameObjectConversionSystem
-    {
-        protected override void OnUpdate()
-        {
-            Entities.ForEach((GeometryGraphHolder holder) =>
-            {
-                if (holder.Graph != null)
-                {
-                    DeclareAssetDependency(holder.gameObject, holder.Graph);
-                }
-            });
-        }
-    }
-
     public struct CGeometryGraphInstance : IComponentData
     {
         public BlobAssetReference<GeometryGraphBlob> graph;
-    }
-
-    public struct GeometryGraphBlob
-    {
-        public BlobArray<GeometryInstruction> instructions;
-        public BlobArray<float> valueBuffer;
     }
 }

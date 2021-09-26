@@ -1,7 +1,7 @@
 using System;
 using UnityEngine;
 
-namespace Code.CubeMarching.GeometryGraph.Editor.DataModel
+namespace Code.CubeMarching.GeometryGraph.Editor.DataModel.MathNodes
 {
     [Serializable]
     public class CosFunction : MathFunction
@@ -16,7 +16,7 @@ namespace Code.CubeMarching.GeometryGraph.Editor.DataModel
         {
             if (m_ParameterNames.Length == 0)
             {
-                m_ParameterNames = new[] { "f" };
+                m_ParameterNames = new[] {"f"};
             }
         }
 

@@ -1,4 +1,5 @@
 using System.Linq;
+using Code.CubeMarching.GeometryGraph.Editor.DataModel.MathNodes;
 using UnityEditor.GraphToolsFoundation.Overdrive;
 using UnityEngine;
 
@@ -9,7 +10,10 @@ namespace Code.CubeMarching.GeometryGraph.Editor.DataModel
         public static float GetValue(this IPortModel self)
         {
             if (self == null)
+            {
                 return 0;
+            }
+
             var node = self.GetConnectedEdges().FirstOrDefault()?.FromPort.NodeModel;
 
             switch (node)
@@ -17,30 +21,33 @@ namespace Code.CubeMarching.GeometryGraph.Editor.DataModel
                 case MathNode mathNode:
                     return mathNode.Evaluate();
                 case IVariableNodeModel varNode:
-                    return (float)varNode.VariableDeclarationModel.InitializationModel.ObjectValue;
+                    return (float) varNode.VariableDeclarationModel.InitializationModel.ObjectValue;
                 case IConstantNodeModel constNode:
-                    return (float)constNode.ObjectValue;
+                    return (float) constNode.ObjectValue;
                 case IEdgePortalExitModel portalModel:
                     var oppositePortal = portalModel.GraphModel.FindReferencesInGraph<IEdgePortalEntryModel>(portalModel.DeclarationModel).FirstOrDefault();
                     if (oppositePortal != null)
                     {
                         return oppositePortal.InputPort.GetValue();
                     }
+
                     return 0;
                 default:
-                    return (float)self.EmbeddedValue.ObjectValue;
+                    return (float) self.EmbeddedValue.ObjectValue;
             }
         }
 
         public static Vector3 GetValue3(this IPortModel self)
         {
             if (self == null)
+            {
                 return default;
+            }
+
             var node = self.GetConnectedEdges().FirstOrDefault()?.FromPort.NodeModel;
 
             switch (node)
             {
-                
                 case IVariableNodeModel varNode:
                     return (Vector3) varNode.VariableDeclarationModel.InitializationModel.ObjectValue;
                 case IConstantNodeModel constNode:

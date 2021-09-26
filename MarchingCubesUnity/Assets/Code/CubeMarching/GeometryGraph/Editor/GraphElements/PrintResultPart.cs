@@ -1,4 +1,5 @@
 using Code.CubeMarching.GeometryGraph.Editor.DataModel;
+using Code.CubeMarching.GeometryGraph.Editor.DataModel.GeometryNodes;
 using UnityEditor.GraphToolsFoundation.Overdrive;
 using UnityEngine;
 using UnityEngine.UIElements;
@@ -19,7 +20,7 @@ namespace Code.CubeMarching.GeometryGraph.Editor.GraphElements
             return null;
         }
 
-        VisualElement m_Root;
+        private VisualElement m_Root;
 
         public Button Button { get; private set; }
         public override VisualElement Root => m_Root;
@@ -29,20 +30,20 @@ namespace Code.CubeMarching.GeometryGraph.Editor.GraphElements
         {
         }
 
-        void OnPrintResult()
+        private void OnPrintResult()
         {
-            float result = (m_Model as GraphResult)?.Evaluate() ?? 0.0f;
+            var result = (m_Model as GraphResult)?.Evaluate() ?? 0.0f;
 
             Debug.Log($"Result is {result}");
         }
 
         protected override void BuildPartUI(VisualElement container)
         {
-            m_Root = new VisualElement { name = PartName };
+            m_Root = new VisualElement {name = PartName};
             m_Root.AddToClassList(ussClassName);
             m_Root.AddToClassList(m_ParentClassName.WithUssElement(PartName));
 
-            Button = new Button() { text = "Print Result" };
+            Button = new Button() {text = "Print Result"};
             Button.clicked += OnPrintResult;
             m_Root.Add(Button);
 

@@ -1,4 +1,5 @@
 using Code.CubeMarching.GeometryGraph.Editor.DataModel;
+using Code.CubeMarching.GeometryGraph.Editor.DataModel.MathNodes;
 using Code.CubeMarching.GeometryGraph.Editor.GraphElements;
 using UnityEditor.GraphToolsFoundation.Overdrive;
 

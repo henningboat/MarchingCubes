@@ -111,7 +111,7 @@ namespace Code.CubeMarching.TerrainChunkEntitySystem
             _clusterArchetype = EntityManager.CreateArchetype(
                 typeof(CClusterPosition),
                 typeof(GeometryInstruction),
-                typeof(CValueBufferEntry),
+                typeof(CGeometryGraphPropertyValue),
                 typeof(CTriangulationInstruction),
                 typeof(CSubChunkWithTrianglesIndex),
                 typeof(CClusterChildListElement),
@@ -191,7 +191,7 @@ namespace Code.CubeMarching.TerrainChunkEntitySystem
 
     [UpdateAfter(typeof(SUpdateFrameCount))]
     [WorldSystemFilter(WorldSystemFilterFlags.Editor | WorldSystemFilterFlags.Default)]
-    public class SCalculateSphereBounds : SystemBase
+    public class SCalculateShapeBounds : SystemBase
     {
         #region Protected methods
 

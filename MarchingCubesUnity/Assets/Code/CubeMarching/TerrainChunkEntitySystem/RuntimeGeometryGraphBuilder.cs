@@ -9,41 +9,40 @@ namespace Code.CubeMarching.TerrainChunkEntitySystem
     public struct RuntimeGeometryGraphBuilder
     {
         private Entity _graphEntity;
-        private readonly ComponentDataFromEntity<CGeometryGraphInstance> _getGeometryGraphInstanceFromEntity;
+        public ComponentDataFromEntity<CGeometryGraphInstance> GetGeometryGraphInstanceFromEntity;
+        public BufferFromEntity<CGeometryGraphPropertyValue> GetPropertyValueBufferFromEntity;
 
         public RuntimeGeometryGraphBuilder(SystemBase system, Entity graphEntity)
         {
             _graphEntity = graphEntity;
-            _getGeometryGraphInstanceFromEntity = system.GetComponentDataFromEntity<CGeometryGraphInstance>();
+            GetGeometryGraphInstanceFromEntity = system.GetComponentDataFromEntity<CGeometryGraphInstance>(false);
+            GetPropertyValueBufferFromEntity = system.GetBufferFromEntity<CGeometryGraphPropertyValue>(false);
         }
 
         public void Execute(DynamicBuffer<GeometryInstruction> geometryInstructions, ref CClusterParameters clusterParameters, in CClusterPosition clusterPosition, bool isPlaying,
-            DynamicBuffer<CValueBufferEntry> valueBuffer)
+            DynamicBuffer<CGeometryGraphPropertyValue> valueBuffer)
         {
             clusterParameters.WriteMask = BitArray512.AllBitsTrue;
             geometryInstructions.Clear();
             valueBuffer.Clear();
 
-            if (_getGeometryGraphInstanceFromEntity[_graphEntity].graph.IsCreated == false)
+            if (GetGeometryGraphInstanceFromEntity[_graphEntity].graph.IsCreated == false)
             {
                 return;
             }
 
-            ref var geometryGraphBlob = ref _getGeometryGraphInstanceFromEntity[_graphEntity].graph.Value;
-            for (var i = 0; i < geometryGraphBlob.instructions.Length; i++)
+            var graphValueProperties = GetPropertyValueBufferFromEntity[_graphEntity];
+
+            ref var geometryGraphBlob = ref GetGeometryGraphInstanceFromEntity[_graphEntity].graph.Value;
+            for (var i = 0; i < geometryGraphBlob.geometryInstructions.Length; i++)
             {
-                geometryInstructions.Add(geometryGraphBlob.instructions[i]);
+                geometryInstructions.Add(geometryGraphBlob.geometryInstructions[i]);
             }
 
-            for (var i = 0; i < geometryGraphBlob.valueBuffer.Length; i++)
+            for (var i = 0; i < graphValueProperties.Length; i++)
             {
-                valueBuffer.Add(new CValueBufferEntry() {Value = geometryGraphBlob.valueBuffer[i]});
+                valueBuffer.Add(graphValueProperties[i]);
             }
         }
-    }
-
-    public struct CValueBufferEntry : IBufferElementData
-    {
-        public float Value;
     }
 }

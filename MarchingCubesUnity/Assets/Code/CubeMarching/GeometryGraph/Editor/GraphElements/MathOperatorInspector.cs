@@ -1,11 +1,12 @@
 using System.Collections.Generic;
 using Code.CubeMarching.GeometryGraph.Editor.DataModel;
+using Code.CubeMarching.GeometryGraph.Editor.DataModel.MathNodes;
 using Code.CubeMarching.GeometryGraph.Editor.GraphElements.Commands;
 using UnityEditor.GraphToolsFoundation.Overdrive;
 
 namespace Code.CubeMarching.GeometryGraph.Editor.GraphElements
 {
-    class MathOperatorInspector : FieldsInspector
+    internal class MathOperatorInspector : FieldsInspector
     {
         public static MathOperatorInspector Create(string name, IGraphElementModel model, IModelUI ownerElement, string parentClassName)
         {
@@ -19,7 +20,9 @@ namespace Code.CubeMarching.GeometryGraph.Editor.GraphElements
 
         /// <inheritdoc />
         public MathOperatorInspector(string name, IGraphElementModel model, IModelUI ownerElement, string parentClassName)
-            : base(name, model, ownerElement, parentClassName) { }
+            : base(name, model, ownerElement, parentClassName)
+        {
+        }
 
         /// <inheritdoc />
         protected override IEnumerable<BaseModelPropertyField> GetFields()

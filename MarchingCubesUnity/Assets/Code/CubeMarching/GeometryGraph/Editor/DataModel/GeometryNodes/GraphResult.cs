@@ -3,7 +3,7 @@ using System.Linq;
 using UnityEditor.GraphToolsFoundation.Overdrive;
 using UnityEditor.GraphToolsFoundation.Overdrive.BasicModel;
 
-namespace Code.CubeMarching.GeometryGraph.Editor.DataModel
+namespace Code.CubeMarching.GeometryGraph.Editor.DataModel.GeometryNodes
 {
     [Serializable]
     public class GraphResult : NodeModel

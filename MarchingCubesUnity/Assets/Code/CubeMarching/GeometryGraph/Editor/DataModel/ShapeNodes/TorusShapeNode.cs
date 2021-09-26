@@ -1,8 +1,10 @@
 ﻿using System.Collections.Generic;
 using Code.CubeMarching.GeometryComponents;
+using Code.CubeMarching.GeometryGraph.Editor.Conversion;
+using Code.CubeMarching.GeometryGraph.Editor.DataModel.GeometryNodes;
 using UnityEditor.GraphToolsFoundation.Overdrive;
 
-namespace Code.CubeMarching.GeometryGraph.Editor.DataModel
+namespace Code.CubeMarching.GeometryGraph.Editor.DataModel.ShapeNodes
 {
     public class TorusShapeNode : ShapeNode<CShapeTorus>
     {
@@ -28,9 +30,9 @@ namespace Code.CubeMarching.GeometryGraph.Editor.DataModel
             return ShapeType.Torus;
         }
 
-        public override List<GeometryGraphProperty> GetProperties()
+        public override List<GeometryGraphProperty> GetProperties(GeometryGraphResolverContext context)
         {
-            return new() {RadiusIn.ResolvePropertyInput(GeometryPropertyType.Float), Thickness.ResolvePropertyInput(GeometryPropertyType.Float)};
+            return new() {RadiusIn.ResolvePropertyInput(context, GeometryPropertyType.Float), Thickness.ResolvePropertyInput(context, GeometryPropertyType.Float)};
         }
     }
 }

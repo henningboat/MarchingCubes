@@ -1,7 +1,10 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using Code.CubeMarching.GeometryGraph.Editor.DataModel;
+using Code.CubeMarching.GeometryGraph.Editor.DataModel.GeometryNodes;
+using Code.CubeMarching.GeometryGraph.Editor.DataModel.MathNodes;
+using Code.CubeMarching.GeometryGraph.Editor.DataModel.ShapeNodes;
 using UnityEditor;
 using UnityEditor.GraphToolsFoundation.Overdrive;
 using UnityEditor.GraphToolsFoundation.Overdrive.BasicModel;
@@ -28,25 +31,25 @@ namespace Code.CubeMarching.GeometryGraph.Editor
 
             var shapes = TypeCache.GetTypesDerivedFrom(typeof(ShapeNode<>)).Where(type => !type.IsAbstract).Select(typeInfo => MakeSearcherItem((typeInfo, typeInfo.Name))).ToList();
             var shapeItems = new SearcherItem("Shapes", "", shapes.ToList());
-            
+
             var combiners = TypeCache.GetTypesDerivedFrom(typeof(GeometryCombinerNode)).Where(type => !type.IsAbstract).Select(typeInfo => MakeSearcherItem((typeInfo, typeInfo.Name))).ToList();
             var combinerItems = new SearcherItem("Combiners", "", combiners.ToList());
-            
-            
+
+            var mathNodes = TypeCache.GetTypesDerivedFrom(typeof(MathNode)).Where(type => !type.IsAbstract).Select(typeInfo => MakeSearcherItem((typeInfo, typeInfo.Name))).ToList();
+            var mathNodeItems = new SearcherItem("MathNodes", "", mathNodes.ToList());
+
+
             var others = new List<SearcherItem>
             {
                 new GraphNodeModelSearcherItem(GraphModel, null,
                     t => t.GraphModel.CreateConstantNode(TypeHandle.Float, "", t.Position, t.Guid, null, t.SpawnFlags),
-                    "Constant"),
-                MakeSearcherItem((typeof(GraphResult),"Result")),
-                MakeSearcherItem((typeof(PIConstant), "PI"))
+                    "Constant")
             };
-            
+
             var constantsItem = new SearcherItem("Values", "", others);
 
-            
-            
-            var items = new List<SearcherItem> {combinerItems, shapeItems, constantsItem};
+
+            var items = new List<SearcherItem> {combinerItems, shapeItems, mathNodeItems, constantsItem};
 
             var searcherDatabase = new SearcherDatabase(items);
             m_Databases.Add(searcherDatabase);
@@ -128,14 +131,6 @@ namespace Code.CubeMarching.GeometryGraph.Editor
 
                 commandDispatcher.Dispatch(new CreateGraphVariableDeclarationCommand(finalName, true, TypeHandle.Vector3, typeof(GeometryGraphVariableDeclarationModel)));
             });
-        }
-    }
-
-    internal class GeometryGraphToolbarProvider : IToolbarProvider
-    {
-        public bool ShowButton(string buttonName)
-        {
-            return true;
         }
     }
 }
