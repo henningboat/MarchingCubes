@@ -10,13 +10,16 @@ namespace Code.CubeMarching.GeometryGraph.Editor.DataModel.GeometryNodes
         protected abstract CombinerOperation CombinerOperation { get; }
         public IPortModel GeometryInputA { get; set; }
         public IPortModel GeometryInputB { get; set; }
+        public IPortModel BlendFactor { get; set; }
 
         public override void Resolve(GeometryGraphResolverContext context)
         {
-            context.BeginWriteCombiner(new CGeometryCombiner() {Operation = CombinerOperation});
+            var blendFactorProperty = BlendFactor.ResolvePropertyInput(context, GeometryPropertyType.Float);
+            context.BeginWriteCombiner(new CombinerInstruction(CombinerOperation, blendFactorProperty, context.CurrentCombinerDepth));
             GeometryInputA.ResolveGeometryInput(context);
             GeometryInputB.ResolveGeometryInput(context);
-            context.FinishWritingCombiner(CombinerOperation, new GeometryGraphConstantProperty((object) 0f, context, GeometryPropertyType.Float, "Zero"));
+
+            context.FinishWritingCombiner();
         }
 
         public override string Title
@@ -30,6 +33,9 @@ namespace Code.CubeMarching.GeometryGraph.Editor.DataModel.GeometryNodes
             base.OnDefineNode();
             GeometryInputA = this.AddDataInputPort<DistanceFieldValue>("", nameof(GeometryInputA), PortOrientation.Horizontal, PortModelOptions.NoEmbeddedConstant);
             GeometryInputB = this.AddDataInputPort<DistanceFieldValue>("", nameof(GeometryInputB), PortOrientation.Horizontal, PortModelOptions.NoEmbeddedConstant);
+
+            BlendFactor = this.AddDataInputPort<float>("BlendFactor", nameof(BlendFactor), PortOrientation.Horizontal,
+                CombinerOperation.HasBlendFactor() ? PortModelOptions.Default : PortModelOptions.Hidden);
         }
     }
 }

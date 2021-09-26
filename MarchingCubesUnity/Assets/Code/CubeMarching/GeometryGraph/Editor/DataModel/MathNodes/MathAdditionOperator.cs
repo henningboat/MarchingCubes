@@ -9,13 +9,11 @@ namespace Code.CubeMarching.GeometryGraph.Editor.DataModel.MathNodes
     public class MathAdditionOperator : MathOperator
     {
         public override MathOperatorType OperatorType => MathOperatorType.Addition;
+    }
 
-        protected override void AddInputPorts()
-        {
-            for (var i = 0; i < InputPortCount; ++i)
-            {
-                this.AddDataInputPort<float>("Term " + (i + 1));
-            }
-        }
+    [Serializable]
+    public class MathSubtractionOperator : MathOperator
+    {
+        public override MathOperatorType OperatorType => MathOperatorType.Subtraction;
     }
 }

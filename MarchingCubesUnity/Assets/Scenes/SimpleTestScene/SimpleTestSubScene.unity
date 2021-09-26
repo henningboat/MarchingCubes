@@ -173,7 +173,7 @@ MonoBehaviour:
       m_Value0: 10364363237964666826
       m_Value1: 8630093658896670614
     _value:
-    - 8
+    - 47.7
     _providerObject: {fileID: 0}
   - _propertyGUID:
       m_Value0: 14145681954809485537
@@ -182,4 +182,10 @@ MonoBehaviour:
     - 0
     - 0
     - 0
+    _providerObject: {fileID: 0}
+  - _propertyGUID:
+      m_Value0: 4533874454944772850
+      m_Value1: 2257224343336382484
+    _value:
+    - 10
     _providerObject: {fileID: 0}

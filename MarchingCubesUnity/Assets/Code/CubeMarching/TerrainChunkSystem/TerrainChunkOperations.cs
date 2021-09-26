@@ -1,6 +1,7 @@
 ﻿using System;
 using Code.CubeMarching.GeometryComponents;
 using Code.SIMDMath;
+using Unity.Collections;
 using Unity.Mathematics;
 using static Code.SIMDMath.SimdMath;
 
@@ -8,29 +9,7 @@ namespace Code.CubeMarching.TerrainChunkSystem
 {
     public static class TerrainChunkOperations
     {
-        public static void CombineWithChunk(this ref TerrainChunkData target, ref TerrainChunkData source, CGeometryCombiner combiner,
-            byte conerageMask)
-        {
-            for (var i = 0; i < 8; i++)
-            {
-                if ((conerageMask & (1 << i)) != 0)
-                {
-                    var baseOffset = i * 16;
-                    for (var j = 0; j < 16; j++)
-                    {
-                        var offset = j + baseOffset;
-                        var valuesA = source[offset];
-                        var valuesB = target[offset];
-
-                        var packedTerrainData = CombinePackedTerrainData(combiner, valuesA, valuesB);
-
-                        target[offset] = packedTerrainData;
-                    }
-                }
-            }
-        }
-
-        public static PackedTerrainData CombinePackedTerrainData(CGeometryCombiner combiner, PackedTerrainData valuesA, PackedTerrainData valuesB)
+        public static PackedTerrainData CombinePackedTerrainData(CGeometryCombiner combiner, PackedTerrainData valuesA, PackedTerrainData valuesB, NativeArray<float> propertyBuffer)
         {
             PackedTerrainData packedTerrainData;
             switch (combiner.Operation)
@@ -42,10 +21,10 @@ namespace Code.CubeMarching.TerrainChunkSystem
                     packedTerrainData = CombineTerrainMax(valuesA, valuesB);
                     break;
                 case CombinerOperation.SmoothMin:
-                    packedTerrainData = CombineTerrainSmoothMin(valuesA, valuesB, combiner.BlendFactor);
+                    packedTerrainData = CombineTerrainSmoothMin(valuesA, valuesB, combiner.BlendFactor.Resolve(propertyBuffer));
                     break;
                 case CombinerOperation.SmoothSubtract:
-                    packedTerrainData = CombineTerrainSmoothSubtract(valuesA, valuesB, combiner.BlendFactor);
+                    packedTerrainData = CombineTerrainSmoothSubtract(valuesA, valuesB, combiner.BlendFactor.Resolve(propertyBuffer));
                     break;
                 case CombinerOperation.Add:
                     packedTerrainData = CombineTerrainAdd(valuesA, valuesB);

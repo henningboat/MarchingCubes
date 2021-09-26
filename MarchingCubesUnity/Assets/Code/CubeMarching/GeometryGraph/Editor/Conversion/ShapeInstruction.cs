@@ -10,15 +10,15 @@ using Unity.Mathematics;
 
 namespace Code.CubeMarching.GeometryGraph.Editor.Conversion
 {
-    internal class ShapeInstruction : GeometryGraphResolverContext.GeometryGraphInstruction
+    internal class ShapeInstruction : GeometryGraphInstruction
     {
         public readonly ShapeType ShapeType;
         public readonly GeometryGraphProperty Position;
         public readonly List<GeometryGraphProperty> ShapeProperties;
-        private CGeometryCombiner _combiner;
+        private CombinerInstruction _combiner;
 
         public ShapeInstruction(ShapeType shapeType, GeometryGraphProperty position, List<GeometryGraphProperty> shapeProperties, int currentCombinerDepth,
-            CGeometryCombiner combiner) : base(currentCombinerDepth)
+            CombinerInstruction combiner) : base(currentCombinerDepth)
         {
             _combiner = combiner;
             ShapeType = shapeType;
@@ -32,7 +32,7 @@ namespace Code.CubeMarching.GeometryGraph.Editor.Conversion
             {
                 CombinerDepth = Depth,
                 CoverageMask = BitArray512.AllBitsTrue,
-                DependencyIndex = default, Combiner = _combiner,
+                DependencyIndex = default, Combiner = _combiner.GetCombinerSetting(),
                 TerrainShape = new GeometryShapeTranslationTuple()
                 {
                     Translation = new CGeometryTransformation(float3.zero),

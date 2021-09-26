@@ -161,25 +161,6 @@ namespace Code.CubeMarching.TerrainChunkEntitySystem
                     case TerrainInstructionType.Shape:
                         var shape = combinerInstruction.TerrainShape;
 
-                        // //----todo make SIMD friendly version of this
-                        // var positionOS = _postionStack[_postionsWS.Length * combinerInstruction.CombinerDepth + i];
-                        //
-                        // float4 a = new float4(positionOS.x.PackedValues[0], positionOS.y.PackedValues[0], positionOS.z.PackedValues[0],1);
-                        // float4 b = new float4(positionOS.x.PackedValues[1],positionOS.y.PackedValues[1],positionOS.z.PackedValues[1],1);
-                        // float4 c = new float4(positionOS.x.PackedValues[2], positionOS.y.PackedValues[2], positionOS.z.PackedValues[2],1);
-                        // float4 d = new float4(positionOS.x.PackedValues[3], positionOS.y.PackedValues[3], positionOS.z.PackedValues[3],1);
-                        //
-                        // a = mul(combinerInstruction.WorldToLocal.Value, a);
-                        // b = mul(combinerInstruction.WorldToLocal.Value, b);
-                        // c = mul(combinerInstruction.WorldToLocal.Value, c);
-                        // d = mul(combinerInstruction.WorldToLocal.Value, d);
-                        //
-                        // positionOS.x = new PackedFloat(a.x, b.x, c.x, d.x);
-                        // positionOS.y = new PackedFloat(a.y, b.y, c.y, d.y);
-                        // positionOS.z = new PackedFloat(a.z, b.z, c.z, d.z);
-                        //
-                        // //----
-
                         var positionOS = shape.Translation.TransformPosition(_postionStack[_postionsWS.Length * combinerInstruction.CombinerDepth + i]);
 
                         var surfaceDistance = shape.TerrainModifier.GetSurfaceDistance(positionOS, _valueBuffer);
@@ -193,7 +174,7 @@ namespace Code.CubeMarching.TerrainChunkEntitySystem
                 }
 
                 var existingData = _terrainDataBuffer[stackBaseOffset + i];
-                var combinedResult = TerrainChunkOperations.CombinePackedTerrainData(combinerInstruction.Combiner, terrainData, existingData);
+                var combinedResult = TerrainChunkOperations.CombinePackedTerrainData(combinerInstruction.Combiner, terrainData, existingData, _valueBuffer);
                 _terrainDataBuffer[stackBaseOffset + i] = combinedResult;
             }
 

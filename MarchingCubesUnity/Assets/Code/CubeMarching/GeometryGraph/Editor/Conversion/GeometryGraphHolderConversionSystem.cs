@@ -80,7 +80,7 @@ namespace Code.CubeMarching.GeometryGraph.Editor.Conversion
                         valueBufferBlobArray[i] = new CGeometryGraphPropertyValue() {Value = resolvedGraph.PropertyValueBuffer[i]};
                     }
 
-                    var propertyOverwrites = new List<GeometryPropertyOverwrite>();
+                    var propertyOverwrites = new List<CGeometryPropertyOverwrite>();
 
                     var testOverwrite = Entity.Null;
                     foreach (var propertyOverwrite in graphInstance.Overwrites)
@@ -91,7 +91,7 @@ namespace Code.CubeMarching.GeometryGraph.Editor.Conversion
                             if (selectedProperty != null)
                             {
                                 var overwritePropertyProvider = SpawnPropertyOverwriteProvider(propertyOverwrite, graphInstance);
-                                propertyOverwrites.Add(new GeometryPropertyOverwrite()
+                                propertyOverwrites.Add(new CGeometryPropertyOverwrite()
                                 {
                                     PropertyType = selectedProperty.Type,
                                     TargetIndex = selectedProperty.Index,
@@ -106,16 +106,12 @@ namespace Code.CubeMarching.GeometryGraph.Editor.Conversion
                         }
                     }
 
-                    var propertyOverwriteBlobArray = blobBuilder.Allocate(ref root.propertyOverwrites, propertyOverwrites.Count);
-                    for (var i = 0; i < propertyOverwrites.Count; i++)
-                    {
-                        propertyOverwriteBlobArray[i] = propertyOverwrites[i];
-                    }
+                    var overwriteBuffer = DstEntityManager.AddBuffer<CGeometryPropertyOverwrite>(entity);
+                    overwriteBuffer.CopyFrom(propertyOverwrites.ToArray());
 
                     DstEntityManager.AddComponentData(entity, new CGeometryGraphInstance()
                     {
-                        graph = blobBuilder.CreateBlobAssetReference<GeometryGraphBlob>(Allocator.Persistent),
-                        OverwriteEntity = testOverwrite
+                        graph = blobBuilder.CreateBlobAssetReference<GeometryGraphBlob>(Allocator.Persistent)
                     });
 
                     DstEntityManager.AddBuffer<CGeometryGraphPropertyValue>(entity);

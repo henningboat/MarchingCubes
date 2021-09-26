@@ -30,31 +30,6 @@ namespace Code.CubeMarching.GeometryGraph.Editor.DataModel.ShapeNodes
 
         protected abstract ShapeType GetShapeType();
 
-        public unsafe GeometryInstruction GetTerrainInstruction()
-        {
-            //
-            // CGenericTerrainModifier genericComponentData = default;
-            // genericComponentData.ShapeType = GetShapeType();
-            //
-            // var ptr = UnsafeUtility.AddressOf(ref genericComponentData.TerrainModifierDataA);
-            // UnsafeUtility.CopyStructureToPtr(ref shape, ptr);
-            //
-            // var position = PositionIn.GetValue3();
-            //
-            // return new GeometryInstruction()
-            // {
-            //     CombinerDepth = 0,
-            //     CoverageMask = BitArray512.AllBitsTrue,
-            //     DependencyIndex = 0,
-            //     Combiner = default,
-            //     TerrainShape = new GeometryShapeTranslationTuple() {Translation = new CGeometryTransformation(position), TerrainMaterial = default, TerrainModifier = genericComponentData},
-            //     TerrainTransformation = default,
-            //     WorldToLocal = new WorldToLocal() {Value = float4x4.identity},
-            //     TerrainInstructionType = TerrainInstructionType.Shape
-            // };
-            throw new Exception();
-        }
-
         public abstract List<GeometryGraphProperty> GetProperties(GeometryGraphResolverContext context);
 
         public void Resolve(GeometryGraphResolverContext context)

@@ -5,7 +5,7 @@ using Unity.Entities;
 namespace Code.CubeMarching.GeometryGraph.Runtime
 {
     [Serializable]
-    public struct GeometryPropertyOverwrite
+    public struct CGeometryPropertyOverwrite : IBufferElementData
     {
         public Entity OverwritePropertyProvider;
         public GeometryPropertyType PropertyType;

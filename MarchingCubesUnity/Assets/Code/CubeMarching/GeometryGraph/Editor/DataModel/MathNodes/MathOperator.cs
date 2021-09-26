@@ -32,6 +32,14 @@ namespace Code.CubeMarching.GeometryGraph.Editor.DataModel.MathNodes
             set => m_InputPortCount = Math.Max(2, value);
         }
 
+        protected void AddInputPorts()
+        {
+            for (var i = 0; i < InputPortCount; ++i)
+            {
+                this.AddDataInputPort<float>("Term " + (i + 1));
+            }
+        }
+
         public IPortModel DataOut { get; private set; }
 
         protected override void OnDefineNode()
@@ -43,7 +51,6 @@ namespace Code.CubeMarching.GeometryGraph.Editor.DataModel.MathNodes
             AddInputPorts();
         }
 
-        protected abstract void AddInputPorts();
 
         public GeometryGraphProperty[] GetInputProperties(GeometryGraphResolverContext context, GeometryPropertyType propertyType)
         {

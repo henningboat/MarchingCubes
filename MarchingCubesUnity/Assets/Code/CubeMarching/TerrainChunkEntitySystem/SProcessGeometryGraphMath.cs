@@ -11,11 +11,11 @@ namespace Code.CubeMarching.TerrainChunkEntitySystem
         {
             var getOverwritePropertyFromEntity = GetComponentDataFromEntity<CGeometryGraphPropertyOverwriteProvider>(true);
 
-            Dependency = Entities.ForEach((CGeometryGraphInstance graphInstance, DynamicBuffer<CGeometryGraphPropertyValue> instancePropertyBuffer) =>
+            Dependency = Entities.ForEach((CGeometryGraphInstance graphInstance, DynamicBuffer<CGeometryGraphPropertyValue> instancePropertyBuffer,
+                DynamicBuffer<CGeometryPropertyOverwrite> overwriteProperties) =>
             {
                 ref var blobPropertyBuffer = ref graphInstance.graph.Value.valueBuffer;
                 ref var mathInstructions = ref graphInstance.graph.Value.mathInstructions;
-                ref var overwritesBuffer = ref graphInstance.graph.Value.propertyOverwrites;
 
                 if (instancePropertyBuffer.Length != blobPropertyBuffer.Length)
                 {
@@ -27,11 +27,11 @@ namespace Code.CubeMarching.TerrainChunkEntitySystem
                     instancePropertyBuffer[i] = blobPropertyBuffer[i];
                 }
 
-                for (var i = 0; i < overwritesBuffer.Length; i++)
+                for (var i = 0; i < overwriteProperties.Length; i++)
                 {
-                    var overwrite = getOverwritePropertyFromEntity[graphInstance.OverwriteEntity];
+                    var overwrite = getOverwritePropertyFromEntity[overwriteProperties[i].OverwritePropertyProvider];
 
-                    instancePropertyBuffer[overwritesBuffer[i].TargetIndex] = new CGeometryGraphPropertyValue() {Value = overwrite.Value[0].x};
+                    instancePropertyBuffer[overwriteProperties[i].TargetIndex] = new CGeometryGraphPropertyValue() {Value = overwrite.Value[0].x};
                 }
 
                 for (var i = 0; i < mathInstructions.Length; i++)

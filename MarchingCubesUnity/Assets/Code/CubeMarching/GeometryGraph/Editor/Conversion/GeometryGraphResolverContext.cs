@@ -6,6 +6,7 @@ using Code.CubeMarching.GeometryGraph.Editor.DataModel;
 using Code.CubeMarching.GeometryGraph.Editor.DataModel.GeometryNodes;
 using Code.CubeMarching.GeometryGraph.Editor.DataModel.ShapeNodes;
 using Code.CubeMarching.TerrainChunkEntitySystem;
+using UnityEditor;
 using UnityEngine;
 using UnityEngine.GraphToolsFoundation.Overdrive;
 
@@ -13,23 +14,10 @@ namespace Code.CubeMarching.GeometryGraph.Editor.Conversion
 {
     public class GeometryGraphResolverContext
     {
-        internal abstract class GeometryGraphInstruction
-        {
-            public readonly int Depth;
-
-            protected GeometryGraphInstruction(int depth)
-            {
-                Depth = depth;
-            }
-
-            public abstract GeometryInstruction GetInstruction();
-        }
-
         private Dictionary<SerializableGUID, GeometryGraphProperty> _properties = new();
         private List<GeometryGraphInstruction> _instructions = new();
-        private CGeometryCombiner _currentCombiner;
 
-        private int currentCombinerDepth;
+        public int CurrentCombinerDepth => _combinerStack.Count-1;
         private List<float> _propertyValueBuffer;
         private List<GeometryInstruction> _geometryInstructionBuffer;
         private List<MathInstruction> _mathInstructionsBuffer;
@@ -39,27 +27,32 @@ namespace Code.CubeMarching.GeometryGraph.Editor.Conversion
 
         public List<GeometryInstruction> GeometryInstructionBuffer => _geometryInstructionBuffer;
 
-        public void BeginWriteCombiner(CGeometryCombiner combiner)
+        private Stack<CombinerInstruction> _combinerStack = new();
+        private GeometryGraphProperty _zeroFloatProperty;
+
+        public CombinerInstruction CurrentCombiner => _combinerStack.Peek();
+        
+        
+        public GeometryGraphResolverContext()
         {
-            _currentCombiner = combiner;
-            currentCombinerDepth++;
+            _zeroFloatProperty = GetOrCreateProperty(SerializableGUID.Generate(), new GeometryGraphConstantProperty(0.0f, this, GeometryPropertyType.Float, "Zero Float Constant"));
+            _combinerStack.Push(new CombinerInstruction(CombinerOperation.Min, _zeroFloatProperty, 0));
         }
 
-        public void FinishWritingCombiner(CombinerOperation operation, GeometryGraphProperty property)
+        public void BeginWriteCombiner(CombinerInstruction combiner)
         {
-            throw new NotImplementedException();
-            // RegisterProperty(property);
-            currentCombinerDepth--;
-            _instructions.Add(new CombinerInstruction(operation, property, currentCombinerDepth));
+            _combinerStack.Push(combiner);
+        }
+
+        public void FinishWritingCombiner()
+        {
+            var combinerToFinish = _combinerStack.Pop();
+            _instructions.Add(combinerToFinish);
         }
 
         public void WriteShape(ShapeType shapeType, GeometryGraphProperty positionProperty, List<GeometryGraphProperty> getProperties)
         {
-            _instructions.Add(new ShapeInstruction(shapeType, positionProperty, getProperties, currentCombinerDepth, _currentCombiner));
-            //RegisterProperty(positionProperty);
-            // getProperties.ForEach(property => RegisterProperty(property));
-
-            _currentCombiner = default;
+            _instructions.Add(new ShapeInstruction(shapeType, positionProperty, getProperties, CurrentCombinerDepth, CurrentCombiner));
         }
 
         public GeometryGraphExposedVariableNode GetExposedVariableProperty(SerializableGUID guid)

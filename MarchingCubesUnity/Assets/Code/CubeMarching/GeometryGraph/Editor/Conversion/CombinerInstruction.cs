@@ -5,7 +5,7 @@ using Code.CubeMarching.Utils;
 
 namespace Code.CubeMarching.GeometryGraph.Editor.Conversion
 {
-    internal class CombinerInstruction : GeometryGraphResolverContext.GeometryGraphInstruction
+    public class CombinerInstruction : GeometryGraphInstruction
     {
         public readonly CombinerOperation Operation;
         public readonly GeometryGraphProperty Property;
@@ -14,6 +14,15 @@ namespace Code.CubeMarching.GeometryGraph.Editor.Conversion
         {
             Operation = operation;
             Property = property;
+        }
+
+        public CGeometryCombiner GetCombinerSetting()
+        {
+            return new()
+            {
+                Operation = Operation,
+                BlendFactor = new FloatValue() {Index = Property.Index}
+            };
         }
 
         public override GeometryInstruction GetInstruction()
@@ -28,7 +37,7 @@ namespace Code.CubeMarching.GeometryGraph.Editor.Conversion
                 Combiner = new CGeometryCombiner()
                 {
                     Operation = Operation,
-                    BlendFactor = 1
+                    BlendFactor = new FloatValue() {Index = Property.Index}
                 }
             };
         }
