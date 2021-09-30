@@ -35,7 +35,7 @@ namespace Code.CubeMarching.GeometryGraph.Editor.Conversion
                 DependencyIndex = default, Combiner = _combiner.GetCombinerSetting(),
                 TerrainShape = new GeometryShapeTranslationTuple()
                 {
-                    Translation = new CGeometryTransformation(float3.zero),
+                    Translation = new CGeometryTransformation(new Float3Value() {Index = Position.Index}),
                     TerrainMaterial = default,
                     TerrainModifier = BuildGenericTerrainModifier()
                 },

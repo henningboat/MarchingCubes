@@ -34,6 +34,9 @@ namespace Code.CubeMarching.GeometryGraph.Editor
 
             var combiners = TypeCache.GetTypesDerivedFrom(typeof(GeometryCombinerNode)).Where(type => !type.IsAbstract).Select(typeInfo => MakeSearcherItem((typeInfo, typeInfo.Name))).ToList();
             var combinerItems = new SearcherItem("Combiners", "", combiners.ToList());
+            
+            // var transformations = TypeCache.GetTypesDerivedFrom(typeof(TransformationNode)).Where(type => !type.IsAbstract).Select(typeInfo => MakeSearcherItem((typeInfo, typeInfo.Name))).ToList();
+            // var transformationItems = new SearcherItem("Transformations", "", combiners.ToList());
 
             var mathNodes = TypeCache.GetTypesDerivedFrom(typeof(MathNode)).Where(type => !type.IsAbstract).Select(typeInfo => MakeSearcherItem((typeInfo, typeInfo.Name))).ToList();
             var mathNodeItems = new SearcherItem("MathNodes", "", mathNodes.ToList());

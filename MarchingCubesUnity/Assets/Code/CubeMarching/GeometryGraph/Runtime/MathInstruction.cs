@@ -18,7 +18,7 @@ namespace Code.CubeMarching.GeometryGraph.Editor.Conversion
         public int ResultIndex;
         public GeometryPropertyType ResultType;
 
-        public void Execute(INativeList<CGeometryGraphPropertyValue> instancePropertyBuffer)
+        public void Execute(DynamicBuffer<CGeometryGraphPropertyValue> instancePropertyBuffer)
         {
             switch (ResultType)
             {

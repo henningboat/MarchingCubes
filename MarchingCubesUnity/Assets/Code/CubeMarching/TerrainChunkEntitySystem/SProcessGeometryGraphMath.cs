@@ -1,4 +1,5 @@
-﻿using Code.CubeMarching.GeometryGraph.Runtime;
+﻿using Code.CubeMarching.GeometryGraph.Editor.Conversion;
+using Code.CubeMarching.GeometryGraph.Runtime;
 using Unity.Entities;
 
 namespace Code.CubeMarching.TerrainChunkEntitySystem
@@ -21,7 +22,7 @@ namespace Code.CubeMarching.TerrainChunkEntitySystem
                 {
                     instancePropertyBuffer.ResizeUninitialized(blobPropertyBuffer.Length);
                 }
-
+                
                 for (var i = 0; i < instancePropertyBuffer.Length; i++)
                 {
                     instancePropertyBuffer[i] = blobPropertyBuffer[i];
@@ -33,10 +34,10 @@ namespace Code.CubeMarching.TerrainChunkEntitySystem
 
                     instancePropertyBuffer[overwriteProperties[i].TargetIndex] = new CGeometryGraphPropertyValue() {Value = overwrite.Value[0].x};
                 }
-
+                
                 for (var i = 0; i < mathInstructions.Length; i++)
                 {
-                    var instruction = mathInstructions[i];
+                    MathInstruction instruction = mathInstructions[i];
                     instruction.Execute(instancePropertyBuffer);
                 }
             }).WithBurst().WithReadOnly(getOverwritePropertyFromEntity).ScheduleParallel(Dependency);

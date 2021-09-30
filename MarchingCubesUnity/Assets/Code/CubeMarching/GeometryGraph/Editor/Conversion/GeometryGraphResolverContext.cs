@@ -113,5 +113,10 @@ namespace Code.CubeMarching.GeometryGraph.Editor.Conversion
                 GeometryInstructionBuffer.Add(_instructions[i].GetInstruction());
             }
         }
+
+        public void WriteTransformation()
+        {
+            throw new NotImplementedException();
+        }
     }
 }

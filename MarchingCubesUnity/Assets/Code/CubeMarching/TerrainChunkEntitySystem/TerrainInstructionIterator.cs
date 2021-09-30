@@ -129,7 +129,7 @@ namespace Code.CubeMarching.TerrainChunkEntitySystem
                 for (var i = 0; i < _postionsWS.Length; i++)
                 {
                     var position = _postionStack[_postionsWS.Length * combinerInstruction.CombinerDepth + i];
-                    _postionStack[_postionsWS.Length * combinerInstruction.CombinerDepth + i] = combinerInstruction.TerrainTransformation.TransformPosition(position);
+                    _postionStack[_postionsWS.Length * combinerInstruction.CombinerDepth + i] = combinerInstruction.TerrainTransformation.TransformPosition(position, _valueBuffer);
                 }
 
                 _lastCombinerDepth = combinerInstruction.CombinerDepth;
@@ -161,7 +161,7 @@ namespace Code.CubeMarching.TerrainChunkEntitySystem
                     case TerrainInstructionType.Shape:
                         var shape = combinerInstruction.TerrainShape;
 
-                        var positionOS = shape.Translation.TransformPosition(_postionStack[_postionsWS.Length * combinerInstruction.CombinerDepth + i]);
+                        var positionOS = shape.Translation.TransformPosition(_postionStack[_postionsWS.Length * combinerInstruction.CombinerDepth + i],_valueBuffer);
 
                         var surfaceDistance = shape.TerrainModifier.GetSurfaceDistance(positionOS, _valueBuffer);
                         terrainData = new PackedTerrainData(surfaceDistance, shape.TerrainMaterial.Material);
