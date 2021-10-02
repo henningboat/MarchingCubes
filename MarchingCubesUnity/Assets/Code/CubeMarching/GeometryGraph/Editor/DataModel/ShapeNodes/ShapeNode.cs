@@ -14,17 +14,15 @@ namespace Code.CubeMarching.GeometryGraph.Editor.DataModel.ShapeNodes
     public abstract class ShapeNode<T> : NodeModel, IGeometryNode where T : struct, ITerrainModifierShape
     {
         public IPortModel GeometryOut { get; set; }
-        public IPortModel PositionIn { get; set; }
 
         protected override void OnDefineNode()
         {
             base.OnDefineNode();
 
             GeometryOut = this.AddDataOutputPort<DistanceFieldValue>(nameof(GeometryOut));
-            PositionIn = this.AddDataInputPort<Vector3>(nameof(PositionIn));
-        }
 
-        public override Color DefaultColor => Color.green;
+            Color = new Color(0.4f, 0, 0);
+        }
 
         public void WriteGeometryInstruction(ref GeometryInstruction instruction)
         {
@@ -34,9 +32,9 @@ namespace Code.CubeMarching.GeometryGraph.Editor.DataModel.ShapeNodes
 
         public abstract List<GeometryGraphProperty> GetProperties(GeometryGraphResolverContext context);
 
-        public void Resolve(GeometryGraphResolverContext context)
+        public void Resolve(GeometryGraphResolverContext context, GeometryTransformationInstruction parent)
         {
-            context.WriteShape(GetShapeType(), PositionIn.ResolvePropertyInput(context, GeometryPropertyType.Float3), GetProperties(context));
+            context.WriteShape(GetShapeType(), parent, GetProperties(context));
         }
     }
 }

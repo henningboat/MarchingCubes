@@ -1,7 +1,9 @@
 ﻿using Code.CubeMarching.GeometryGraph.Editor.Conversion;
 using Code.CubeMarching.GeometryGraph.Editor.DataModel.GeometryNodes;
+using Code.CubeMarching.GeometryGraph.Editor.DataModel.ShapeNodes;
 using UnityEditor.GraphToolsFoundation.Overdrive;
 using UnityEditor.GraphToolsFoundation.Overdrive.BasicModel;
+using UnityEngine;
 
 namespace Code.CubeMarching.GeometryGraph.Editor.DataModel.TransformationNode
 {
@@ -16,12 +18,11 @@ namespace Code.CubeMarching.GeometryGraph.Editor.DataModel.TransformationNode
             _geometryOutput = this.AddDataOutputPort<DistanceFieldValue>("", nameof(_geometryInput));
         }
 
-        protected abstract TransformationInstruction ResolveInstruction(GeometryGraphResolverContext geometryGraphResolverContext);
+        protected abstract GeometryTransformationInstruction GetTransformationInstruction(GeometryGraphResolverContext context, GeometryTransformationInstruction parent);
 
-        public void Resolve(GeometryGraphResolverContext context)
+        public void Resolve(GeometryGraphResolverContext context,GeometryTransformationInstruction parent)
         {
-            context.WriteTransformation(ResolveInstruction(context));
-            _geometryInput.ResolveGeometryInput(context);
+            _geometryInput.ResolveGeometryInput(context, GetTransformationInstruction(context, parent));
         }
     }
 }

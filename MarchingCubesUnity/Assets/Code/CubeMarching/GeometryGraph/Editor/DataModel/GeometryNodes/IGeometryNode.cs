@@ -4,6 +4,6 @@ namespace Code.CubeMarching.GeometryGraph.Editor.DataModel.GeometryNodes
 {
     public interface IGeometryNode
     {
-        void Resolve(GeometryGraphResolverContext context);
+        void Resolve(GeometryGraphResolverContext context, GeometryTransformationInstruction parent);
     }
 }

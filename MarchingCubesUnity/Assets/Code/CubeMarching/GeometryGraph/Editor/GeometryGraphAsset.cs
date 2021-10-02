@@ -54,7 +54,8 @@ namespace Code.CubeMarching.GeometryGraph.Editor
             var resultNode = GraphModel.NodeModels.FirstOrDefault(model => model is GraphResult) as GraphResult;
 
             var rootNode = resultNode.DataIn.GetConnectedPorts().FirstOrDefault().NodeModel as IGeometryNode;
-            rootNode.Resolve(context);
+            
+            rootNode.Resolve(context, context.OriginTransformation);
 
             context.BuildBuffers();
 
