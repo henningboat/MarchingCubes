@@ -29,7 +29,7 @@ namespace Code.CubeMarching.GeometryGraph.Editor.Conversion
         {
             var entity = CreateAdditionalEntity(holder);
 
-            float4x4 value = default;
+            Float16 value = default;
             for (var i = 0; i < propertyOverwrite.Value.Length; i++)
             {
                 value[i] = propertyOverwrite.Value[i];

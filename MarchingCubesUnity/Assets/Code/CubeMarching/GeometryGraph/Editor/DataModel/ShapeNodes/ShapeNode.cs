@@ -24,6 +24,8 @@ namespace Code.CubeMarching.GeometryGraph.Editor.DataModel.ShapeNodes
             PositionIn = this.AddDataInputPort<Vector3>(nameof(PositionIn));
         }
 
+        public override Color DefaultColor => Color.green;
+
         public void WriteGeometryInstruction(ref GeometryInstruction instruction)
         {
         }

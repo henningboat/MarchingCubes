@@ -37,12 +37,12 @@ namespace Code.CubeMarching.GeometryGraph.Editor.Conversion
             }
         }
 
-        private float3 CalculateFloat3(INativeList<CGeometryGraphPropertyValue> instancePropertyBuffer)
+        private float3 CalculateFloat3(DynamicBuffer<CGeometryGraphPropertyValue> instancePropertyBuffer)
         {
             throw new NotImplementedException();
         }
 
-        private float CalculateFloat(INativeList<CGeometryGraphPropertyValue> instancePropertyBuffer)
+        private float CalculateFloat(DynamicBuffer<CGeometryGraphPropertyValue> instancePropertyBuffer)
         {
             var inputA = instancePropertyBuffer[InputAIndex].Value;
             var inputB = instancePropertyBuffer[InputBIndex].Value;

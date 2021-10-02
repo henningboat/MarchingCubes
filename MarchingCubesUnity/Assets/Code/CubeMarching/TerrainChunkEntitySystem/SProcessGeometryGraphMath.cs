@@ -32,7 +32,7 @@ namespace Code.CubeMarching.TerrainChunkEntitySystem
                 {
                     var overwrite = getOverwritePropertyFromEntity[overwriteProperties[i].OverwritePropertyProvider];
 
-                    instancePropertyBuffer[overwriteProperties[i].TargetIndex] = new CGeometryGraphPropertyValue() {Value = overwrite.Value[0].x};
+                    instancePropertyBuffer[overwriteProperties[i].TargetIndex] = new CGeometryGraphPropertyValue() {Value = overwrite.Value[0]};
                 }
                 
                 for (var i = 0; i < mathInstructions.Length; i++)

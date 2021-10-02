@@ -84,8 +84,7 @@ namespace Code.CubeMarching.GeometryComponents
 
         public float3 Resolve(NativeArray<float> valueBuffer)
         {
-            //todo probably better to handle this with pointer magic
-            return new(valueBuffer[Index], valueBuffer[Index + 1], valueBuffer[Index] + 2);
+            return new(valueBuffer[Index], valueBuffer[Index + 1], valueBuffer[Index + 2]);
         }
     }
 }
