@@ -5,6 +5,7 @@ using Code.CubeMarching.GeometryGraph.Editor.DataModel;
 using Code.CubeMarching.GeometryGraph.Editor.DataModel.GeometryNodes;
 using Code.CubeMarching.GeometryGraph.Editor.DataModel.MathNodes;
 using Code.CubeMarching.GeometryGraph.Editor.DataModel.ShapeNodes;
+using Code.CubeMarching.GeometryGraph.Editor.DataModel.TransformationNode;
 using UnityEditor;
 using UnityEditor.GraphToolsFoundation.Overdrive;
 using UnityEditor.GraphToolsFoundation.Overdrive.BasicModel;
@@ -34,11 +35,14 @@ namespace Code.CubeMarching.GeometryGraph.Editor
 
             var combiners = TypeCache.GetTypesDerivedFrom(typeof(GeometryCombinerNode)).Where(type => !type.IsAbstract).Select(typeInfo => MakeSearcherItem((typeInfo, typeInfo.Name))).ToList();
             var combinerItems = new SearcherItem("Combiners", "", combiners.ToList());
-            
-            // var transformations = TypeCache.GetTypesDerivedFrom(typeof(TransformationNode)).Where(type => !type.IsAbstract).Select(typeInfo => MakeSearcherItem((typeInfo, typeInfo.Name))).ToList();
-            // var transformationItems = new SearcherItem("Transformations", "", combiners.ToList());
+
+            var transformations = TypeCache.GetTypesDerivedFrom(typeof(TransformationNode)).Where(type => !type.IsAbstract).Select(typeInfo => MakeSearcherItem((typeInfo, typeInfo.Name))).ToList();
+            var transformationItems = new SearcherItem("Transformations", "", transformations.ToList());
 
             var mathNodes = TypeCache.GetTypesDerivedFrom(typeof(MathNode)).Where(type => !type.IsAbstract).Select(typeInfo => MakeSearcherItem((typeInfo, typeInfo.Name))).ToList();
+            
+            mathNodes.Add( MakeSearcherItem((typeof(GraphResult), "Result")));
+            
             var mathNodeItems = new SearcherItem("MathNodes", "", mathNodes.ToList());
 
 
@@ -52,7 +56,7 @@ namespace Code.CubeMarching.GeometryGraph.Editor
             var constantsItem = new SearcherItem("Values", "", others);
 
 
-            var items = new List<SearcherItem> {combinerItems, shapeItems, mathNodeItems, constantsItem};
+            var items = new List<SearcherItem> {combinerItems, shapeItems, mathNodeItems, constantsItem, transformationItems};
 
             var searcherDatabase = new SearcherDatabase(items);
             m_Databases.Add(searcherDatabase);

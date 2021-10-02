@@ -48,6 +48,15 @@ namespace Code.SIMDMath
             this.z = z;
         }
 
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public PackedFloat3(float3 original)
+        {
+            x = original.x;
+            y = original.y;
+            z = original.z;
+        }
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public PackedFloat3(float3 a, float3 b, float3 c, float3 d)
         {
@@ -59,49 +68,49 @@ namespace Code.SIMDMath
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static PackedFloat3 operator +(PackedFloat3 a, PackedFloat3 b)
         {
-            return new PackedFloat3(a.x + b.x, a.y + b.y, a.z + b.z);
+            return new(a.x + b.x, a.y + b.y, a.z + b.z);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static PackedFloat3 operator +(PackedFloat3 a, PackedFloat b)
         {
-            return new PackedFloat3(a.x + b, a.y + b, a.z + b);
+            return new(a.x + b, a.y + b, a.z + b);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static PackedFloat3 operator -(PackedFloat3 a, PackedFloat3 b)
         {
-            return new PackedFloat3(a.x - b.x, a.y - b.y, a.z - b.z);
+            return new(a.x - b.x, a.y - b.y, a.z - b.z);
         }
-        
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static PackedFloat3 operator -(PackedFloat3 a, PackedFloat b)
         {
-            return new PackedFloat3(a.x - b, a.y - b, a.z - b);
+            return new(a.x - b, a.y - b, a.z - b);
         }
-        
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static PackedFloat3 operator -(PackedFloat a, PackedFloat3 b)
         {
-            return new PackedFloat3(b.x - a, b.y - a, b.z - a);
+            return new(b.x - a, b.y - a, b.z - a);
         }
-        
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static PackedFloat3 operator *(PackedFloat3 a, PackedFloat3 b)
         {
-            return new PackedFloat3(a.x * b.x, a.y * b.y, a.z * b.z);
+            return new(a.x * b.x, a.y * b.y, a.z * b.z);
         }
-        
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static PackedFloat3 operator *(PackedFloat3 a, PackedFloat b)
         {
-            return new PackedFloat3(a.x * b, a.y * b, a.z * b);
+            return new(a.x * b, a.y * b, a.z * b);
         }
-        
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static PackedFloat3 operator *(PackedFloat a, PackedFloat3 b)
         {
-            return new PackedFloat3(a* b.x, a* b.y, a* b.z);
+            return new(a * b.x, a * b.y, a * b.z);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -116,17 +125,24 @@ namespace Code.SIMDMath
             return !(a == b);
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static PackedFloat3 operator %(PackedFloat3 a, PackedFloat3 b)
+        {
+            a.x.PackedValues %= b.x.PackedValues;
+            a.y.PackedValues %= b.y.PackedValues;
+            a.z.PackedValues %= b.z.PackedValues;
+            return a;
+        }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static implicit operator PackedFloat3(float3 a)
         {
-            return new PackedFloat3((PackedFloat) a.x, a.y, a.z);
+            return new((PackedFloat) a.x, a.y, a.z);
         }
     }
-    
-    
-    
-     [StructLayout(LayoutKind.Sequential)]
+
+
+    [StructLayout(LayoutKind.Sequential)]
     public struct PackedFloat2
     {
         public bool Equals(PackedFloat2 other)
@@ -176,25 +192,25 @@ namespace Code.SIMDMath
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static PackedFloat2 operator +(PackedFloat2 a, PackedFloat2 b)
         {
-            return new PackedFloat2(a.x + b.x, a.y + b.y);
+            return new(a.x + b.x, a.y + b.y);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static PackedFloat2 operator +(PackedFloat2 a, PackedFloat b)
         {
-            return new PackedFloat2(a.x + b, a.y + b);
+            return new(a.x + b, a.y + b);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static PackedFloat2 operator -(PackedFloat2 a, PackedFloat2 b)
         {
-            return new PackedFloat2(a.x - b.x, a.y - b.y);
+            return new(a.x - b.x, a.y - b.y);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static PackedFloat2 operator -(PackedFloat2 a, PackedFloat b)
         {
-            return new PackedFloat2(a.x - b, a.y - b);
+            return new(a.x - b, a.y - b);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -213,7 +229,7 @@ namespace Code.SIMDMath
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static implicit operator PackedFloat2(float2 a)
         {
-            return new PackedFloat2((PackedFloat) a.x, a.y);
+            return new((PackedFloat) a.x, a.y);
         }
     }
 }

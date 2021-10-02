@@ -24,7 +24,7 @@ namespace Code.CubeMarching.GeometryComponents
             var offsetValue = offset.Resolve(valueBuffer);
 
             var positionOS = scale.Resolve(valueBuffer) * (positionWS - offsetValue);
-            return (cnoise4(positionOS) + valueOffset.Resolve(valueBuffer)) * strength.Resolve(valueBuffer);
+            return ((cnoise4(positionOS)) + valueOffset.Resolve(valueBuffer)) * strength.Resolve(valueBuffer);
         }
 
         public TerrainBounds CalculateBounds(Translation translation, NativeArray<float> valueBuffer)

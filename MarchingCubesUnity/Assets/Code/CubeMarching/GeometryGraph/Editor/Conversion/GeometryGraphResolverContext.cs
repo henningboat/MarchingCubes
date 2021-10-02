@@ -17,7 +17,7 @@ namespace Code.CubeMarching.GeometryGraph.Editor.Conversion
         private Dictionary<SerializableGUID, GeometryGraphProperty> _properties = new();
         private List<GeometryGraphInstruction> _instructions = new();
 
-        public int CurrentCombinerDepth => _combinerStack.Count-1;
+        public int CurrentCombinerDepth => _combinerStack.Count - 1;
         private List<float> _propertyValueBuffer;
         private List<GeometryInstruction> _geometryInstructionBuffer;
         private List<MathInstruction> _mathInstructionsBuffer;
@@ -31,8 +31,8 @@ namespace Code.CubeMarching.GeometryGraph.Editor.Conversion
         private GeometryGraphProperty _zeroFloatProperty;
 
         public CombinerInstruction CurrentCombiner => _combinerStack.Peek();
-        
-        
+
+
         public GeometryGraphResolverContext()
         {
             _zeroFloatProperty = GetOrCreateProperty(SerializableGUID.Generate(), new GeometryGraphConstantProperty(0.0f, this, GeometryPropertyType.Float, "Zero Float Constant"));
@@ -114,9 +114,9 @@ namespace Code.CubeMarching.GeometryGraph.Editor.Conversion
             }
         }
 
-        public void WriteTransformation()
+        public void WriteTransformation(TransformationInstruction transformationInstruction)
         {
-            throw new NotImplementedException();
+            _instructions.Add(transformationInstruction);
         }
     }
 }

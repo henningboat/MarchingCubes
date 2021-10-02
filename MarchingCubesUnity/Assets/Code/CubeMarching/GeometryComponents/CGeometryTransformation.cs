@@ -71,11 +71,11 @@ namespace Code.CubeMarching.GeometryComponents
     [StructLayout(LayoutKind.Sequential)]
     public struct CGenericTerrainTransformation : IComponentData
     {
-        public TerrainTransformationType TerrainTransformationType;
         public Bytes16 TerrainModifierDataA;
         public Bytes16 TerrainModifierDataB;
         public Bytes16 TerrainModifierDataC;
         public Bytes16 TerrainModifierDataD;
+        public TerrainTransformationType TerrainTransformationType;
 
         public PackedFloat3 TransformPosition(PackedFloat3 positionOS, NativeArray<float> valueBuffer)
         {
@@ -88,6 +88,8 @@ namespace Code.CubeMarching.GeometryComponents
                     // case TerrainTransformationType.Mirror:
                     //     return ((CTerrainTransformationMirror*) ptr)->TransformPosition(positionOS);
                     //     break;
+                    case TerrainTransformationType.Repetition:
+                        return ((CTerrainTransformationRepetition*) ptr)->TransformPosition(positionOS, valueBuffer);
                     case TerrainTransformationType.Transform:
                         return ((CGeometryTransformation*) ptr)->TransformPosition(positionOS, valueBuffer);
                         break;
@@ -119,9 +121,10 @@ namespace Code.CubeMarching.GeometryComponents
 
     public enum TerrainTransformationType
     {
-        Mirror,
-        Wave,
-        Transform
+        Mirror = 0,
+        Wave = 1,
+        Transform = 2,
+        Repetition = 3
     }
 
     public struct CGeometryTransformation : IComponentData, ITerrainTransformation
@@ -134,7 +137,7 @@ namespace Code.CubeMarching.GeometryComponents
         public PackedFloat3 TransformPosition(PackedFloat3 positionWS, NativeArray<float> valueBuffer)
         {
             var objectOriginResolved = objectOrigin.Resolve(valueBuffer);
-            
+
             switch (Type)
             {
                 case TerrainModifierTransformationType.None:
@@ -212,7 +215,7 @@ namespace Code.CubeMarching.GeometryComponents
         public uint CalculateHash()
         {
             var hash = math.hash(inverseRotationScaleMatrix);
-            hash.AddToHash((uint)objectOrigin.Index);
+            hash.AddToHash((uint) objectOrigin.Index);
             hash.AddToHash((uint) Type);
             return hash;
         }
@@ -224,5 +227,21 @@ namespace Code.CubeMarching.GeometryComponents
         TransformationOnly,
         TransformationAndUniformScale,
         TransformationRotationAndScale
+    }
+
+
+    [Serializable]
+    [StructLayout(LayoutKind.Sequential)]
+    public struct CTerrainTransformationRepetition : ITerrainTransformation
+    {
+        [SerializeField] public Float3Value Period;
+        [SerializeField] public Float3Value Offset;
+
+        public TerrainTransformationType TerrainTransformationType { get; }
+
+        public PackedFloat3 TransformPosition(PackedFloat3 positionWS, NativeArray<float> valueBuffer)
+        {
+            return positionWS % new PackedFloat3(Period.Resolve(valueBuffer));
+        }
     }
 }
