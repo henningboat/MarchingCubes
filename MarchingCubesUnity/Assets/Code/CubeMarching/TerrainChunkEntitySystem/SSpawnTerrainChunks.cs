@@ -212,7 +212,7 @@ namespace Code.CubeMarching.TerrainChunkEntitySystem
 
         public CTerrainMaterial TerrainMaterial;
         public CGenericGeometryShape TerrainModifier;
-        public CGeometryTransformation Translation;
+        public Float4X4Value TransformationValue;
 
         #endregion
 
@@ -220,7 +220,8 @@ namespace Code.CubeMarching.TerrainChunkEntitySystem
         {
             //todo add TerrainMaterial to hash ones there is a proper implementation
             var hash = TerrainModifier.CalculateHash();
-            hash.AddToHash(Translation.CalculateHash());
+            //todo
+          //  hash.AddToHash(TransformationValue.Index);
             return hash;
         }
     }

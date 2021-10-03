@@ -148,7 +148,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 622982911}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 4.4, y: 1.72, z: 4.3}
+  m_LocalPosition: {x: 27.31, y: 1.72, z: 16.48}
   m_LocalScale: {x: 0.5690198, y: 0.5690198, z: 0.5690198}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -170,44 +170,8 @@ MonoBehaviour:
   _geometryGraph: {fileID: 11400000, guid: 35ace0ac0e543694a9de99dc91917ff9, type: 2}
   _overwrites:
   - _propertyGUID:
-      m_Value0: 10364363237964666826
-      m_Value1: 8630093658896670614
+      m_Value0: 6689545110554054812
+      m_Value1: 15868118601848426785
     _value:
-    - 47.39
-    _providerObject: {fileID: 0}
-  - _propertyGUID:
-      m_Value0: 14145681954809485537
-      m_Value1: 4153761398938074930
-    _value:
-    - 0
-    - 0
-    - 0
-    _providerObject: {fileID: 0}
-  - _propertyGUID:
-      m_Value0: 4533874454944772850
-      m_Value1: 2257224343336382484
-    _value:
-    - 10
-    _providerObject: {fileID: 0}
-  - _propertyGUID:
-      m_Value0: 14662344094486867202
-      m_Value1: 12840456327037184902
-    _value:
-    - 8
-    - 8
-    - 8
-    _providerObject: {fileID: 0}
-  - _propertyGUID:
-      m_Value0: 8382376509374321448
-      m_Value1: 16264545111307734309
-    _value:
-    - 8
-    - 8
-    - 8
-    _providerObject: {fileID: 0}
-  - _propertyGUID:
-      m_Value0: 16028630040649229981
-      m_Value1: 11655862299213902067
-    _value:
-    - 0.5
+    - 9.2
     _providerObject: {fileID: 0}

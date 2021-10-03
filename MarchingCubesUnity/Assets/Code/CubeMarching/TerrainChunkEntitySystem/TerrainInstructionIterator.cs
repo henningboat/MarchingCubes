@@ -4,6 +4,7 @@ using Code.CubeMarching.TerrainChunkSystem;
 using Code.SIMDMath;
 using Unity.Collections;
 using Unity.Entities;
+using Unity.Mathematics;
 using static Unity.Mathematics.math;
 
 namespace Code.CubeMarching.TerrainChunkEntitySystem
@@ -161,7 +162,25 @@ namespace Code.CubeMarching.TerrainChunkEntitySystem
                     case TerrainInstructionType.Shape:
                         var shape = combinerInstruction.TerrainShape;
 
-                        var positionOS = shape.Translation.TransformPosition(_postionStack[_postionsWS.Length * combinerInstruction.CombinerDepth + i],_valueBuffer);
+                        float4x4 transformation = shape.TransformationValue.Resolve(_valueBuffer);
+
+
+                        PackedFloat3 positionOS=default;
+
+
+                        var positionWSValue = _postionStack[_postionsWS.Length * combinerInstruction.CombinerDepth + i];
+
+                        //todo add SIMD version
+                        for (int j = 0; j < 4; j++)
+                        {
+                            float4 positionWSSlice = new float4(positionWSValue.x.PackedValues[j], positionWSValue.y.PackedValues[j], positionWSValue.z.PackedValues[j], 1);
+                            float4 positionOSSlice = mul(transformation, positionWSSlice);
+                            positionOS.x.PackedValues[j] = positionOSSlice.x;
+                            positionOS.y.PackedValues[j] = positionOSSlice.y;
+                            positionOS.z.PackedValues[j] = positionOSSlice.z;
+                        }
+                        
+                        //var positionOS = shape.Translation.TransformPosition(_postionStack[_postionsWS.Length * combinerInstruction.CombinerDepth + i],_valueBuffer);
 
                         var surfaceDistance = shape.TerrainModifier.GetSurfaceDistance(positionOS, _valueBuffer);
                         terrainData = new PackedTerrainData(surfaceDistance, shape.TerrainMaterial.Material);

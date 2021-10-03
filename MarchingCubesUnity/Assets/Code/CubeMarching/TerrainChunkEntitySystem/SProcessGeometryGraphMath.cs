@@ -38,7 +38,7 @@ namespace Code.CubeMarching.TerrainChunkEntitySystem
                 for (var i = 0; i < mathInstructions.Length; i++)
                 {
                     MathInstruction instruction = mathInstructions[i];
-                    instruction.Execute(instancePropertyBuffer);
+                    instruction.Execute(instancePropertyBuffer.Reinterpret<float>());
                 }
             }).WithBurst().WithReadOnly(getOverwritePropertyFromEntity).ScheduleParallel(Dependency);
         }

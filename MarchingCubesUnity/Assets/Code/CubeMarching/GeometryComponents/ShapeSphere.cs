@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Runtime.InteropServices;
 using Code.CubeMarching.Authoring;
+using Code.CubeMarching.GeometryGraph.Editor.Conversion;
 using Code.CubeMarching.Rendering;
 using Code.SIMDMath;
 using JetBrains.Annotations;
@@ -85,6 +86,16 @@ namespace Code.CubeMarching.GeometryComponents
         public float3 Resolve(NativeArray<float> valueBuffer)
         {
             return new(valueBuffer[Index], valueBuffer[Index + 1], valueBuffer[Index + 2]);
+        }
+    }
+    
+    public struct Float4X4Value
+    {
+        public int Index;
+
+        public float4x4 Resolve(NativeArray<float> valueBuffer)
+        {
+            return valueBuffer.Read<float4x4>(Index);
         }
     }
 }

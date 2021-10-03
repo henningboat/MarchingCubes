@@ -13,11 +13,11 @@ namespace Code.CubeMarching.GeometryGraph.Editor.Conversion
     internal class ShapeInstruction : GeometryGraphInstruction
     {
         public readonly ShapeType ShapeType;
-        public readonly GeometryTransformationInstruction Transformation;
+        public readonly GeometryGraphProperty Transformation;
         public readonly List<GeometryGraphProperty> ShapeProperties;
         private CombinerInstruction _combiner;
 
-        public ShapeInstruction(ShapeType shapeType, GeometryTransformationInstruction transformation, List<GeometryGraphProperty> shapeProperties, int currentCombinerDepth,
+        public ShapeInstruction(ShapeType shapeType, GeometryGraphProperty transformation, List<GeometryGraphProperty> shapeProperties, int currentCombinerDepth,
             CombinerInstruction combiner) : base(currentCombinerDepth)
         {
             _combiner = combiner;
@@ -35,8 +35,7 @@ namespace Code.CubeMarching.GeometryGraph.Editor.Conversion
                 DependencyIndex = default, Combiner = _combiner.GetCombinerSetting(),
                 TerrainShape = new GeometryShapeTranslationTuple()
                 {
-                    //todo
-                   // Translation = new CGeometryTransformation(new Float3Value() {Index = Position.Index}),
+                    TransformationValue = new Float4X4Value(){Index = Transformation.Index},
                     TerrainMaterial = default,
                     TerrainModifier = BuildGenericTerrainModifier()
                 },

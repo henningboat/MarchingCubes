@@ -15,6 +15,6 @@ namespace Code.CubeMarching.GeometryGraph.Editor.DataModel.GeometryNodes
             GeometryOut = this.AddDataOutputPort<DistanceFieldValue>(null, nameof(GeometryOut));
         }
 
-        public abstract void Resolve(GeometryGraphResolverContext context, GeometryTransformationInstruction parent);
+        public abstract void Resolve(GeometryGraphResolverContext context, GeometryGraphProperty parent);
     }
 }

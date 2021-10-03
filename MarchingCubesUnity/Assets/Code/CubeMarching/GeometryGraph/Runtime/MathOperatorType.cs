@@ -7,6 +7,7 @@
         Multiplication,
         Division,
         Min,
-        Max
+        Max,
+        Translate
     }
 }

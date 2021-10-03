@@ -32,9 +32,9 @@ namespace Code.CubeMarching.GeometryGraph.Editor.DataModel.ShapeNodes
 
         public abstract List<GeometryGraphProperty> GetProperties(GeometryGraphResolverContext context);
 
-        public void Resolve(GeometryGraphResolverContext context, GeometryTransformationInstruction parent)
+        public void Resolve(GeometryGraphResolverContext context, GeometryGraphProperty transfoamation)
         {
-            context.WriteShape(GetShapeType(), parent, GetProperties(context));
+            context.WriteShape(GetShapeType(), transfoamation, GetProperties(context));
         }
     }
 }

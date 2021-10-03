@@ -18,11 +18,11 @@ namespace Code.CubeMarching.GeometryGraph.Editor.DataModel.TransformationNode
             _geometryOutput = this.AddDataOutputPort<DistanceFieldValue>("", nameof(_geometryInput));
         }
 
-        protected abstract GeometryTransformationInstruction GetTransformationInstruction(GeometryGraphResolverContext context, GeometryTransformationInstruction parent);
+        protected abstract GeometryGraphProperty GetTransformationInstruction(GeometryGraphResolverContext context, GeometryGraphProperty parent);
 
-        public void Resolve(GeometryGraphResolverContext context,GeometryTransformationInstruction parent)
+        public void Resolve(GeometryGraphResolverContext context,GeometryGraphProperty transformation)
         {
-            _geometryInput.ResolveGeometryInput(context, GetTransformationInstruction(context, parent));
+            _geometryInput.ResolveGeometryInput(context, GetTransformationInstruction(context, transformation));
         }
     }
 }

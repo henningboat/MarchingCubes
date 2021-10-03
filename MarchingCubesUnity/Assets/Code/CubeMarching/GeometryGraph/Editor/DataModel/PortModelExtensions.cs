@@ -12,12 +12,12 @@ namespace Code.CubeMarching.GeometryGraph.Editor.DataModel
 {
     public static class PortModelExtensions
     {
-        public static void ResolveGeometryInput(this IPortModel port, GeometryGraphResolverContext context, GeometryTransformationInstruction geometryTransformationInstruction)
+        public static void ResolveGeometryInput(this IPortModel port, GeometryGraphResolverContext context, GeometryGraphProperty transformation)
         {
             var connectedPort = port.GetConnectedPorts().FirstOrDefault(model => model != null && model.PortDataType == typeof(DistanceFieldValue) && model.NodeModel != null);
             if (connectedPort != null && connectedPort.NodeModel is IGeometryNode geometryNode)
             {
-                geometryNode.Resolve(context,geometryTransformationInstruction);
+                geometryNode.Resolve(context, transformation);
             }
         }
 

@@ -1,8 +1,10 @@
 ﻿using System;
+using System.Reflection;
 using Code.CubeMarching.GeometryGraph.Editor.DataModel.GeometryNodes;
 using Code.CubeMarching.GeometryGraph.Editor.DataModel.ShapeNodes;
 using Code.CubeMarching.TerrainChunkEntitySystem;
 using Unity.Collections;
+using Unity.Collections.LowLevel.Unsafe;
 using Unity.Entities;
 using Unity.Mathematics;
 
@@ -18,34 +20,57 @@ namespace Code.CubeMarching.GeometryGraph.Editor.Conversion
         public int ResultIndex;
         public GeometryPropertyType ResultType;
 
-        public void Execute(DynamicBuffer<CGeometryGraphPropertyValue> instancePropertyBuffer)
+        public void Execute(DynamicBuffer<float> instancePropertyBuffer)
         {
-            switch (ResultType)
+            unsafe
             {
-                case GeometryPropertyType.Float:
-                    var floatResult = CalculateFloat(instancePropertyBuffer);
-                    instancePropertyBuffer[ResultIndex] = new CGeometryGraphPropertyValue() {Value = floatResult};
-                    break;
-                case GeometryPropertyType.Float3:
-                    var float3Result = CalculateFloat3(instancePropertyBuffer);
-                    instancePropertyBuffer[ResultIndex + 0] = new CGeometryGraphPropertyValue() {Value = float3Result.x};
-                    instancePropertyBuffer[ResultIndex + 1] = new CGeometryGraphPropertyValue() {Value = float3Result.y};
-                    instancePropertyBuffer[ResultIndex + 2] = new CGeometryGraphPropertyValue() {Value = float3Result.z};
-                    break;
+                switch (ResultType)
+                {
+                    case GeometryPropertyType.Float:
+                        var floatResult = CalculateFloat(instancePropertyBuffer);
+                        instancePropertyBuffer.Write(floatResult, ResultIndex);
+                        break;
+                    case GeometryPropertyType.Float3:
+                        var float3Result = CalculateFloat3(instancePropertyBuffer);
+                        instancePropertyBuffer.Write(float3Result, ResultIndex);
+                        break;
+                    case GeometryPropertyType.Float4X4:
+                        float4x4 float4X4Result = CalculateFloat4X4(instancePropertyBuffer);
+                        instancePropertyBuffer.Write(float4X4Result, ResultIndex);
+                        break;
+                    default:
+                        throw new ArgumentOutOfRangeException();
+                }
+            }
+        }
+
+        private float3 CalculateFloat3(DynamicBuffer<float> instancePropertyBuffer)
+        {
+            throw new NotImplementedException();
+        }
+
+        private float4x4 CalculateFloat4X4(DynamicBuffer<float> instancePropertyBuffer)
+        {
+            switch (MathOperationType)
+            {
+                case MathOperatorType.Translate:
+                    float4x4 transformation = instancePropertyBuffer.Read<float4x4>(InputAIndex);
+                    float3 offset = instancePropertyBuffer.Read<float3>(InputBIndex);
+                    
+                    //kind of unintuitive, but the transformation we are calculating is actually worldToObject, 
+                    //so we need to invert the offset
+                    offset = -offset;
+                    
+                    return math.mul(transformation, float4x4.Translate(offset));
                 default:
                     throw new ArgumentOutOfRangeException();
             }
         }
 
-        private float3 CalculateFloat3(DynamicBuffer<CGeometryGraphPropertyValue> instancePropertyBuffer)
+        private float CalculateFloat(DynamicBuffer<float> instancePropertyBuffer)
         {
-            throw new NotImplementedException();
-        }
-
-        private float CalculateFloat(DynamicBuffer<CGeometryGraphPropertyValue> instancePropertyBuffer)
-        {
-            var inputA = instancePropertyBuffer[InputAIndex].Value;
-            var inputB = instancePropertyBuffer[InputBIndex].Value;
+            var inputA = instancePropertyBuffer.Read<float>(InputAIndex);
+            var inputB = instancePropertyBuffer.Read<float>(InputBIndex);
 
             switch (MathOperationType)
             {
@@ -69,6 +94,29 @@ namespace Code.CubeMarching.GeometryGraph.Editor.Conversion
                 default:
                     throw new ArgumentOutOfRangeException();
             }
+        }
+    }
+
+    public static unsafe class DynamicBufferFloatExtensionMethods
+    {
+        public static T Read<T>(this DynamicBuffer<float> buffer, int index) where T : struct
+        {
+            return UnsafeUtility.ReadArrayElementWithStride<T>(buffer.GetUnsafePtr(), 1, sizeof(float) * index);
+        }
+
+        public static void Write<T>(this DynamicBuffer<float> buffer, T value, int index) where T : struct
+        {
+            UnsafeUtility.WriteArrayElementWithStride(buffer.GetUnsafeReadOnlyPtr(), 1, sizeof(float) * index, value);
+        }
+        
+        public static T Read<T>(this NativeArray<float> buffer, int index) where T : struct
+        {
+            return UnsafeUtility.ReadArrayElementWithStride<T>(buffer.GetUnsafeReadOnlyPtr(), 1, sizeof(float) * index);
+        }
+
+        public static void Write<T>(this NativeArray<float> buffer, T value, int index) where T : struct
+        {
+            UnsafeUtility.WriteArrayElementWithStride(buffer.GetUnsafePtr(), 1, sizeof(float) * index, value);
         }
     }
 }

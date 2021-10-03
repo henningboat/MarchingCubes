@@ -33,10 +33,4 @@ namespace Code.CubeMarching.GeometryGraph.Editor.DataModel.ShapeNodes
             return new() {RadiusIn.ResolvePropertyInput(context, GeometryPropertyType.Float)};
         }
     }
-
-    public enum GeometryPropertyType
-    {
-        Float,
-Float3
-    }
 }

@@ -16,12 +16,12 @@ namespace Code.CubeMarching.GeometryGraph.Editor.DataModel.GeometryNodes
         public IPortModel GeometryInputB { get; set; }
         public IPortModel BlendFactor { get; set; }
 
-        public override void Resolve(GeometryGraphResolverContext context, GeometryTransformationInstruction parent)
+        public override void Resolve(GeometryGraphResolverContext context, GeometryGraphProperty transformation)
         {
             var blendFactorProperty = BlendFactor.ResolvePropertyInput(context, GeometryPropertyType.Float);
             context.BeginWriteCombiner(new CombinerInstruction(EvaluateCombinerOperation(), blendFactorProperty, context.CurrentCombinerDepth));
-            GeometryInputA.ResolveGeometryInput(context, parent);
-            GeometryInputB.ResolveGeometryInput(context, parent);
+            GeometryInputA.ResolveGeometryInput(context, transformation);
+            GeometryInputB.ResolveGeometryInput(context, transformation);
 
             context.FinishWritingCombiner();
         }
