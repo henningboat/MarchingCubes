@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using Code.CubeMarching.GeometryComponents;
+using Code.CubeMarching.GeometryGraph.Editor.DataModel.ShapeNodes;
 using Code.CubeMarching.GeometryGraph.Runtime;
 using Code.CubeMarching.TerrainChunkEntitySystem;
 using Unity.Collections;
@@ -35,7 +37,7 @@ namespace Code.CubeMarching.GeometryGraph.Editor.Conversion
                 value[i] = propertyOverwrite.Value[i];
             }
 
-            DstEntityManager.AddComponentData(entity, new CGeometryGraphPropertyOverwriteProvider() {Value = value});
+            DstEntityManager.AddComponentData(entity, new CGeometryGraphPropertyValueProvider() {Value = value});
             DstEntityManager.SetName(entity, $"Property Overwrite {propertyOverwrite.PropertyGUID}");
             return entity;
         }
@@ -80,9 +82,10 @@ namespace Code.CubeMarching.GeometryGraph.Editor.Conversion
                         valueBufferBlobArray[i] = new CGeometryGraphPropertyValue() {Value = resolvedGraph.PropertyValueBuffer[i]};
                     }
 
+                    root.GraphOrigin = new Float4X4Value() {Index = resolvedGraph.OriginTransformation.Index};
+
                     var propertyOverwrites = new List<CGeometryPropertyOverwrite>();
 
-                    var testOverwrite = Entity.Null;
                     foreach (var propertyOverwrite in graphInstance.Overwrites)
                     {
                         if (propertyOverwrite.ProviderObject == null)
@@ -97,7 +100,6 @@ namespace Code.CubeMarching.GeometryGraph.Editor.Conversion
                                     TargetIndex = selectedProperty.Index,
                                     OverwritePropertyProvider = overwritePropertyProvider
                                 });
-                                testOverwrite = overwritePropertyProvider;
                             }
                         }
                         else
@@ -106,6 +108,9 @@ namespace Code.CubeMarching.GeometryGraph.Editor.Conversion
                         }
                     }
 
+                    propertyOverwrites.Add(new CGeometryPropertyOverwrite()
+                        {PropertyType = GeometryPropertyType.Float4X4, TargetIndex = resolvedGraph.OriginTransformation.Index, OverwritePropertyProvider = entity});
+                    
                     var overwriteBuffer = DstEntityManager.AddBuffer<CGeometryPropertyOverwrite>(entity);
                     overwriteBuffer.CopyFrom(propertyOverwrites.ToArray());
 
@@ -115,6 +120,9 @@ namespace Code.CubeMarching.GeometryGraph.Editor.Conversion
                     });
 
                     DstEntityManager.AddBuffer<CGeometryGraphPropertyValue>(entity);
+
+                    DstEntityManager.AddComponent<CFloat4x4PropertyFromTransformation>(entity);
+                    DstEntityManager.AddComponent<CGeometryGraphPropertyValueProvider>(entity);
                 }
             });
         }

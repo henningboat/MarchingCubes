@@ -15,7 +15,7 @@ namespace Code.CubeMarching.GeometryGraph.Editor
     {
         protected override Type GraphModelType => typeof(GeometryGraphModel);
 
-        [MenuItem("Assets/Create/Math Book")]
+        [MenuItem("Assets/Create/Geometry Graph")]
         public static void CreateGraph(MenuCommand menuCommand)
         {
             const string path = "Assets";

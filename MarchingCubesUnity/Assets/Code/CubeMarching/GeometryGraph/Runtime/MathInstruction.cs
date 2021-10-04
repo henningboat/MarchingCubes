@@ -59,9 +59,9 @@ namespace Code.CubeMarching.GeometryGraph.Editor.Conversion
                     
                     //kind of unintuitive, but the transformation we are calculating is actually worldToObject, 
                     //so we need to invert the offset
-                    offset = -offset;
+                    var worldToLocal = math.inverse(float4x4.Translate(offset));
                     
-                    return math.mul(transformation, float4x4.Translate(offset));
+                    return math.mul(worldToLocal, transformation);
                 default:
                     throw new ArgumentOutOfRangeException();
             }

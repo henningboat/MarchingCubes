@@ -12,7 +12,7 @@ namespace Code.CubeMarching.GeometryGraph.Editor
             ShortcutHelper.RegisterDefaultShortcuts<SimpleGraphViewWindow>(GeometryGraphStencil.GraphName);
         }
 
-        [MenuItem("GTF/Samples/GeometryGraph Editor")]
+        [MenuItem("Window/Geometry Graph Editor")]
         public static void ShowWindow()
         {
             GetWindow<SimpleGraphViewWindow>();
@@ -20,7 +20,7 @@ namespace Code.CubeMarching.GeometryGraph.Editor
 
         protected override void OnEnable()
         {
-            EditorToolName = "Math Book";
+            EditorToolName = "Geometry Graph";
             base.OnEnable();
         }
 

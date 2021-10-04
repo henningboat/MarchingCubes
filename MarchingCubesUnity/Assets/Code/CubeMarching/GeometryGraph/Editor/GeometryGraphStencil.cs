@@ -21,7 +21,7 @@ namespace Code.CubeMarching.GeometryGraph.Editor
 
         public override string ToolName => GraphName;
 
-        public static string GraphName => "Math Book";
+        public static string GraphName => "Geometry Graph";
 
         public GeometryGraphStencil()
         {
