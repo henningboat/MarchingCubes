@@ -26,6 +26,7 @@ namespace Code.CubeMarching.GeometryGraph.Editor
             EditorGUILayout.PropertyField(_geometryGraphProperty);
             if (graph == null)
             {
+                serializedObject.ApplyModifiedProperties();
                 return;
             }
 
