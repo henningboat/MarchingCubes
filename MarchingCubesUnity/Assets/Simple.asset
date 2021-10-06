@@ -1,0 +1,121 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8a1b94d54a0718749ac226aeb8ef53fc, type: 3}
+  m_Name: Simple
+  m_EditorClassIdentifier: 
+  m_GraphModel:
+    rid: 5677977107544670209
+  references:
+    version: 2
+    RefIds:
+    - rid: 5677977107544670209
+      type: {class: GeometryGraphModel, ns: Code.CubeMarching.GeometryGraph.Editor.DataModel, asm: CubeMarching}
+      data:
+        m_AssetModel: {fileID: 11400000}
+        m_GraphNodeModels:
+        - rid: 5677977107544670210
+        - rid: 5677977107544670212
+        m_EdgeModels: []
+        m_BadgeModels: []
+        m_GraphEdgeModels:
+        - rid: 5677977107544670213
+        m_PolymorphicEdgeModels: []
+        m_StickyNoteModels: []
+        m_GraphStickyNoteModels: []
+        m_PlacematModels: []
+        m_GraphPlacematModels: []
+        m_GraphVariableModels: []
+        m_GraphPortalModels: []
+        m_Name: 
+        m_StencilTypeName: Code.CubeMarching.GeometryGraph.Editor.GeometryGraphStencil,
+          CubeMarching, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
+    - rid: 5677977107544670210
+      type: {class: GraphResult, ns: Code.CubeMarching.GeometryGraph.Editor.DataModel.GeometryNodes, asm: CubeMarching}
+      data:
+        m_Guid:
+          m_Value0: 12612075079219842433
+          m_Value1: 9396013394017854298
+        m_AssetModel: {fileID: 11400000}
+        m_Color: {r: 0, g: 0, b: 0, a: 0}
+        m_HasUserColor: 0
+        m_Version: 1
+        m_Position: {x: 1203, y: 141}
+        m_Title: 
+        m_InputConstantsById:
+          m_KeyList:
+          - DataIn
+          m_ValueList:
+          - rid: 5677977107544670211
+        m_State: 0
+        m_Collapsed: 0
+    - rid: 5677977107544670211
+      type: {class: EnumConstant, ns: UnityEditor.GraphToolsFoundation.Overdrive.BasicModel, asm: Unity.GraphTools.Foundation.Overdrive.Model}
+      data:
+        m_Value:
+          m_EnumType:
+            Identification: Code.CubeMarching.GeometryGraph.Editor.DataModel.GeometryNodes.DistanceFieldValue,
+              CubeMarching, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
+          m_Value: 0
+    - rid: 5677977107544670212
+      type: {class: TorusShapeNode, ns: Code.CubeMarching.GeometryGraph.Editor.DataModel.ShapeNodes, asm: CubeMarching}
+      data:
+        m_Guid:
+          m_Value0: 17729962201741329914
+          m_Value1: 2011218390554882313
+        m_AssetModel: {fileID: 11400000}
+        m_Color: {r: 0.4, g: 0, b: 0, a: 1}
+        m_HasUserColor: 1
+        m_Version: 1
+        m_Position: {x: 827, y: 125}
+        m_Title: 
+        m_InputConstantsById:
+          m_KeyList:
+          - RadiusIn
+          - Thickness
+          m_ValueList:
+          - rid: 5677977107544670214
+          - rid: 5677977107544670215
+        m_State: 0
+        m_Collapsed: 0
+    - rid: 5677977107544670213
+      type: {class: EdgeModel, ns: UnityEditor.GraphToolsFoundation.Overdrive.BasicModel, asm: Unity.GraphTools.Foundation.Overdrive.Model}
+      data:
+        m_Guid:
+          m_Value0: 4720166609869084684
+          m_Value1: 12308054899799098957
+        m_AssetModel: {fileID: 11400000}
+        m_Color: {r: 0, g: 0, b: 0, a: 0}
+        m_HasUserColor: 0
+        m_Version: 1
+        m_FromPortReference:
+          m_NodeModelGuid:
+            m_Value0: 17729962201741329914
+            m_Value1: 2011218390554882313
+          m_GraphAssetModel: {fileID: 11400000}
+          m_UniqueId: GeometryOut
+        m_ToPortReference:
+          m_NodeModelGuid:
+            m_Value0: 12612075079219842433
+            m_Value1: 9396013394017854298
+          m_GraphAssetModel: {fileID: 11400000}
+          m_UniqueId: DataIn
+        m_EdgeControlPoints: []
+        m_EditMode: 0
+        m_EdgeLabel: 
+    - rid: 5677977107544670214
+      type: {class: FloatConstant, ns: UnityEditor.GraphToolsFoundation.Overdrive.BasicModel, asm: Unity.GraphTools.Foundation.Overdrive.Model}
+      data:
+        m_Value: 8
+    - rid: 5677977107544670215
+      type: {class: FloatConstant, ns: UnityEditor.GraphToolsFoundation.Overdrive.BasicModel, asm: Unity.GraphTools.Foundation.Overdrive.Model}
+      data:
+        m_Value: 3

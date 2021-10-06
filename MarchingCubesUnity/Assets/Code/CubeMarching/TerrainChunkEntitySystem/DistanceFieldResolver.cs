@@ -14,7 +14,7 @@ namespace Code.CubeMarching.TerrainChunkEntitySystem
     public static class DistanceFieldResolver
     {
         public static void CalculateDistanceFieldForChunk(DynamicBuffer<TerrainChunkDataBuffer> terrainChunkBuffer, ref DistanceFieldChunkData distanceField, CTerrainEntityChunkPosition chunkPosition,
-            BufferFromEntity<GeometryInstruction> getTerrainInstructionBuffer, Entity clusterEntity, int backgroundDataIndex, bool ignoreBackgroundData, CClusterParameters clusterParameters,
+            BufferFromEntity<CSubGraphGeometryInstruction> getTerrainInstructionBuffer, Entity clusterEntity, int backgroundDataIndex, bool ignoreBackgroundData, CClusterParameters clusterParameters,
             NativeArray<float> valueBuffer)
         {
             TerrainChunkData terrainChunk = default;
@@ -32,7 +32,7 @@ namespace Code.CubeMarching.TerrainChunkEntitySystem
                     positionsToCheck[i] = new float3(positionGS.x, positionGS.y, positionGS.z) * SSpawnTerrainChunks.TerrainChunkLength + offsetInChunk;
                 }
 
-                var iterator = new TerrainInstructionIterator(positionsToCheck, getTerrainInstructionBuffer[clusterEntity], chunkPosition.indexInCluster, existingData, valueBuffer);
+                var iterator = new TerrainInstructionIterator(positionsToCheck, getTerrainInstructionBuffer[clusterEntity].Reinterpret<GeometryInstruction>(), chunkPosition.indexInCluster, existingData, valueBuffer);
 
                 iterator.CalculateTerrainData();
 
@@ -57,7 +57,7 @@ namespace Code.CubeMarching.TerrainChunkEntitySystem
             {
                 CreatePositionsArray(distanceField, chunkPosition, out var positions);
 
-                var iterator = new TerrainInstructionIterator(positions, getTerrainInstructionBuffer[clusterEntity], chunkPosition.indexInCluster, existingData, valueBuffer);
+                var iterator = new TerrainInstructionIterator(positions, getTerrainInstructionBuffer[clusterEntity].Reinterpret<GeometryInstruction>(), chunkPosition.indexInCluster, existingData, valueBuffer);
                 iterator.CalculateTerrainData();
 
                 terrainChunk = CopyResultsBackToBuffer(distanceField, terrainChunk, iterator);

@@ -27,26 +27,25 @@ namespace Code.CubeMarching.TerrainChunkEntitySystem
             //Static geometry 
             {
                 //Write Instructions
-                var graphEntity = GetSingletonEntity<CGeometryGraphInstance>();
+                var mainGraphSingleton = GetSingletonEntity<CMainGeometryGraphSingleton>();
 
-                var writeJob = new RuntimeGeometryGraphBuilder(this, graphEntity);
+                var writeJob = new RuntimeGeometryGraphBuilder(this, mainGraphSingleton);
                 Dependency = Entities
-                    .ForEach((Entity entity, ref DynamicBuffer<GeometryInstruction> terrainInstructions, ref CClusterParameters clusterParameters,
+                    .ForEach((Entity entity, ref DynamicBuffer<CSubGraphGeometryInstruction> terrainInstructions,ref DynamicBuffer<CSubGeometryGraphPropertyValue> valueBuffer, ref CClusterParameters clusterParameters,
                         in CClusterPosition clusterPosition) =>
                     {
-                        var valueBuffer = writeJob.GetPropertyValueBufferFromEntity[entity];
                         writeJob.Execute(terrainInstructions, ref clusterParameters, clusterPosition, isPlaying, valueBuffer);
                     }).WithName("WriteStaticTerrainInstructions").WithBurst().Schedule(Dependency);
 
-                var getValueBuffer = GetBufferFromEntity<CGeometryGraphPropertyValue>(true);
+                var getValueBuffer = GetBufferFromEntity<CMainGeometryGraphPropertyValue>(true);
                 //Calculate Distance Fields
-                var getTerrainInstructionBuffer = GetBufferFromEntity<GeometryInstruction>(true);
+                var getTerrainInstructionBuffer = GetBufferFromEntity<CSubGraphGeometryInstruction>(true);
 
                 Dependency = Entities.ForEach((ref CTerrainChunkDynamicData distanceField, in ClusterChild clusterChild,
                         in CTerrainEntityChunkPosition chunkPosition) =>
                     {
                         var clusterParameters = getClusterParameters[clusterChild.ClusterEntity];
-                        var valueBuffer = getValueBuffer[graphEntity];
+                        var valueBuffer = getValueBuffer[mainGraphSingleton];
                         hasher.Execute(ref distanceField.DistanceFieldChunkData, chunkPosition, clusterParameters, clusterChild, frameCount);
 
                         if (!distanceField.DistanceFieldChunkData.InstructionsChangedSinceLastFrame)

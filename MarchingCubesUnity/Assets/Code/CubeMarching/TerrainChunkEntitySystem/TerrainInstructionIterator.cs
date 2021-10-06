@@ -50,7 +50,7 @@ namespace Code.CubeMarching.TerrainChunkEntitySystem
             _combinerStackSize = 0;
             for (var i = 0; i < combinerInstructions.Length; i++)
             {
-                _combinerStackSize = max(combinerInstructions[i].CombinerDepth, _combinerStackSize);
+                _combinerStackSize = max(_combinerInstructions[i].CombinerDepth, _combinerStackSize);
             }
 
             //todo workaround. Remove this and see the exceptions

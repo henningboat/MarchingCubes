@@ -10,38 +10,39 @@ namespace Code.CubeMarching.TerrainChunkEntitySystem
     {
         private Entity _graphEntity;
         public ComponentDataFromEntity<CGeometryGraphInstance> GetGeometryGraphInstanceFromEntity;
-        public BufferFromEntity<CGeometryGraphPropertyValue> GetPropertyValueBufferFromEntity;
+        private readonly BufferFromEntity<CMainGraphGeometryInstruction> _instructionBuffer;
+        private readonly BufferFromEntity<CMainGeometryGraphPropertyValue> _valueBuffer;
+
 
         public RuntimeGeometryGraphBuilder(SystemBase system, Entity graphEntity)
         {
             _graphEntity = graphEntity;
             GetGeometryGraphInstanceFromEntity = system.GetComponentDataFromEntity<CGeometryGraphInstance>(false);
-            GetPropertyValueBufferFromEntity = system.GetBufferFromEntity<CGeometryGraphPropertyValue>(false);
+            _instructionBuffer = system.GetBufferFromEntity<CMainGraphGeometryInstruction>();
+            _valueBuffer = system.GetBufferFromEntity<CMainGeometryGraphPropertyValue>();
         }
 
-        public void Execute(DynamicBuffer<GeometryInstruction> geometryInstructions, ref CClusterParameters clusterParameters, in CClusterPosition clusterPosition, bool isPlaying,
-            DynamicBuffer<CGeometryGraphPropertyValue> valueBuffer)
+        public void Execute(DynamicBuffer<CSubGraphGeometryInstruction> subGraphGeometryInstructions, ref CClusterParameters clusterParameters, in CClusterPosition clusterPosition, bool isPlaying,
+            DynamicBuffer<CSubGeometryGraphPropertyValue> valueBuffer)
         {
             clusterParameters.WriteMask = BitArray512.AllBitsTrue;
-            geometryInstructions.Clear();
-            valueBuffer.Clear();
+            
+            var geometryInstructionsCast = subGraphGeometryInstructions.Reinterpret<GeometryInstruction>();
+            geometryInstructionsCast.Clear();
 
-            if (GetGeometryGraphInstanceFromEntity[_graphEntity].graph.IsCreated == false)
+            var mainGraphInstructionBuffer = _instructionBuffer[_graphEntity].Reinterpret<GeometryInstruction>();
+
+            for (var i = 0; i <mainGraphInstructionBuffer.Length; i++)
             {
-                return;
+                geometryInstructionsCast.Add(mainGraphInstructionBuffer[i]);
             }
 
-            var graphValueProperties = GetPropertyValueBufferFromEntity[_graphEntity];
-
-            ref var geometryGraphBlob = ref GetGeometryGraphInstanceFromEntity[_graphEntity].graph.Value;
-            for (var i = 0; i < geometryGraphBlob.geometryInstructions.Length; i++)
+            var mainGraphValueBuffer = _valueBuffer[_graphEntity].Reinterpret<float>();
+            var valueBufferCast = valueBuffer.Reinterpret<float>();
+            valueBufferCast.Clear();
+            for (var i = 0; i < mainGraphValueBuffer.Length; i++)
             {
-                geometryInstructions.Add(geometryGraphBlob.geometryInstructions[i]);
-            }
-
-            for (var i = 0; i < graphValueProperties.Length; i++)
-            {
-                valueBuffer.Add(graphValueProperties[i]);
+                valueBufferCast.Add(mainGraphValueBuffer[i]);
             }
         }
     }

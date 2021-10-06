@@ -7,10 +7,8 @@ namespace Code.CubeMarching.GeometryGraph.Runtime
 {
     public struct GeometryGraphBlob
     {
-        public BlobArray<CGeometryGraphPropertyValue> valueBuffer;
+        public BlobArray<CSubGeometryGraphPropertyValue> valueBuffer;
         public BlobArray<MathInstruction> mathInstructions;
         public BlobArray<GeometryInstruction> geometryInstructions;
-        
-        public Float4X4Value GraphOrigin;
     }
 }

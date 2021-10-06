@@ -110,8 +110,8 @@ namespace Code.CubeMarching.TerrainChunkEntitySystem
 
             _clusterArchetype = EntityManager.CreateArchetype(
                 typeof(CClusterPosition),
-                typeof(GeometryInstruction),
-                typeof(CGeometryGraphPropertyValue),
+                typeof(CSubGraphGeometryInstruction),
+                typeof(CSubGeometryGraphPropertyValue),
                 typeof(CTriangulationInstruction),
                 typeof(CSubChunkWithTrianglesIndex),
                 typeof(CClusterChildListElement),
@@ -307,7 +307,7 @@ namespace Code.CubeMarching.TerrainChunkEntitySystem
         #endregion
     }
 
-    public struct GeometryInstruction : IBufferElementData
+    public struct GeometryInstruction
     {
         #region Public Fields
 
@@ -347,6 +347,26 @@ namespace Code.CubeMarching.TerrainChunkEntitySystem
 
             return hash;
         }
+
+        public void AddValueBufferOffset(int valueBufferOffset)
+        {
+            TerrainShape.TerrainModifier.PropertyIndexesA += valueBufferOffset;
+            TerrainShape.TerrainModifier.PropertyIndexesB += valueBufferOffset;
+            TerrainShape.TerrainModifier.PropertyIndexesC += valueBufferOffset;
+            TerrainShape.TerrainModifier.PropertyIndexesD += valueBufferOffset;
+
+            TerrainShape.TransformationValue.Index += valueBufferOffset;
+        }
+    }
+    
+    public struct CSubGraphGeometryInstruction : IBufferElementData
+    {
+        public GeometryInstruction Instruction;
+    } 
+    
+    public struct CMainGraphGeometryInstruction : IBufferElementData
+    {
+        public GeometryInstruction Instruction;
     }
 
     public enum TerrainInstructionType : byte
