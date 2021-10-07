@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using Code.CubeMarching.GeometryComponents;
 using Code.CubeMarching.GeometryGraph.Editor.Conversion;
 using Code.CubeMarching.GeometryGraph.Editor.DataModel;
 using Code.CubeMarching.GeometryGraph.Editor.DataModel.GeometryNodes;
@@ -54,9 +55,13 @@ namespace Code.CubeMarching.GeometryGraph.Editor
             var resultNode = GraphModel.NodeModels.FirstOrDefault(model => model is GraphResult) as GraphResult;
 
             var rootNode = resultNode.DataIn.GetConnectedPorts().FirstOrDefault().NodeModel as IGeometryNode;
+
+            context.BeginWriteCombiner(new CombinerInstruction(CombinerOperation.Min,context.ZeroFloatProperty,context.CurrentCombinerDepth));
             
             rootNode.Resolve(context, context.OriginTransformation);
 
+            context.FinishWritingCombiner();
+            
             context.BuildBuffers();
 
             return context;

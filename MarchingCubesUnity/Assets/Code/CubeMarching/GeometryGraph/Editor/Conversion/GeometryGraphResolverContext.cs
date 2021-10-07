@@ -30,7 +30,7 @@ namespace Code.CubeMarching.GeometryGraph.Editor.Conversion
         public List<GeometryInstruction> GeometryInstructionBuffer => _geometryInstructionBuffer;
 
         private Stack<CombinerInstruction> _combinerStack = new();
-        private GeometryGraphProperty _zeroFloatProperty;
+        public readonly GeometryGraphProperty ZeroFloatProperty;
         private List<GeometryTransformation> _translationsBuffer;
 
         public CombinerInstruction CurrentCombiner => _combinerStack.Peek();
@@ -39,9 +39,9 @@ namespace Code.CubeMarching.GeometryGraph.Editor.Conversion
 
         public GeometryGraphResolverContext()
         {
-            _zeroFloatProperty = GetOrCreateProperty(SerializableGUID.Generate(), new GeometryGraphConstantProperty(0.0f, this, GeometryPropertyType.Float, "Zero Float Constant"));
+            ZeroFloatProperty = GetOrCreateProperty(SerializableGUID.Generate(), new GeometryGraphConstantProperty(0.0f, this, GeometryPropertyType.Float, "Zero Float Constant"));
             OriginTransformation = GetOrCreateProperty(SerializableGUID.Generate(), new GeometryGraphConstantProperty(Matrix4x4.Translate(Vector3.one*-32), this, GeometryPropertyType.Float4X4, "Origin Matrix"));
-            _combinerStack.Push(new CombinerInstruction(CombinerOperation.Min, _zeroFloatProperty, 0));
+            _combinerStack.Push(new CombinerInstruction(CombinerOperation.Min, ZeroFloatProperty, 0));
         }
 
         public void BeginWriteCombiner(CombinerInstruction combiner)
