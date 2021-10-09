@@ -6,6 +6,7 @@ using Code.CubeMarching.GeometryComponents;
 using Code.CubeMarching.GeometryGraph.Editor.DataModel;
 using Code.CubeMarching.GeometryGraph.Editor.DataModel.GeometryNodes;
 using Code.CubeMarching.GeometryGraph.Editor.DataModel.ShapeNodes;
+using Code.CubeMarching.GeometryGraph.Editor.DataModel.TransformationNode;
 using Code.CubeMarching.TerrainChunkEntitySystem;
 using Unity.Mathematics;
 using UnityEditor;
@@ -127,6 +128,11 @@ namespace Code.CubeMarching.GeometryGraph.Editor.Conversion
             {
                 GeometryInstructionBuffer.Add(_instructions[i].GetInstruction());
             }
+        }
+
+        public void WriteDistanceModifier(DistanceModifierInstruction getDistanceModifierInstruction)
+        {
+            _instructions.Add(getDistanceModifierInstruction);
         }
     }
 

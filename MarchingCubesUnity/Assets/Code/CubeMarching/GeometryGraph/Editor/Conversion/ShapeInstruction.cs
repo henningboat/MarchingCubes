@@ -28,39 +28,7 @@ namespace Code.CubeMarching.GeometryGraph.Editor.Conversion
 
         public override GeometryInstruction GetInstruction()
         {
-            return new()
-            {
-                CombinerDepth = Depth,
-                CoverageMask = BitArray512.AllBitsTrue,
-                DependencyIndex = default, Combiner = _combiner.GetCombinerSetting(),
-                TerrainShape = new GeometryShapeTranslationTuple()
-                {
-                    TransformationValue = new Float4X4Value(){Index = Transformation.Index},
-                    TerrainMaterial = default,
-                    TerrainModifier = BuildGenericTerrainModifier()
-                },
-                TerrainInstructionType = TerrainInstructionType.Shape
-            };
-        }
-
-        private CGenericTerrainModifier BuildGenericTerrainModifier()
-        {
-            unsafe
-            {
-                var shape = new CGenericTerrainModifier();
-                shape.ShapeType = ShapeType;
-                if (ShapeProperties.Count > 16)
-                {
-                    throw new ArgumentOutOfRangeException("There's no support for more than 16 properties");
-                }
-
-                for (var i = 0; i < ShapeProperties.Count; i++)
-                {
-                    UnsafeUtility.WriteArrayElement((int*) UnsafeUtility.AddressOf(ref shape), i, ShapeProperties[i].Index);
-                }
-
-                return shape;
-            }
+            return GeometryInstructionUtility.CreateInstruction(GeometryInstructionType.Shape, (int) ShapeType, Depth, _combiner, Transformation, ShapeProperties);
         }
     }
 }

@@ -2,6 +2,8 @@ using System;
 using System.Runtime.CompilerServices;
 using Code.CubeMarching.Authoring;
 using Code.CubeMarching.GeometryComponents;
+using Code.CubeMarching.GeometryGraph.Editor.Conversion;
+using Code.CubeMarching.GeometryGraph.Runtime;
 using Code.CubeMarching.Rendering;
 using Code.CubeMarching.TerrainChunkSystem;
 using Code.CubeMarching.Utils;
@@ -12,7 +14,6 @@ using Unity.Rendering;
 using Unity.Transforms;
 using UnityEngine;
 using UnityEngine.Rendering;
-using CGenericGeometryShape = Code.CubeMarching.Authoring.CGenericTerrainModifier;
 
 namespace Code.CubeMarching.TerrainChunkEntitySystem
 {
@@ -110,8 +111,8 @@ namespace Code.CubeMarching.TerrainChunkEntitySystem
 
             _clusterArchetype = EntityManager.CreateArchetype(
                 typeof(CClusterPosition),
-                typeof(CSubGraphGeometryInstruction),
-                typeof(CSubGeometryGraphPropertyValue),
+                typeof(GeometryInstruction),
+                typeof(CGeometryGraphPropertyValue),
                 typeof(CTriangulationInstruction),
                 typeof(CSubChunkWithTrianglesIndex),
                 typeof(CClusterChildListElement),
@@ -187,81 +188,7 @@ namespace Code.CubeMarching.TerrainChunkEntitySystem
 
         #endregion
     }
-
-
-    [UpdateAfter(typeof(SUpdateFrameCount))]
-    [WorldSystemFilter(WorldSystemFilterFlags.Editor | WorldSystemFilterFlags.Default)]
-    public class SCalculateShapeBounds : SystemBase
-    {
-        #region Protected methods
-
-        protected override void OnUpdate()
-        {
-            // Entities.ForEach((ref CTerrainModifierBounds bounds, in CGenericGeometryShape terrainModifier, in Translation translation) =>
-            // {
-            //     bounds.Bounds = terrainModifier.CalculateBounds(translation);
-            // }).WithBurst().ScheduleParallel();
-        }
-
-        #endregion
-    }
-
-    public struct GeometryShapeTranslationTuple
-    {
-        #region Public Fields
-
-        public CTerrainMaterial TerrainMaterial;
-        public CGenericGeometryShape TerrainModifier;
-        public Float4X4Value TransformationValue;
-
-        #endregion
-
-        public uint CalculateHash()
-        {
-            //todo add TerrainMaterial to hash ones there is a proper implementation
-            var hash = TerrainModifier.CalculateHash();
-            //todo
-          //  hash.AddToHash(TransformationValue.Index);
-            return hash;
-        }
-    }
-
-    public struct GizmosVisualization
-    {
-        #region Public Fields
-
-        public float4 color;
-        public bool IsSubChunk;
-        public float4x4 transformation;
-
-        #endregion
-    }
-
-    public static class Utils
-    {
-        #region Static Stuff
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static int3 IndexToPositionWS(int i, int3 size)
-        {
-            var index = i;
-
-            var x = index % size.x;
-            var y = index / size.x % size.y;
-            var z = index / (size.x * size.y);
-
-            return new int3(x, y, z);
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static int PositionToIndex(int3 position, int3 size)
-        {
-            return position.x + position.y * size.x + position.z * size.x * size.y;
-        }
-
-        #endregion
-    }
-
+    
     public struct CTerrainEntityChunkPosition : IComponentData
     {
         #region Public Fields
@@ -307,69 +234,40 @@ namespace Code.CubeMarching.TerrainChunkEntitySystem
         #endregion
     }
 
-    public struct GeometryInstruction
+    public struct GeometryInstruction:IBufferElementData
     {
         #region Public Fields
 
         public int CombinerDepth;
+        public GeometryInstructionType GeometryInstructionType;
+        
+        public int GeometryInstructionSubType;
+        
+        public int16 PropertyIndexes;
+        public Float4X4Value TransformationValue;
+        
         public CGeometryCombiner Combiner;
-        public BitArray512 CoverageMask;
-        public int DependencyIndex;
-        public TerrainInstructionType TerrainInstructionType;
-        public GeometryShapeTranslationTuple TerrainShape;
-        public CGenericTerrainTransformation TerrainTransformation;
-        public WorldToLocal WorldToLocal;
-        public uint Hash;
 
         #endregion
 
-        public uint CalculateHash()
-        {
-            var hash = math.hash(new uint3((uint) TerrainInstructionType, (uint) CombinerDepth, (uint) DependencyIndex));
-
-            switch (TerrainInstructionType)
-            {
-                case TerrainInstructionType.Shape:
-                    hash.AddToHash(TerrainShape.CalculateHash());
-                    break;
-                case TerrainInstructionType.Combiner:
-                    hash.AddToHash(Combiner.CalculateHash());
-                    break;
-                case TerrainInstructionType.Transformation:
-                    hash.AddToHash(TerrainTransformation.CalculateHash());
-                    break;
-                case TerrainInstructionType.None:
-                case TerrainInstructionType.CopyOriginal:
-                    break;
-                default:
-                    throw new ArgumentOutOfRangeException();
-            }
-
-            return hash;
-        }
-
         public void AddValueBufferOffset(int valueBufferOffset)
         {
-            TerrainShape.TerrainModifier.PropertyIndexesA += valueBufferOffset;
-            TerrainShape.TerrainModifier.PropertyIndexesB += valueBufferOffset;
-            TerrainShape.TerrainModifier.PropertyIndexesC += valueBufferOffset;
-            TerrainShape.TerrainModifier.PropertyIndexesD += valueBufferOffset;
+            PropertyIndexes.AddOffset(valueBufferOffset);
+            TransformationValue.Index += valueBufferOffset;
+        }
 
-            TerrainShape.TransformationValue.Index += valueBufferOffset;
+        public CGenericTerrainTransformation GetTerrainTransformation()
+        {
+            return new() {TerrainTransformationType = (TerrainTransformationType) GeometryInstructionSubType,};
+        }
+
+        public CGenericGeometryShape GetShapeInstruction()
+        {
+            return new() {Data = PropertyIndexes, ShapeType = (ShapeType) GeometryInstructionType};
         }
     }
-    
-    public struct CSubGraphGeometryInstruction : IBufferElementData
-    {
-        public GeometryInstruction Instruction;
-    } 
-    
-    public struct CMainGraphGeometryInstruction : IBufferElementData
-    {
-        public GeometryInstruction Instruction;
-    }
 
-    public enum TerrainInstructionType : byte
+    public enum GeometryInstructionType : byte
     {
         None = 0,
         Shape = 1,

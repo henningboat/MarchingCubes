@@ -16,7 +16,7 @@ namespace Code.CubeMarching.Authoring
             CGenericTerrainTransformation genericComponentData = default;
             genericComponentData.TerrainTransformationType = componentData.TerrainTransformationType;
 
-            var ptr = UnsafeUtility.AddressOf(ref genericComponentData.TerrainModifierDataA);
+            var ptr = UnsafeUtility.AddressOf(ref genericComponentData.Data);
             UnsafeUtility.CopyStructureToPtr(ref componentData, ptr);
 
             dstManager.AddComponent<CGenericTerrainTransformation>(entity);

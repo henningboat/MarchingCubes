@@ -102,7 +102,7 @@ namespace Code.CubeMarching.TerrainChunkEntitySystem
 
         private void ProcessTerrainData(int instructionIndex)
         {
-            var combinerInstruction = _combinerInstructions[instructionIndex];
+            GeometryInstruction combinerInstruction = _combinerInstructions[instructionIndex];
 
 
             if (combinerInstruction.CombinerDepth > _lastCombinerDepth)
@@ -125,20 +125,16 @@ namespace Code.CubeMarching.TerrainChunkEntitySystem
                 }
             }
 
-            if (combinerInstruction.TerrainInstructionType == TerrainInstructionType.Transformation)
+            if (combinerInstruction.GeometryInstructionType == GeometryInstructionType.Transformation)
             {
                 for (var i = 0; i < _postionsWS.Length; i++)
                 {
                     var position = _postionStack[_postionsWS.Length * combinerInstruction.CombinerDepth + i];
-                    _postionStack[_postionsWS.Length * combinerInstruction.CombinerDepth + i] = combinerInstruction.TerrainTransformation.TransformPosition(position, _valueBuffer);
+
+                    _postionStack[_postionsWS.Length * combinerInstruction.CombinerDepth + i] = combinerInstruction.GetTerrainTransformation().TransformPosition(position, _valueBuffer);
                 }
 
                 _lastCombinerDepth = combinerInstruction.CombinerDepth;
-                return;
-            }
-
-            if (combinerInstruction.CoverageMask[_indexInsideChunk] == false)
-            {
                 return;
             }
 
@@ -154,16 +150,15 @@ namespace Code.CubeMarching.TerrainChunkEntitySystem
             for (var i = 0; i < _postionsWS.Length; i++)
             {
                 PackedTerrainData terrainData = default;
-                switch (combinerInstruction.TerrainInstructionType)
+                switch (combinerInstruction.GeometryInstructionType)
                 {
-                    case TerrainInstructionType.CopyOriginal:
+                    case GeometryInstructionType.CopyOriginal:
                         terrainData = _originalTerrainData[i];
                         break;
-                    case TerrainInstructionType.Shape:
-                        var shape = combinerInstruction.TerrainShape;
+                    case GeometryInstructionType.Shape:
+                        var shape = combinerInstruction.GetShapeInstruction();
 
-                        float4x4 transformation = shape.TransformationValue.Resolve(_valueBuffer);
-
+                        float4x4 transformation = combinerInstruction.TransformationValue.Resolve(_valueBuffer);
 
                         PackedFloat3 positionOS=default;
 
@@ -182,11 +177,11 @@ namespace Code.CubeMarching.TerrainChunkEntitySystem
                         
                         //var positionOS = shape.Translation.TransformPosition(_postionStack[_postionsWS.Length * combinerInstruction.CombinerDepth + i],_valueBuffer);
 
-                        var surfaceDistance = shape.TerrainModifier.GetSurfaceDistance(positionOS, _valueBuffer);
-                        terrainData = new PackedTerrainData(surfaceDistance, shape.TerrainMaterial.Material);
+                        var surfaceDistance = shape.GetSurfaceDistance(positionOS, _valueBuffer);
+                        terrainData = new PackedTerrainData(surfaceDistance, default);
                         break;
-                    case TerrainInstructionType.Combiner:
-                        terrainData = _terrainDataBuffer[combinerInstruction.DependencyIndex * _postionsWS.Length + i];
+                    case GeometryInstructionType.Combiner:
+                        terrainData = _terrainDataBuffer[(combinerInstruction.CombinerDepth+1) * _postionsWS.Length + i];
                         break;
                     default:
                         throw new ArgumentOutOfRangeException();

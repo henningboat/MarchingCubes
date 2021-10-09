@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using Code.CubeMarching.GeometryGraph.Runtime;
 using Code.CubeMarching.TerrainChunkEntitySystem;
 using Code.SIMDMath;
 using Unity.Collections;
@@ -71,17 +72,14 @@ namespace Code.CubeMarching.GeometryComponents
     [StructLayout(LayoutKind.Sequential)]
     public struct CGenericTerrainTransformation : IComponentData
     {
-        public Bytes16 TerrainModifierDataA;
-        public Bytes16 TerrainModifierDataB;
-        public Bytes16 TerrainModifierDataC;
-        public Bytes16 TerrainModifierDataD;
+        public int16 Data;
         public TerrainTransformationType TerrainTransformationType;
 
         public PackedFloat3 TransformPosition(PackedFloat3 positionOS, NativeArray<float> valueBuffer)
         {
             unsafe
             {
-                var ptr = UnsafeUtility.AddressOf(ref TerrainModifierDataA);
+                var ptr = UnsafeUtility.AddressOf(ref Data);
                 switch (TerrainTransformationType)
                 {
                     //todo reimplement
@@ -99,24 +97,24 @@ namespace Code.CubeMarching.GeometryComponents
             }
         }
 
-        public uint CalculateHash()
-        {
-            unsafe
-            {
-                var ptr = UnsafeUtility.AddressOf(ref TerrainModifierDataA);
-                switch (TerrainTransformationType)
-                {
-                    //todo reimplement
-                    // case TerrainTransformationType.Mirror:
-                    //     return ((CTerrainTransformationMirror*) ptr)->CalculateHash();
-                    case TerrainTransformationType.Transform:
-                        return ((CGeometryTransformation*) ptr)->CalculateHash();
-                        break;
-                    default:
-                        throw new ArgumentOutOfRangeException();
-                }
-            }
-        }
+        // public uint CalculateHash()
+        // {
+        //     unsafe
+        //     {
+        //         var ptr = UnsafeUtility.AddressOf(ref Data);
+        //         switch (TerrainTransformationType)
+        //         {
+        //             //todo reimplement
+        //             // case TerrainTransformationType.Mirror:
+        //             //     return ((CTerrainTransformationMirror*) ptr)->CalculateHash();
+        //             case TerrainTransformationType.Transform:
+        //                 return ((CGeometryTransformation*) ptr)->CalculateHash();
+        //                 break;
+        //             default:
+        //                 throw new ArgumentOutOfRangeException();
+        //         }
+        //     }
+        // }
     }
 
     public enum TerrainTransformationType

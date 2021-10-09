@@ -24,7 +24,7 @@ namespace Code.CubeMarching.GeometryGraph.Editor.DataModel.ShapeNodes
             Color = new Color(0.4f, 0, 0);
         }
 
-        public void WriteGeometryInstruction(ref CSubGraphGeometryInstruction instruction)
+        public void WriteGeometryInstruction(ref GeometryInstruction instruction)
         {
         }
 

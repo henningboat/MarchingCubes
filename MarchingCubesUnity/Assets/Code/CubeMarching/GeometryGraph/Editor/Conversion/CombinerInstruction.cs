@@ -1,5 +1,6 @@
 ﻿using Code.CubeMarching.GeometryComponents;
 using Code.CubeMarching.GeometryGraph.Editor.DataModel.GeometryNodes;
+using Code.CubeMarching.GeometryGraph.Runtime;
 using Code.CubeMarching.TerrainChunkEntitySystem;
 using Code.CubeMarching.Utils;
 
@@ -27,18 +28,19 @@ namespace Code.CubeMarching.GeometryGraph.Editor.Conversion
 
         public override GeometryInstruction GetInstruction()
         {
+            var propertyIndexes = new int16();
+            propertyIndexes[0] = Depth + 1;
+            
             return new()
             {
                 CombinerDepth = Depth,
-                CoverageMask = BitArray512.AllBitsTrue,
-                DependencyIndex = Depth + 1,
-                TerrainShape = default,
-                TerrainInstructionType = TerrainInstructionType.Combiner,
+                GeometryInstructionType = GeometryInstructionType.Combiner,
                 Combiner = new CGeometryCombiner()
                 {
                     Operation = Operation,
                     BlendFactor = new FloatValue() {Index = Property.Index}
-                }
+                },
+                PropertyIndexes = propertyIndexes,
             };
         }
     }

@@ -79,7 +79,7 @@ namespace Code.CubeMarching.GeometryGraph.Editor.Conversion
 
                     for (var i = 0; i < resolvedGraph.PropertyValueBuffer.Count; i++)
                     {
-                        valueBufferBlobArray[i] = new CSubGeometryGraphPropertyValue() {Value = resolvedGraph.PropertyValueBuffer[i]};
+                        valueBufferBlobArray[i] = new CGeometryGraphPropertyValue() {Value = resolvedGraph.PropertyValueBuffer[i]};
                     }
 
                     var propertyOverwrites = new List<CGeometryPropertyOverwrite>();
@@ -117,8 +117,8 @@ namespace Code.CubeMarching.GeometryGraph.Editor.Conversion
                         graph = blobBuilder.CreateBlobAssetReference<GeometryGraphBlob>(Allocator.Persistent)
                     });
 
-                    DstEntityManager.AddBuffer<CSubGeometryGraphPropertyValue>(entity);
-                    var instructionBuffer = DstEntityManager.AddBuffer<CSubGraphGeometryInstruction>(entity);
+                    DstEntityManager.AddBuffer<CGeometryGraphPropertyValue>(entity);
+                    var instructionBuffer = DstEntityManager.AddBuffer<GeometryInstruction>(entity);
                     instructionBuffer.Reinterpret<GeometryInstruction>().CopyFrom(resolvedGraph.GeometryInstructionBuffer.ToArray());
 
                     DstEntityManager.AddComponent<CFloat4x4PropertyFromTransformation>(entity);
