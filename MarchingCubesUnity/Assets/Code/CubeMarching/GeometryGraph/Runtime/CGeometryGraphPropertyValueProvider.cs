@@ -9,7 +9,7 @@ namespace Code.CubeMarching.GeometryGraph.Runtime
     [GenerateAuthoringComponent]
     public struct CGeometryGraphPropertyValueProvider : IComponentData
     {
-        public Float16 Value;
+        public float16 Value;
 
         public unsafe void CopyFromFloat4x4(ref float4x4 value)
         {

@@ -31,7 +31,7 @@ namespace Code.CubeMarching.GeometryGraph.Editor.Conversion
         {
             var entity = CreateAdditionalEntity(holder);
 
-            Float16 value = default;
+            float16 value = default;
             for (var i = 0; i < propertyOverwrite.Value.Length; i++)
             {
                 value[i] = propertyOverwrite.Value[i];

@@ -7,7 +7,6 @@ using Unity.Entities;
 namespace Code.CubeMarching.TerrainChunkEntitySystem
 {
     [WorldSystemFilter(WorldSystemFilterFlags.Editor | WorldSystemFilterFlags.Default)]
-    [UpdateAfter(typeof(SBuildStaticGeometry))]
     public class SProcessGeometryGraphMath : SystemBase
     {
         protected override void OnUpdate()

@@ -138,7 +138,8 @@ namespace Code.CubeMarching.Rendering
                                 var subChunkOffset = TerrainChunkEntitySystem.Utils.IndexToPositionWS(i, 2) * 4;
                                 subChunkWithTriangles.Add(new CSubChunkWithTrianglesIndex(positionOfChunkWS + subChunkOffset, 0));
 
-                                if (dynamicData.DistanceFieldChunkData.InstructionsChangedSinceLastFrame)
+                                //todo re-add checking for this 
+                             //   if (dynamicData.DistanceFieldChunkData.InstructionsChangedSinceLastFrame)
                                 {
                                     triangulationInstructions.Add(new CTriangulationInstruction(positionOfChunkWS + subChunkOffset, 0));
                                     vertexCountPerSubChunk[subChunkIndex] = new CVertexCountPerSubCluster() {vertexCount = Constants.maxVertsPerCluster};

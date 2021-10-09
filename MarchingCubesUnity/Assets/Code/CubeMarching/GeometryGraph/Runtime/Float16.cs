@@ -4,7 +4,7 @@ using Unity.Mathematics;
 namespace Code.CubeMarching.GeometryGraph.Runtime
 {
     [StructLayout(LayoutKind.Sequential)]
-    public struct Float16
+    public struct float16
     {
         private float4 c0;
         private float4 c1;
@@ -21,7 +21,7 @@ namespace Code.CubeMarching.GeometryGraph.Runtime
                     throw new System.ArgumentException("index must be between[0...15]");
                 }
 #endif
-                fixed (Float16* array = &this)
+                fixed (float16* array = &this)
                 {
                     return ref ((float*) array)[index];
                 }

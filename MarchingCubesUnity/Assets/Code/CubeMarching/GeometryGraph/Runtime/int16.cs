@@ -21,7 +21,7 @@ namespace Code.CubeMarching.GeometryGraph.Runtime
                     throw new System.ArgumentException("index must be between[0...15]");
                 }
 #endif
-                fixed (Float16* array = &this)
+                fixed (int16* array = &this)
                 {
                     return ref ((int*) array)[index];
                 }
