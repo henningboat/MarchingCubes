@@ -102,12 +102,12 @@ namespace Code.CubeMarching.TerrainChunkEntitySystem
 
         private void ProcessTerrainData(int instructionIndex)
         {
-            GeometryInstruction combinerInstruction = _combinerInstructions[instructionIndex];
+            GeometryInstruction geometryInstruction = _combinerInstructions[instructionIndex];
 
 
-            if (combinerInstruction.CombinerDepth > _lastCombinerDepth)
+            if (geometryInstruction.CombinerDepth > _lastCombinerDepth)
             {
-                for (var combinerDepthToInitialize = max(0, _lastCombinerDepth + 1); combinerDepthToInitialize <= combinerInstruction.CombinerDepth; combinerDepthToInitialize++)
+                for (var combinerDepthToInitialize = max(0, _lastCombinerDepth + 1); combinerDepthToInitialize <= geometryInstruction.CombinerDepth; combinerDepthToInitialize++)
                 {
                     _hasWrittenToCurrentCombiner[combinerDepthToInitialize] = false;
 
@@ -124,46 +124,62 @@ namespace Code.CubeMarching.TerrainChunkEntitySystem
                     }
                 }
             }
-
-            if (combinerInstruction.GeometryInstructionType == GeometryInstructionType.Transformation)
+            
+            if (geometryInstruction.GeometryInstructionType == GeometryInstructionType.PositionModification)
             {
+                throw new NotImplementedException();
+                // for (var i = 0; i < _postionsWS.Length; i++)
+                // {
+                //     var position = _postionStack[_postionsWS.Length * combinerInstruction.CombinerDepth + i];
+                //
+                //     _postionStack[_postionsWS.Length * combinerInstruction.CombinerDepth + i] = combinerInstruction.GetTerrainTransformation().TransformPosition(position, _valueBuffer);
+                // }
+                //
+                // _lastCombinerDepth = combinerInstruction.CombinerDepth;
+                // return;
+            }
+            
+            var stackBaseOffset = _postionsWS.Length * geometryInstruction.CombinerDepth;
+            
+            if (geometryInstruction.GeometryInstructionType == GeometryInstructionType.DistanceModification)
+            {
+                var distanceModificationInstruction = geometryInstruction.GetDistanceModificationInstruction();
+                
                 for (var i = 0; i < _postionsWS.Length; i++)
                 {
-                    var position = _postionStack[_postionsWS.Length * combinerInstruction.CombinerDepth + i];
-
-                    _postionStack[_postionsWS.Length * combinerInstruction.CombinerDepth + i] = combinerInstruction.GetTerrainTransformation().TransformPosition(position, _valueBuffer);
+                    var surfaceDistance = _terrainDataBuffer[stackBaseOffset + i];
+                    surfaceDistance.SurfaceDistance = distanceModificationInstruction.GetSurfaceDistance(surfaceDistance.SurfaceDistance, _valueBuffer);
+                    _terrainDataBuffer[stackBaseOffset + i] = surfaceDistance;
                 }
-
-                _lastCombinerDepth = combinerInstruction.CombinerDepth;
+                
                 return;
             }
 
-            if (_hasWrittenToCurrentCombiner[combinerInstruction.CombinerDepth] == false)
+            if (_hasWrittenToCurrentCombiner[geometryInstruction.CombinerDepth] == false)
             {
-                combinerInstruction.Combiner.Operation = CombinerOperation.Replace;
+                geometryInstruction.Combiner.Operation = CombinerOperation.Replace;
 
-                _hasWrittenToCurrentCombiner[combinerInstruction.CombinerDepth] = true;
+                _hasWrittenToCurrentCombiner[geometryInstruction.CombinerDepth] = true;
             }
 
-            var stackBaseOffset = _postionsWS.Length * combinerInstruction.CombinerDepth;
 
             for (var i = 0; i < _postionsWS.Length; i++)
             {
                 PackedTerrainData terrainData = default;
-                switch (combinerInstruction.GeometryInstructionType)
+                switch (geometryInstruction.GeometryInstructionType)
                 {
                     case GeometryInstructionType.CopyOriginal:
                         terrainData = _originalTerrainData[i];
                         break;
                     case GeometryInstructionType.Shape:
-                        var shape = combinerInstruction.GetShapeInstruction();
+                        var shape = geometryInstruction.GetShapeInstruction();
 
-                        float4x4 transformation = combinerInstruction.TransformationValue.Resolve(_valueBuffer);
+                        float4x4 transformation = geometryInstruction.TransformationValue.Resolve(_valueBuffer);
 
                         PackedFloat3 positionOS=default;
 
 
-                        var positionWSValue = _postionStack[_postionsWS.Length * combinerInstruction.CombinerDepth + i];
+                        var positionWSValue = _postionStack[_postionsWS.Length * geometryInstruction.CombinerDepth + i];
 
                         //todo add SIMD version
                         for (int j = 0; j < 4; j++)
@@ -181,18 +197,18 @@ namespace Code.CubeMarching.TerrainChunkEntitySystem
                         terrainData = new PackedTerrainData(surfaceDistance, default);
                         break;
                     case GeometryInstructionType.Combiner:
-                        terrainData = _terrainDataBuffer[(combinerInstruction.CombinerDepth+1) * _postionsWS.Length + i];
+                        terrainData = _terrainDataBuffer[(geometryInstruction.CombinerDepth+1) * _postionsWS.Length + i];
                         break;
                     default:
                         throw new ArgumentOutOfRangeException();
                 }
 
                 var existingData = _terrainDataBuffer[stackBaseOffset + i];
-                var combinedResult = TerrainChunkOperations.CombinePackedTerrainData(combinerInstruction.Combiner, terrainData, existingData, _valueBuffer);
+                var combinedResult = TerrainChunkOperations.CombinePackedTerrainData(geometryInstruction.Combiner, terrainData, existingData, _valueBuffer);
                 _terrainDataBuffer[stackBaseOffset + i] = combinedResult;
             }
 
-            _lastCombinerDepth = combinerInstruction.CombinerDepth;
+            _lastCombinerDepth = geometryInstruction.CombinerDepth;
         }
 
         #endregion

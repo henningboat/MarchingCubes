@@ -290,17 +290,27 @@ namespace Code.CubeMarching.TerrainChunkEntitySystem
         {
             return new() {Data = PropertyIndexes, ShapeType = (ShapeType) GeometryInstructionSubType};
         }
+
+        public CGenericDistanceModification GetDistanceModificationInstruction()
+        {
+            return new() {Data = PropertyIndexes, Type = (DistanceModificationType) GeometryInstructionSubType};
+        }
     }
 
     public enum GeometryInstructionType : byte
     {
-        None = 0,
-        Shape = 1,
-        Combiner = 2,
-        Transformation = 3,
-        CopyOriginal
+        Shape,
+        PositionModification,
+        DistanceModification,
+        Combiner,
+        CopyOriginal,
     }
 
+    public enum DistanceModificationType
+    {
+        Onion,
+    }
+    
     public struct CTerrainModifierBounds : IComponentData
     {
         #region Public Fields

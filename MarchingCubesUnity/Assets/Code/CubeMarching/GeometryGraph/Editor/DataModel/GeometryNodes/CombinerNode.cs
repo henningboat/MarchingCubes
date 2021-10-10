@@ -5,11 +5,12 @@ using Code.CubeMarching.GeometryGraph.Editor.DataModel.ShapeNodes;
 using UnityEditor.GraphToolsFoundation.Overdrive;
 using UnityEngine;
 using UnityEngine.GraphToolsFoundation.Overdrive;
+using Port = UnityEditor.Experimental.GraphView.Port;
 
 namespace Code.CubeMarching.GeometryGraph.Editor.DataModel.GeometryNodes
 {
     [Serializable]
-    public class CombinerNode : GeometryCombinerNode
+    public class CombinerNode : GeometryCombinerNode,IMultipleExecutionInputs
     {
         public IPortModel BlendModeInput { get; set; }
         public IPortModel GeometryInputA { get; set; }
@@ -43,11 +44,15 @@ namespace Code.CubeMarching.GeometryGraph.Editor.DataModel.GeometryNodes
             base.OnDefineNode();
             BlendModeInput = this.AddDataInputPort<CombinerOperation>("Blend Mode", nameof(BlendModeInput));
 
-            GeometryInputA = this.AddDataInputPort<DistanceFieldValue>("", nameof(GeometryInputA), PortOrientation.Horizontal, PortModelOptions.NoEmbeddedConstant);
-            GeometryInputB = this.AddDataInputPort<DistanceFieldValue>("", nameof(GeometryInputB), PortOrientation.Horizontal, PortModelOptions.NoEmbeddedConstant);
+            GeometryInputA = this.AddExecutionInputPort("", nameof(GeometryInputA));
+            GeometryInputB = this.AddExecutionInputPort("", nameof(GeometryInputB));
 
 
             BlendFactor = this.AddDataInputPort<float>("BlendFactor", nameof(BlendFactor));
         }
+    }
+
+    public interface IMultipleExecutionInputs
+    {
     }
 }

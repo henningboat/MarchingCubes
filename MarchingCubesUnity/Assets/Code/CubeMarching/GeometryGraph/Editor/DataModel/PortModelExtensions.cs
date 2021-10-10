@@ -7,6 +7,7 @@ using Code.CubeMarching.GeometryGraph.Editor.DataModel.MathNodes;
 using Code.CubeMarching.GeometryGraph.Editor.DataModel.ShapeNodes;
 using Unity.Collections;
 using UnityEditor.GraphToolsFoundation.Overdrive;
+using UnityEngine.GraphToolsFoundation.Overdrive;
 
 namespace Code.CubeMarching.GeometryGraph.Editor.DataModel
 {
@@ -14,7 +15,7 @@ namespace Code.CubeMarching.GeometryGraph.Editor.DataModel
     {
         public static void ResolveGeometryInput(this IPortModel port, GeometryGraphResolverContext context, GeometryGraphProperty transformation)
         {
-            var connectedPort = port.GetConnectedPorts().FirstOrDefault(model => model != null && model.PortDataType == typeof(DistanceFieldValue) && model.NodeModel != null);
+            var connectedPort = port.GetConnectedPorts().FirstOrDefault(model => model != null && model.DataTypeHandle == TypeHandle.ExecutionFlow  && model.NodeModel != null);
             if (connectedPort != null && connectedPort.NodeModel is IGeometryNode geometryNode)
             {
                 geometryNode.Resolve(context, transformation);

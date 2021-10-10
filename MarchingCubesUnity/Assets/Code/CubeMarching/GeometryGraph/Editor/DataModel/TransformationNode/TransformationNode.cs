@@ -14,8 +14,8 @@ namespace Code.CubeMarching.GeometryGraph.Editor.DataModel.TransformationNode
 
         protected override void OnDefineNode()
         {
-            _geometryInput = this.AddDataInputPort<DistanceFieldValue>("", nameof(_geometryInput));
-            _geometryOutput = this.AddDataOutputPort<DistanceFieldValue>("", nameof(_geometryInput));
+            _geometryInput = this.AddExecutionInputPort("", nameof(_geometryInput));
+            _geometryOutput = this.AddExecutionOutputPort("", nameof(_geometryInput));
         }
 
         protected abstract GeometryGraphProperty GetTransformationInstruction(GeometryGraphResolverContext context, GeometryGraphProperty parent);

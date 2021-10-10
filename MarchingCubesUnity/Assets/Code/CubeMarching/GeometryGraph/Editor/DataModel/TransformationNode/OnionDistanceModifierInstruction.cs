@@ -7,15 +7,11 @@ namespace Code.CubeMarching.GeometryGraph.Editor.DataModel.TransformationNode
 {
     public class OnionDistanceModifierInstruction : DistanceModifierInstruction
     {
-        private GeometryGraphProperty _thickness;
+        public OnionDistanceModifierInstruction(GeometryGraphProperty thickness, GeometryGraphResolverContext context, GeometryGraphProperty transformation) :
+            base(context.CurrentCombinerDepth, context.CurrentCombiner, transformation, thickness)
+        {
+        }
 
-        public OnionDistanceModifierInstruction(GeometryGraphProperty thickness, GeometryGraphResolverContext context) : base(context.CurrentCombinerDepth)
-        {
-            _thickness = thickness;
-        }
-        public override GeometryInstruction GetInstruction()
-        {
-            throw new NotImplementedException();
-        }
+        protected override DistanceModificationType Type => DistanceModificationType.Onion;
     }
 }

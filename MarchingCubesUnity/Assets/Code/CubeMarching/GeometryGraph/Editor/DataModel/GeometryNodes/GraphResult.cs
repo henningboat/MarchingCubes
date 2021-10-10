@@ -18,11 +18,7 @@ namespace Code.CubeMarching.GeometryGraph.Editor.DataModel.GeometryNodes
 
         protected override void OnDefineNode()
         {
-            DataIn = this.AddDataInputPort<DistanceFieldValue>("", nameof(DataIn));
+            DataIn = this.AddExecutionInputPort("", nameof(DataIn));
         }
-    }
-
-    public enum DistanceFieldValue
-    {
     }
 }

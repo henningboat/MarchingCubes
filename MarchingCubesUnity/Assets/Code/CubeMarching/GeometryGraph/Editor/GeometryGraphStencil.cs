@@ -142,5 +142,22 @@ namespace Code.CubeMarching.GeometryGraph.Editor
                 commandDispatcher.Dispatch(new CreateGraphVariableDeclarationCommand(finalName, true, TypeHandle.Vector3, typeof(GeometryGraphVariableDeclarationModel)));
             });
         }
+
+        public override bool GetPortCapacity(IPortModel portModel, out PortCapacity capacity)
+        {
+            if (portModel.DataTypeHandle == TypeHandle.ExecutionFlow)
+            {
+                capacity = PortCapacity.Single;
+                return true;
+            }
+
+            capacity = default;
+            return false;
+        }
+
+        public override IGraphProcessor CreateGraphProcessor()
+        {
+            return base.CreateGraphProcessor();
+        }
     }
 }

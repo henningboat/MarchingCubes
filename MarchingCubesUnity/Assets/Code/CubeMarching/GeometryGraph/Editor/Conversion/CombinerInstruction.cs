@@ -30,8 +30,8 @@ namespace Code.CubeMarching.GeometryGraph.Editor.Conversion
         {
             var propertyIndexes = new int16();
             propertyIndexes[0] = Depth + 1;
-            
-            return new()
+
+            return new GeometryInstruction()
             {
                 CombinerDepth = Depth,
                 GeometryInstructionType = GeometryInstructionType.Combiner,
@@ -40,7 +40,7 @@ namespace Code.CubeMarching.GeometryGraph.Editor.Conversion
                     Operation = Operation,
                     BlendFactor = new FloatValue() {Index = Property.Index}
                 },
-                PropertyIndexes = propertyIndexes,
+                PropertyIndexes = propertyIndexes
             };
         }
     }

@@ -12,7 +12,7 @@ namespace Code.CubeMarching.GeometryGraph.Editor.DataModel.GeometryNodes
         {
             base.OnDefineNode();
 
-            GeometryOut = this.AddDataOutputPort<DistanceFieldValue>(null, nameof(GeometryOut));
+            GeometryOut = this.AddExecutionOutputPort(null, nameof(GeometryOut));
         }
 
         public abstract void Resolve(GeometryGraphResolverContext context, GeometryGraphProperty parent);

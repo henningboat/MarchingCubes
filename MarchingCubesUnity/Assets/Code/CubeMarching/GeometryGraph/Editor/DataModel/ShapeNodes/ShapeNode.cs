@@ -19,7 +19,7 @@ namespace Code.CubeMarching.GeometryGraph.Editor.DataModel.ShapeNodes
         {
             base.OnDefineNode();
 
-            GeometryOut = this.AddDataOutputPort<DistanceFieldValue>(nameof(GeometryOut));
+            GeometryOut = this.AddExecutionOutputPort(nameof(GeometryOut));
 
             Color = new Color(0.4f, 0, 0);
         }

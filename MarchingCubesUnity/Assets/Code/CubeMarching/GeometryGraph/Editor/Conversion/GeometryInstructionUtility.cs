@@ -8,7 +8,7 @@ namespace Code.CubeMarching.GeometryGraph.Editor.Conversion
 {
     internal static class GeometryInstructionUtility
     {
-        public static GeometryInstruction CreateInstruction(GeometryInstructionType geometryInstructionType, int subType, int depth, CombinerInstruction combiner, GeometryGraphProperty transformation,
+        public static GeometryInstruction CreateInstruction(GeometryInstructionType geometryInstructionType, int subType, int depth, CGeometryCombiner combiner, GeometryGraphProperty transformation,
             List<GeometryGraphProperty> shapeProperties)
         {
             var transformationValue = new Float4X4Value() {Index = transformation.Index};
@@ -22,7 +22,7 @@ namespace Code.CubeMarching.GeometryGraph.Editor.Conversion
             {
                 GeometryInstructionType = geometryInstructionType,
                 GeometryInstructionSubType = subType,
-                Combiner = combiner.GetCombinerSetting(),
+                Combiner = combiner,
                 CombinerDepth = depth,
                 TransformationValue = transformationValue,
                 PropertyIndexes = propertyIndexes

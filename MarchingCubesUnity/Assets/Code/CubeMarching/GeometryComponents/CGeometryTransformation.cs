@@ -117,6 +117,7 @@ namespace Code.CubeMarching.GeometryComponents
         // }
     }
 
+
     public enum TerrainTransformationType
     {
         Mirror = 0,
